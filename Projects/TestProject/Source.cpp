@@ -7,7 +7,7 @@ int main() {
 
 	Application app;
 
-	printf("GET MY NUMBER?!?! : %i\n", app.getRandom());
+	printf("GET MY NUMBER?!?! : %f\n", app.getRandom());
 
 	system("pause");
 	return 0;
