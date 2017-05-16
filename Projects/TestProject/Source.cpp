@@ -1,14 +1,17 @@
+#define CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
-#include <iostream>
-
-#include "MallardEngine\Application.h"
+#include "TestApp.h"
 
 int main() {
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	Application app;
+	Application* app = new TestApp();
 
-	printf("GET MY NUMBER?!?! : %f\n", app.getRandom());
+	app->run();
 
-	system("pause");
+	delete app;
+
 	return 0;
 }

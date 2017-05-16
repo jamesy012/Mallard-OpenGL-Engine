@@ -21,9 +21,17 @@
   <ItemGroup>
     <ClInclude Include="..\_Common\DLLBuild.h" />
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="TimeHandler.h" />
+    <ClInclude Include="Transform.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="TimeHandler.cpp" />
+    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DBC40799-7547-4447-AF16-0052335F371F}</ProjectGuid>
