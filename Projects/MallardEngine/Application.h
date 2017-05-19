@@ -1,21 +1,23 @@
 #pragma once
 #include "DLLBuild.h"
 
+class Window;
+
 struct GLFWwindow;
 
-class Application {
+class DLL_BUILD Application {
 public:
-	DLL_BUILD Application();
-	DLL_BUILD ~Application();
+	Application();
+	~Application();
 
-	DLL_BUILD void run();
+	void run();
 
 protected:
-	DLL_BUILD virtual void startUp() = 0;
-	DLL_BUILD virtual void shutDown() = 0;
-	DLL_BUILD virtual void update() = 0;
-	DLL_BUILD virtual void draw() = 0;
-	DLL_BUILD virtual void drawUi() = 0;
+	virtual void startUp() = 0;
+	virtual void shutDown() = 0;
+	virtual void update() = 0;
+	virtual void draw() = 0;
+	virtual void drawUi() = 0;
 
 	//application related stuff
 	bool m_Quit = false;
@@ -23,9 +25,11 @@ protected:
 	//flags/handles
 	bool m_CloseOnEscape = true;
 
+	Window* m_AppWindow = nullptr;
 private:
 	void setCallbacksForWindow(GLFWwindow* a_Window);
 
 	void checkHandles();
+
 };
 

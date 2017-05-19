@@ -4,20 +4,20 @@
 
 class Application;
 
-class TimeHandler {
+class DLL_BUILD TimeHandler {
 	friend Application;
 public:
 
-	DLL_BUILD static int getCurrentFrameNumber();
-	DLL_BUILD static float getCurrentTime();
-	DLL_BUILD static float getPreviousTime();
-	DLL_BUILD static float getDeltaTime();
-	DLL_BUILD static float getUnscaledDeltaTime();
-	DLL_BUILD static float getDeltaTimeScale();
+	static int getCurrentFrameNumber();
+	static float getCurrentTime();
+	static float getPreviousTime();
+	static float getDeltaTime();
+	static float getUnscaledDeltaTime();
+	static float getDeltaTimeScale();
 
-	DLL_BUILD static void setDeltaTimeScale(float a_Scale);
+	static void setDeltaTimeScale(float a_Scale);
 
-	DLL_BUILD static void setMaxDeltaTime(float a_MaxDt);
+	static void setMaxDeltaTime(float a_MaxDt);
 protected:
 	static void update();
 

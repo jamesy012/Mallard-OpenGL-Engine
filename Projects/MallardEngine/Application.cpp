@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#define _GLFW_BUILD_DLL
 #include <glad\glad.h>
 #include <GLFW\glfw3.h>
 #include <glm\glm.hpp>
@@ -8,11 +9,17 @@
 #include "TimeHandler.h"
 #include "Input.h"
 
+#include "Window.h"
+
 Application::Application() {
 }
 
 
 Application::~Application() {
+	if (m_AppWindow != nullptr) {
+		delete m_AppWindow;
+		m_AppWindow = nullptr;
+	}
 }
 
 void Application::run() {
@@ -23,18 +30,19 @@ void Application::run() {
 	}
 
 	//create window
-	GLFWwindow* window = glfwCreateWindow(640, 480, "My Title", NULL, NULL);
-	if (!window) {
+	m_AppWindow = new Window();
+	if (!m_AppWindow->createWindow(640, 480, "Window")) {
 		printf("NO WINDOW!?\n");
 		// Window or OpenGL context creation failed
 	}
 
-	setCallbacksForWindow(window);
+	setCallbacksForWindow(m_AppWindow->getWindow());
+	m_AppWindow->setCallbacks();//<- move to function above
 
 	startUp();
 
 	//game loop
-	while (!glfwWindowShouldClose(window) && !m_Quit) {
+	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
 		//update time
 		TimeHandler::update();
 
@@ -53,17 +61,16 @@ void Application::run() {
 
 			draw();
 
-			//change camera!
+			//change camera?
 			drawUi();
 		}
 
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(m_AppWindow->getWindow());
 	}
 
 	shutDown();
 
 	//glfwTerminate
-	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 
@@ -74,9 +81,7 @@ void Application::setCallbacksForWindow(GLFWwindow * a_Window) {
 	glfwSetMouseButtonCallback(a_Window, Input::mouseButtonCallback);
 	glfwSetCharCallback(a_Window, Input::charCallback);
 	glfwSetScrollCallback(a_Window, Input::scrollCallback);
-	//glfwSetWindowSizeCallback(window, Window::windowSizeCallback);
-	//glfwSetFramebufferSizeCallback(window, Window::framebufferSizeCallback);
-	//glfwSetWindowFocusCallback(window, Window::windowFocusCallback);
+	
 }
 
 void Application::checkHandles() {

@@ -12,7 +12,7 @@ void TestApp::shutDown() {
 
 void TestApp::update() {
 	// Keep running
-	printf("Frame: %i dt:%f\n", TimeHandler::getCurrentFrameNumber(), TimeHandler::getDeltaTime());
+	printf("Frame: %i dt: %f\n", TimeHandler::getCurrentFrameNumber(), TimeHandler::getDeltaTime());
 }
 
 void TestApp::draw() {
