@@ -4,11 +4,14 @@
 
 #include <glm\glm.hpp>
 
-class Application;
+class Window;//for callbacks
+class Application;//for update
+
 struct GLFWwindow;
 
 class DLL_BUILD Input {
 	friend Application;
+	friend Window;
 public:
 	//is a_Key currently down
 	static bool isKeyDown(unsigned int a_Key);

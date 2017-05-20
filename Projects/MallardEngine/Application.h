@@ -3,7 +3,6 @@
 
 class Window;
 
-struct GLFWwindow;
 
 class DLL_BUILD Application {
 public:
@@ -27,9 +26,10 @@ protected:
 
 	Window* m_AppWindow = nullptr;
 private:
-	void setCallbacksForWindow(GLFWwindow* a_Window);
+	void setCallbacksForWindow(Window* a_Window);
 
 	void checkHandles();
 
+	Window* m_ContextWindow = nullptr;
 };
 

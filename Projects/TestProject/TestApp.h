@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MallardEngine\Application.h"
+#include "Application.h"
 
 class TestApp :
 	public Application {

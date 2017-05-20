@@ -20,6 +20,10 @@ Application::~Application() {
 		delete m_AppWindow;
 		m_AppWindow = nullptr;
 	}
+	if (m_ContextWindow != nullptr) {
+		delete m_ContextWindow;
+		m_ContextWindow = nullptr;
+	}
 }
 
 void Application::run() {
@@ -29,17 +33,23 @@ void Application::run() {
 		return;
 	}
 
-	//create window
+	m_ContextWindow = new Window();
 	m_AppWindow = new Window();
-	if (!m_AppWindow->createWindow(640, 480, "Window")) {
-		printf("NO WINDOW!?\n");
-		// Window or OpenGL context creation failed
-	}
 
-	setCallbacksForWindow(m_AppWindow->getWindow());
-	m_AppWindow->setCallbacks();//<- move to function above
+	m_ContextWindow->createWindow();//create an empty context
 
 	startUp();
+
+	if (!m_AppWindow->isWindowCreated()) {
+		//create window
+		if (!m_AppWindow->createWindow(640, 480, "Window")) {
+			printf("NO WINDOW!?\n");
+			// Window or OpenGL context creation failed
+		}
+	}
+
+	setCallbacksForWindow(m_AppWindow);
+
 
 	//game loop
 	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
@@ -75,13 +85,9 @@ void Application::run() {
 }
 
 
-void Application::setCallbacksForWindow(GLFWwindow * a_Window) {
-	glfwSetKeyCallback(a_Window, Input::keyCallback);
-	glfwSetCursorPosCallback(a_Window, Input::cursorPositionCallback);
-	glfwSetMouseButtonCallback(a_Window, Input::mouseButtonCallback);
-	glfwSetCharCallback(a_Window, Input::charCallback);
-	glfwSetScrollCallback(a_Window, Input::scrollCallback);
-	
+void Application::setCallbacksForWindow(Window * a_Window) {
+	a_Window->setCallbacks();
+
 }
 
 void Application::checkHandles() {
