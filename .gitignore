@@ -241,6 +241,6 @@ paket-files/
 
 
 #### My Ignores
-_WorkingDir/MallardEngine_*.dll
+_WorkingDir/*.dll
 Builds/
 IntermediateDir/

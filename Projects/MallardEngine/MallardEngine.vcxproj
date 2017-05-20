@@ -87,29 +87,29 @@
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -119,13 +119,16 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
-      <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>
+      <Command>echo copying mallardEngine dll to workingDir
+copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+echo copying assimp dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,13 +139,16 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
-      <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>
+      <Command>echo copying mallardEngine dll to workingDir
+copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+echo copying assimp dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -157,7 +163,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>
@@ -178,7 +184,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>

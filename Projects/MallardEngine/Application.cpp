@@ -11,6 +11,11 @@
 
 #include "Window.h"
 
+/* assimp include files. These three are usually needed. */
+#include <assimp/cimport.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 Application::Application() {
 }
 
@@ -32,6 +37,13 @@ void Application::run() {
 		//could not start glfw
 		return;
 	}
+
+	/* get a handle to the predefined STDOUT log stream and attach
+	it to the logging system. It remains active for all further
+	calls to aiImportFile(Ex) and aiApplyPostProcessing. */
+	struct aiLogStream stream;
+	stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+	aiAttachLogStream(&stream);
 
 	m_ContextWindow = new Window();
 	m_AppWindow = new Window();
