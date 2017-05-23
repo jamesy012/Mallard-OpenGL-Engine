@@ -2,6 +2,8 @@
 
 #include "Application.h"
 
+class Model;
+
 class TestApp :
 	public Application {
 public:
@@ -11,5 +13,8 @@ public:
 	virtual void update() override;
 	virtual void draw() override;
 	virtual void drawUi() override;
+
+private:
+	Model* m_Model;
 };
 

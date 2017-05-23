@@ -38,6 +38,8 @@ public:
 	int const getWindowHeight() const;
 	bool const isWindowCreated() const;
 
+	void makeContextCurrent() const;
+
 protected:
 	static Window* getWindowFromGlfwWindow(GLFWwindow* a_Window);
 private:

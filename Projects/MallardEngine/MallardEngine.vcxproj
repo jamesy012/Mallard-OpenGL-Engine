@@ -22,6 +22,12 @@
     <ClInclude Include="..\_Common\DLLBuild.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="IRenderable.h" />
+    <ClInclude Include="IResource.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="TimeHandler.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Window.h" />
@@ -29,6 +35,10 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TimeHandler.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -87,29 +97,29 @@
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -128,7 +138,7 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -148,7 +158,7 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -163,7 +173,7 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>
@@ -184,7 +194,7 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>

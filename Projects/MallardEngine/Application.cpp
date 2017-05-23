@@ -1,13 +1,16 @@
 #include "Application.h"
 
+#define GLEW_STATIC
+#include <gl\glew.h>
 #define _GLFW_BUILD_DLL
-#include <glad\glad.h>
 #include <GLFW\glfw3.h>
+
 #include <glm\glm.hpp>
 #include <glm\ext.hpp>
 
 #include "TimeHandler.h"
 #include "Input.h"
+#include "ResourceManager.h"
 
 #include "Window.h"
 
@@ -37,6 +40,10 @@ void Application::run() {
 		//could not start glfw
 		return;
 	}
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	/* get a handle to the predefined STDOUT log stream and attach
 	it to the logging system. It remains active for all further
@@ -46,11 +53,21 @@ void Application::run() {
 	aiAttachLogStream(&stream);
 
 	m_ContextWindow = new Window();
+	m_ContextWindow->createWindow();//create an empty context
+	m_ContextWindow->makeContextCurrent();//make context so glew can load
+
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK) {
+		printf("Failed to initialize GLEW\n");
+		return;
+	}
+
+
 	m_AppWindow = new Window();
 
-	m_ContextWindow->createWindow();//create an empty context
 
 	startUp();
+
 
 	if (!m_AppWindow->isWindowCreated()) {
 		//create window
@@ -59,38 +76,46 @@ void Application::run() {
 			// Window or OpenGL context creation failed
 		}
 	}
+	m_AppWindow->makeContextCurrent();//make context so we can render to it
 
 	setCallbacksForWindow(m_AppWindow);
 
+	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
 
 	//game loop
 	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
 		//update time
 		TimeHandler::update();
-
+		
 		//update old key presses
 		Input::update();
-
+		
 		//update any new key presses
 		glfwPollEvents();
-
+		
 		//check application flags
 		checkHandles();
-
+		
 		//call virtual functions
 		{
 			update();
-
+		
 			draw();
-
+		
 			//change camera?
 			drawUi();
 		}
+
+		// Clear the colorbuffer
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		glfwSwapBuffers(m_AppWindow->getWindow());
 	}
 
 	shutDown();
+
+	aiDetachAllLogStreams();
+	ResourceManager::deleteLeftOverResources();
 
 	//glfwTerminate
 	glfwTerminate();

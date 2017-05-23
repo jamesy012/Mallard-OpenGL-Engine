@@ -130,6 +130,10 @@ bool const Window::isWindowCreated() const {
 	return m_IsVisable;
 }
 
+void Window::makeContextCurrent() const {
+	glfwMakeContextCurrent(m_ThisWindow);
+}
+
 void Window::windowSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height) {
 	Window* window = getWindowFromGlfwWindow(a_Window);
 	window->m_Width = a_Width;
