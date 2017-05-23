@@ -53,7 +53,7 @@ void ResourceManager::removeResource(IResource * a_Resource) {
 
 		
 		//remove from list
-		for (int i = 0; i < m_ResourceList[resourceIndex]->size(); i++) {
+		for (size_t i = 0; i < m_ResourceList[resourceIndex]->size(); i++) {
 			if (m_ResourceList[resourceIndex]->at(i) == mainReference) {
 				m_ResourceList[resourceIndex]->erase(m_ResourceList[resourceIndex]->begin() + i);
 				delete mainReference;
@@ -71,7 +71,7 @@ ResourceManager::ResourceReference* ResourceManager::getMainResource(IResource *
 		return nullptr;
 	}
 
-	for (int i = 0; i < resourceObjects->size(); i++) {
+	for (size_t i = 0; i < resourceObjects->size(); i++) {
 		ResourceReference* ref = resourceObjects->at(i);
 		//if (ref->resource == a_Resource) {
 		//	continue;
@@ -91,7 +91,7 @@ void ResourceManager::deleteLeftOverResources() {
 		//it->second gives you the mapped element (vector)
 		mapData* data = it->second;
 		
-		for (int i = 0; i < data->size(); i++) {
+		for (size_t i = 0; i < data->size(); i++) {
 			ResourceReference* ref = data->at(i);
 			delete ref;
 		}

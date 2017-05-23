@@ -13,7 +13,7 @@ enum ResourceTypes {
 	RESOUCE_END_TYPE_LIST
 };
 
-class DLL_BUILD IResource {
+class  IResource {
 	friend ResourceManager;
 
 public:
@@ -27,12 +27,12 @@ public:
 		assert(m_CanDelete);
 	}
 
-	void load(const char* a_FileName) {
+	DLL_BUILD void load(const char* a_FileName) {
 		m_FileName = a_FileName;
 		m_IsMainResource = ResourceManager::loadResource(this);
 	}
 
-	void unload() {
+	DLL_BUILD void unload() {
 		std::cout << "RESOURCE UNLOAD\n";
 		ResourceManager::removeResource(this);
 		//if (!m_IsMainResource) {
@@ -42,18 +42,18 @@ public:
 		//}
 	}
 
-	virtual unsigned int getResourceType() const = 0;
-	const char* getFilename() const {
+	DLL_BUILD virtual unsigned int getResourceType() const = 0;
+	DLL_BUILD const char* getFilename() const {
 		return m_FileName.c_str();
 	}
 
 protected:
 	//first load of this file
-	virtual void resourceLoad() = 0;
+	DLL_BUILD virtual void resourceLoad() = 0;
 	//loading this file from a already loaded version
-	virtual void resourceCopy(IResource* a_Resource) = 0;
+	DLL_BUILD virtual void resourceCopy(IResource* a_Resource) = 0;
 	//unloads this resource from memory
-	virtual void resourceUnload() = 0;
+	DLL_BUILD virtual void resourceUnload() = 0;
 
 	std::string m_FileName;
 

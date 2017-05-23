@@ -8,13 +8,13 @@
 
 struct aiMesh;
 
-struct DLL_BUILD Vertex {
+struct Vertex {
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec2 texCoord;
 };
 
-class DLL_BUILD Mesh : public IRenderable {
+class  Mesh : public IRenderable {
 private:
 	typedef Vertex VerticesType;
 	typedef unsigned int IndicesType;
@@ -23,12 +23,12 @@ public:
 	~Mesh();
 
 	// Inherited via IRenderable
-	virtual void draw() override;
+	DLL_BUILD virtual void draw() override;
 
-	void applyData(std::vector<VerticesType> a_Verts, std::vector<IndicesType> a_Indices);
-	void loadFromMesh(aiMesh* a_Mesh);
+	DLL_BUILD void applyData(std::vector<VerticesType> a_Verts, std::vector<IndicesType> a_Indices);
+	DLL_BUILD void loadFromMesh(aiMesh* a_Mesh);
 
-	void bind();
+	DLL_BUILD void bind();
 
 private:
 	std::vector<VerticesType> m_Vertices;

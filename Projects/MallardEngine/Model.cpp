@@ -26,7 +26,7 @@ void Model::loadNode(aiNode * a_Node) {
 	//const char* name = a_Node->mName.C_Str();
 
 	//go through mesh's
-	for (int i = 0; i < meshCount; i++) {
+	for (size_t i = 0; i < meshCount; i++) {
 		unsigned int meshIndex = a_Node->mMeshes[i];
 		aiMesh* mesh = m_Scene->mMeshes[meshIndex];
 
@@ -35,7 +35,7 @@ void Model::loadNode(aiNode * a_Node) {
 		m_Meshs[meshIndex] = myMesh;
 	}
 
-	for (int i = 0; i < childCount; i++) {
+	for (size_t i = 0; i < childCount; i++) {
 		loadNode(a_Node->mChildren[i]);
 	}
 }
@@ -62,14 +62,14 @@ void Model::resourceCopy(IResource * a_Resource) {
 }
 
 void Model::resourceUnload() {
-	for (int i = 0; i < m_Meshs.size(); i++) {
+	for (size_t i = 0; i < m_Meshs.size(); i++) {
 		delete m_Meshs[i];
 	}
 	m_Meshs.clear();
 }
 
 void Model::draw() {
-	for (int i = 0; i < m_Meshs.size(); i++) {
+	for (size_t i = 0; i < m_Meshs.size(); i++) {
 		m_Meshs[i]->draw();
 	}
 }

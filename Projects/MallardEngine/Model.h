@@ -10,20 +10,20 @@ class Mesh;
 struct aiScene;
 struct aiNode;
 
-class DLL_BUILD Model : public IResource, public IRenderable {
+class  Model : public IResource, public IRenderable {
 public:
 	Model();
 	~Model();
 
-	virtual unsigned int getResourceType() const override;
-	virtual void draw() override;
+	DLL_BUILD virtual unsigned int getResourceType() const override;
+	DLL_BUILD virtual void draw() override;
 
 private:
-	void loadNode(aiNode* a_Node);
+	DLL_BUILD void loadNode(aiNode* a_Node);
 
-	virtual void resourceLoad() override;
-	virtual void resourceCopy(IResource * a_Resource) override;
-	virtual void resourceUnload() override;
+	DLL_BUILD virtual void resourceLoad() override;
+	DLL_BUILD virtual void resourceCopy(IResource * a_Resource) override;
+	DLL_BUILD virtual void resourceUnload() override;
 
 	std::vector<Mesh*> m_Meshs;
 
