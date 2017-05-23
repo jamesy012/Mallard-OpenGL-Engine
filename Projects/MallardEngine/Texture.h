@@ -6,8 +6,8 @@
 
 class  Texture : public IResource {
 public:
-	Texture();
-	~Texture();
+	DLL_BUILD Texture();
+	DLL_BUILD ~Texture();
 
 
 	// Inherited via IResource

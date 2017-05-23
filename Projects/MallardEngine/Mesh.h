@@ -19,8 +19,8 @@ private:
 	typedef Vertex VerticesType;
 	typedef unsigned int IndicesType;
 public:
-	Mesh();
-	~Mesh();
+	DLL_BUILD Mesh();
+	DLL_BUILD ~Mesh();
 
 	// Inherited via IRenderable
 	DLL_BUILD virtual void draw() override;

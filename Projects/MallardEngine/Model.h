@@ -12,8 +12,8 @@ struct aiNode;
 
 class  Model : public IResource, public IRenderable {
 public:
-	Model();
-	~Model();
+	DLL_BUILD Model();
+	DLL_BUILD ~Model();
 
 	DLL_BUILD virtual unsigned int getResourceType() const override;
 	DLL_BUILD virtual void draw() override;

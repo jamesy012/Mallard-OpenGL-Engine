@@ -17,12 +17,12 @@ class  IResource {
 	friend ResourceManager;
 
 public:
-	IResource() {
+	DLL_BUILD IResource() {
 		std::cout << "RESOURCE CONSTUCTOR\n";
 		m_CanDelete = false;
 	}
 
-	virtual ~IResource() {
+	DLL_BUILD virtual ~IResource() {
 		std::cout << "RESOURCE DECONSTUCTOR\n";
 		assert(m_CanDelete);
 	}
