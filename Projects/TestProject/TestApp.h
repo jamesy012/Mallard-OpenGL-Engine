@@ -3,6 +3,8 @@
 #include "Application.h"
 
 class Model;
+class Mesh;
+class Shader;
 
 class TestApp :
 	public Application {
@@ -16,5 +18,7 @@ public:
 
 private:
 	Model* m_Model;
+	Mesh* m_Mesh;
+	Shader* m_Shader;
 };
 

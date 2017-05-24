@@ -72,7 +72,7 @@ bool Window::createWindow() {
 	glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
 
 	//this wont be a main window
-	//checkIfWindowShouldBeMain();
+	checkIfWindowShouldBeMain();
 	applyGlfwWindowDataToClass();
 	ADD_WINDOW_TO_MAP();
 	WINDOW_CREATE_RETURN();

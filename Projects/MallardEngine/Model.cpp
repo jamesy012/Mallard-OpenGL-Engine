@@ -35,6 +35,7 @@ void Model::loadNode(aiNode * a_Node) {
 		m_Meshs[meshIndex] = myMesh;
 	}
 
+	//go through children
 	for (size_t i = 0; i < childCount; i++) {
 		loadNode(a_Node->mChildren[i]);
 	}

@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#define GLEW_STATIC
 #include <gl\glew.h>
 #define _GLFW_BUILD_DLL
 #include <GLFW\glfw3.h>
@@ -40,10 +39,10 @@ void Application::run() {
 		//could not start glfw
 		return;
 	}
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	/* get a handle to the predefined STDOUT log stream and attach
 	it to the logging system. It remains active for all further
@@ -62,12 +61,7 @@ void Application::run() {
 		return;
 	}
 
-
 	m_AppWindow = new Window();
-
-
-	startUp();
-
 
 	if (!m_AppWindow->isWindowCreated()) {
 		//create window
@@ -78,38 +72,48 @@ void Application::run() {
 	}
 	m_AppWindow->makeContextCurrent();//make context so we can render to it
 
+	//startUp();//moved to the first run check in loop
+
+
+
+
+
 	setCallbacksForWindow(m_AppWindow);
 
 	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
+	bool firstRun = true;
 
 	//game loop
 	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
 		//update time
 		TimeHandler::update();
-		
+
 		//update old key presses
 		Input::update();
-		
+
 		//update any new key presses
 		glfwPollEvents();
-		
+
 		//check application flags
 		checkHandles();
-		
+
 		//call virtual functions
-		{
+		if(!firstRun){
 			update();
-		
+
 			draw();
-		
+
 			//change camera?
 			drawUi();
+		} else {
+			startUp();
+			firstRun = false;
 		}
 
-		// Clear the colorbuffer
-		glClear(GL_COLOR_BUFFER_BIT);
 
 		glfwSwapBuffers(m_AppWindow->getWindow());
+		// Clear the colorbuffer
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	shutDown();

@@ -9,8 +9,8 @@
 struct aiMesh;
 
 struct Vertex {
-	glm::vec3 position;
-	glm::vec3 normal;
+	glm::vec4 position;
+	glm::vec4 normal;
 	glm::vec2 texCoord;
 };
 
@@ -21,6 +21,10 @@ private:
 public:
 	DLL_BUILD Mesh();
 	DLL_BUILD ~Mesh();
+
+	//creates a box for this mesh
+	//if there is already a mesh here then it will overwrite the old mesh
+	DLL_BUILD void createBox();
 
 	// Inherited via IRenderable
 	DLL_BUILD virtual void draw() override;
