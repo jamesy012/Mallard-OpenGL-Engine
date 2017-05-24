@@ -81,10 +81,18 @@ void Application::run() {
 	setCallbacksForWindow(m_AppWindow);
 
 	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
-	bool firstRun = true;
+
+	//have the window show something while we load the game
+	glfwSwapBuffers(m_AppWindow->getWindow());
+	glClear(GL_COLOR_BUFFER_BIT);
+	glfwSwapBuffers(m_AppWindow->getWindow());
+
+	startUp();
 
 	//game loop
 	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
+		// Clear the colorbuffer
+		glClear(GL_COLOR_BUFFER_BIT);
 		//update time
 		TimeHandler::update();
 
@@ -98,22 +106,17 @@ void Application::run() {
 		checkHandles();
 
 		//call virtual functions
-		if(!firstRun){
+		{
 			update();
 
 			draw();
 
 			//change camera?
 			drawUi();
-		} else {
-			startUp();
-			firstRun = false;
 		}
 
 
 		glfwSwapBuffers(m_AppWindow->getWindow());
-		// Clear the colorbuffer
-		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	shutDown();
