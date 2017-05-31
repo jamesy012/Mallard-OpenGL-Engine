@@ -134,7 +134,9 @@
       <Command>echo copying mallardEngine dll to workingDir
 copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
 echo copying assimp dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"</Command>
+xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+echo copying glew dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
@@ -154,7 +156,9 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
       <Command>echo copying mallardEngine dll to workingDir
 copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
 echo copying assimp dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"</Command>
+xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+echo copying glew dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
@@ -178,7 +182,12 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>
+      <Command>echo copying mallardEngine dll to workingDir
+copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+echo copying assimp dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+echo copying glew dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
@@ -199,7 +208,12 @@ xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"</Command>
+      <Command>echo copying mallardEngine dll to workingDir
+copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+echo copying assimp dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+echo copying glew dll to working dir
+xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
