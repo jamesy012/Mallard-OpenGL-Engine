@@ -29,7 +29,5 @@ private:
 	void setCallbacksForWindow(Window* a_Window);
 
 	void checkHandles();
-
-	Window* m_ContextWindow = nullptr;
 };
 

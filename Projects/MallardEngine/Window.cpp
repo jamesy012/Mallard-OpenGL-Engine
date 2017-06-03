@@ -37,7 +37,7 @@ Window::Window(GLFWwindow * a_Window) {
 void Window::destroyWindow() {
 	if (m_IsWindowCreated) {
 		glfwDestroyWindow(m_ThisWindow);
-		m_FrameBufferHeight = m_FrameBufferWidth = m_Width = m_Height = 0;
+		m_FramebufferHeight = m_FramebufferWidth = m_Width = m_Height = 0;
 		m_IsVisable = false;
 	}
 }
@@ -88,8 +88,11 @@ bool Window::createWindow(int a_Width, int a_Height) {
 	WINDOW_CREATE_RETURN();
 }
 
-bool Window::createWindow(int a_Width, int a_Height, const char * a_Title) {
+bool Window::createWindow(int a_Width, int a_Height, const char * a_Title, bool a_Visable) {
 	CHECK_IF_WINDOW();
+
+	glfwWindowHint(GLFW_VISIBLE, a_Visable);
+
 	m_Title = a_Title;
 	m_ThisWindow = glfwCreateWindow(a_Width, a_Height, a_Title, NULL, getMainContext());
 
@@ -97,6 +100,44 @@ bool Window::createWindow(int a_Width, int a_Height, const char * a_Title) {
 	applyGlfwWindowDataToClass();
 	ADD_WINDOW_TO_MAP();
 	WINDOW_CREATE_RETURN();
+}
+
+void Window::setVisable(bool a_IsVisable) {
+	m_IsVisable = a_IsVisable;
+	if (m_IsVisable) {
+		glfwShowWindow(m_ThisWindow);
+	} else {
+		glfwHideWindow(m_ThisWindow);
+	}
+}
+
+void Window::setWindowSize(int a_width, int a_Height) {
+	m_Width = a_width;
+	m_Height = a_Height;
+	updateWindowSize();
+}
+
+void Window::setWindowWidth(int a_width) {
+	m_Width = a_width;
+	updateWindowSize();
+}
+
+void Window::setWindowHeight(int a_Height) {
+	m_Height = a_Height;
+	updateWindowSize();
+}
+
+void Window::setWindowTitle(const char * a_Title) {
+	m_Title = a_Title;
+	glfwSetWindowTitle(m_ThisWindow, m_Title);
+}
+
+void Window::setWindowData(int a_width, int a_Height, const char * a_Title) {
+	m_Width = a_width;
+	m_Height = a_Height;
+	updateWindowSize();
+	m_Title = a_Title;
+	glfwSetWindowTitle(m_ThisWindow, m_Title);
 }
 
 GLFWwindow * Window::getWindow() const {
@@ -126,7 +167,19 @@ int const Window::getWindowHeight() const {
 	return m_Height;
 }
 
+int const Window::getFramebufferWidth() const {
+	return m_FramebufferWidth;
+}
+
+int const Window::getFramebufferHeight() const {
+	return m_FramebufferHeight;
+}
+
 bool const Window::isWindowCreated() const {
+	return m_IsVisable;
+}
+
+bool const Window::getIsVisable() const {
 	return m_IsVisable;
 }
 
@@ -153,7 +206,7 @@ Window * Window::getWindowFromGlfwWindow(GLFWwindow * a_Window) {
 void Window::applyGlfwWindowDataToClass() {
 	m_IsWindowCreated = true;
 	glfwGetWindowSize(m_ThisWindow, &m_Width, &m_Height);
-	glfwGetFramebufferSize(m_ThisWindow, &m_FrameBufferWidth, &m_FrameBufferHeight);
+	glfwGetFramebufferSize(m_ThisWindow, &m_FramebufferWidth, &m_FramebufferHeight);
 	m_IsVisable = glfwGetWindowAttrib(m_ThisWindow, GLFW_VISIBLE) != 0;//convert int to bool
 }
 
@@ -163,6 +216,10 @@ void Window::checkIfWindowShouldBeMain() {
 			m_MainWindow = this;
 		}
 	}
+}
+
+void Window::updateWindowSize() {
+	glfwSetWindowSize(m_ThisWindow, m_Width,m_Height);
 }
 
 GLFWwindow * Window::getMainContext() {

@@ -27,14 +27,11 @@ Application::~Application() {
 		delete m_AppWindow;
 		m_AppWindow = nullptr;
 	}
-	if (m_ContextWindow != nullptr) {
-		delete m_ContextWindow;
-		m_ContextWindow = nullptr;
-	}
 }
 
 void Application::run() {
 
+	//start glfw
 	if (!glfwInit()) {
 		//could not start glfw
 		return;
@@ -51,42 +48,32 @@ void Application::run() {
 	stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
 	aiAttachLogStream(&stream);
 
-	m_ContextWindow = new Window();
-	m_ContextWindow->createWindow();//create an empty context
-	m_ContextWindow->makeContextCurrent();//make context so glew can load
+	//create window for app
+	m_AppWindow = new Window();
+	m_AppWindow->createWindow(640, 480, "Window");
+	m_AppWindow->makeContextCurrent();//make context so we can render to it
 
+	//set up callbacks for window
+	setCallbacksForWindow(m_AppWindow);
+
+
+	//start glew (opengl)
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
 		printf("Failed to initialize GLEW\n");
 		return;
-	}
+	}	
 
-	m_AppWindow = new Window();
-
-	if (!m_AppWindow->isWindowCreated()) {
-		//create window
-		if (!m_AppWindow->createWindow(640, 480, "Window")) {
-			printf("NO WINDOW!?\n");
-			// Window or OpenGL context creation failed
-		}
-	}
-	m_AppWindow->makeContextCurrent();//make context so we can render to it
-
-	//startUp();//moved to the first run check in loop
-
-
-
-
-
-	setCallbacksForWindow(m_AppWindow);
-
+	//set up default clear color
 	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
 
+	//todo Add text that will say loading here
+
 	//have the window show something while we load the game
-	glfwSwapBuffers(m_AppWindow->getWindow());
 	glClear(GL_COLOR_BUFFER_BIT);
 	glfwSwapBuffers(m_AppWindow->getWindow());
 
+	//program startup/load models
 	startUp();
 
 	//game loop
@@ -109,8 +96,13 @@ void Application::run() {
 		{
 			update();
 
+			//clear framebuffer
+
 			draw();
 
+			//draw framebuffer
+			
+			//draw ui ontop of framebuffer
 			//change camera?
 			drawUi();
 		}

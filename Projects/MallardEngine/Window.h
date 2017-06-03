@@ -23,7 +23,15 @@ public:
 	bool createWindow();
 
 	bool createWindow(int a_Width, int a_Height);
-	bool createWindow(int a_Width, int a_Height, const char* a_Title);
+	bool createWindow(int a_Width, int a_Height, const char* a_Title, bool a_Visable = true);
+
+	void setVisable(bool a_IsVisable);
+
+	void setWindowSize(int a_width, int a_Height);
+	void setWindowWidth(int a_width);
+	void setWindowHeight(int a_Height);
+	void setWindowTitle(const char* a_Title);
+	void setWindowData(int a_width, int a_Height,const char* a_Title);
 
 	GLFWwindow* getWindow() const;
 	GLFWwindow* getMainWindow() const;
@@ -36,7 +44,11 @@ public:
 
 	int const getWindowWidth() const;
 	int const getWindowHeight() const;
+	int const getFramebufferWidth() const;
+	int const getFramebufferHeight() const;
 	bool const isWindowCreated() const;
+
+	bool const getIsVisable() const;
 
 	void makeContextCurrent() const;
 
@@ -55,13 +67,15 @@ private:
 	//checks if there is currently a main window,and if this window should become it
 	void checkIfWindowShouldBeMain();
 
+	void updateWindowSize();
+
 	GLFWwindow* getMainContext();
 
 	GLFWwindow* m_ThisWindow = nullptr;
 
 	const char* m_Title = "Default Title";
 	int m_Width, m_Height;
-	int m_FrameBufferWidth, m_FrameBufferHeight;
+	int m_FramebufferWidth, m_FramebufferHeight;
 	bool m_IsVisable = false;
 
 	bool m_IsWindowCreated = false;
