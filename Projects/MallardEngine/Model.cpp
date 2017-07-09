@@ -43,7 +43,7 @@ void Model::loadNode(aiNode * a_Node) {
 
 void Model::resourceLoad() {
 	Assimp::Importer importer;
-	m_Scene = importer.ReadFile(m_FileName.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 	
 	if (m_Scene == nullptr || m_Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || m_Scene->mRootNode == nullptr) {
 		//model failed to load

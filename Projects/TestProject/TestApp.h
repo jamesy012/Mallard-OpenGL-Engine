@@ -5,6 +5,7 @@
 class Model;
 class Mesh;
 class Shader;
+class Texture;
 
 class TestApp :
 	public Application {
@@ -20,5 +21,6 @@ private:
 	Model* m_Model;
 	Mesh* m_Mesh;
 	Shader* m_Shader;
+	Texture* m_Texture;
 };
 

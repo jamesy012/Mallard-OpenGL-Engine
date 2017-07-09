@@ -34,9 +34,9 @@ void ResourceManager::removeResource(IResource * a_Resource) {
 	mainReference->resourceCount--;
 
 	//dont remove main resource yet
-	if (!a_Resource->m_IsMainResource) {
+	if (!a_Resource->m_Resource_IsMain) {
 		a_Resource->resourceUnload();
-		a_Resource->m_CanDelete = true;
+		a_Resource->m_Resource_CanDelete = true;
 		delete a_Resource;
 	}
 
@@ -46,7 +46,7 @@ void ResourceManager::removeResource(IResource * a_Resource) {
 		int resourceIndex = mainReference->resource->getResourceType();
 
 		resource->resourceUnload();
-		resource->m_CanDelete = true;
+		resource->m_Resource_CanDelete = true;
 		delete resource;
 		mainReference->resource = nullptr;
 
@@ -76,7 +76,7 @@ ResourceManager::ResourceReference* ResourceManager::getMainResource(IResource *
 		//if (ref->resource == a_Resource) {
 		//	continue;
 		//}
-		if (ref->resource->m_FileName == a_Resource->m_FileName) {
+		if (ref->resource->m_Resource_FileName == a_Resource->m_Resource_FileName) {
 			return ref;
 		}
 	}

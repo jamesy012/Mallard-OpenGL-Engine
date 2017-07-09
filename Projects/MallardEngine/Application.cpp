@@ -76,10 +76,15 @@ void Application::run() {
 	//program startup/load models
 	startUp();
 
+	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	//game loop
 	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
 		// Clear the colorbuffer
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//update time
 		TimeHandler::update();
 
@@ -96,7 +101,8 @@ void Application::run() {
 		{
 			update();
 
-			//clear framebuffer
+			//clear framebuffer?
+			//set up new empty framebuffer
 
 			draw();
 
@@ -107,6 +113,7 @@ void Application::run() {
 			drawUi();
 		}
 
+		//draw framebuffer
 
 		glfwSwapBuffers(m_AppWindow->getWindow());
 	}

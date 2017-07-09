@@ -3,6 +3,9 @@
 #include <GL\glew.h>
 #include <assimp\scene.h>
 
+#include "Texture.h"
+#include "Shader.h"
+
 Mesh::Mesh() {
 	m_Vao = m_Vbo = m_Ebo = 0;
 }
@@ -66,9 +69,24 @@ void Mesh::createBox() {
 }
 
 void Mesh::draw() {
+	unsigned int loc = 0;
+	if (m_Texture != nullptr) {
+		//todo move this out of mesh
+		int slot = 0;
+		m_Texture->bindTexture(slot);
+
+		//TexDiffuse1 name in shader
+		loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "TexDiffuse1");
+		glUniform1i(loc, slot);
+	}
+
 	glBindVertexArray(m_Vao);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+
+	//unbind texture
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Mesh::applyData(std::vector<VerticesType> a_Verts, std::vector<IndicesType> a_Indices) {
@@ -160,4 +178,8 @@ void Mesh::bind() {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VerticesType), (GLvoid*) offsetof(Vertex, texCoord));
 
 	glBindVertexArray(0);
+}
+
+void Mesh::setTexture(Texture * a_Texture) {
+	m_Texture = a_Texture;
 }

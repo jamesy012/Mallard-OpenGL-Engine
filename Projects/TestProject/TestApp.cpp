@@ -18,20 +18,24 @@
 #include "Shader.h"
 
 void TestApp::startUp() {
-	Texture* t1 = new Texture();
-	Texture* t2 = new Texture();
-	Texture* t3 = new Texture();
-	Texture* t4 = new Texture();
-
-	t1->load("test1");
-	t2->load("test2");
-	t3->load("test1");
-	t4->load("test1");
-
-	t1->unload();
-	t2->unload();
-	t3->unload();
-	t4->unload();
+	//Texture* t1 = new Texture();
+	//Texture* t2 = new Texture();
+	//Texture* t3 = new Texture();
+	//Texture* t4 = new Texture();
+	m_Texture = new Texture();
+	
+	m_Texture->load("Textures/imageTest.jpg");
+	//m_Texture->load("Textures/imageTest.png");
+	//m_Texture->load1x1Texture();
+	//t1->load("Textures/imageTest.png");
+	//t2->load("test2");
+	//t3->load("Textures/imageTest.png");
+	//t4->load("Textures/imageTest.png");
+	//
+	//t1->unload();
+	//t2->unload();
+	//t3->unload();
+	//t4->unload();
 
 	m_Model = new Model();
 
@@ -39,10 +43,11 @@ void TestApp::startUp() {
 
 	m_Shader = new Shader();
 
-	m_Shader->createSimpleShader(false);
+	m_Shader->createSimpleShader(true);
 
 	m_Mesh = new Mesh();
 	m_Mesh->createBox();
+	m_Mesh->setTexture(m_Texture);
 	
 	//delete t1;
 	//delete t2;
@@ -52,6 +57,7 @@ void TestApp::startUp() {
 
 void TestApp::shutDown() {
 	m_Model->unload();
+	m_Texture->unload();
 	delete m_Shader;
 	delete m_Mesh;
 }

@@ -7,6 +7,7 @@
 #include <sstream> //std::stringstream
 #include <string> //std::string
 
+static Shader* m_LastUsed = nullptr;
 
 Shader::Shader() {
 	m_Program = 0;
@@ -70,6 +71,7 @@ void Shader::createSimpleShader(bool a_Textured) {
 			"void main() { "
 			"	vec4 col = texture(TexDiffuse1, vTexCoord); "
 			"	fragColor = (col * color)*col.a; "
+			//"	fragColor = col; "
 			"} ";
 	} else {
 		fragment = "#version 410\n"
@@ -135,6 +137,11 @@ unsigned int Shader::getProgram() {
 
 void Shader::use() {
 	glUseProgram(m_Program);
+	m_LastUsed = this;
+}
+
+Shader * Shader::getCurrentShader() {
+	return m_LastUsed;
 }
 
 unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) {

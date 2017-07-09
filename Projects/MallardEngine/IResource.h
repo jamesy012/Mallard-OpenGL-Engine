@@ -19,24 +19,24 @@ class  IResource {
 public:
 	DLL_BUILD IResource() {
 		std::cout << "RESOURCE CONSTUCTOR\n";
-		m_CanDelete = false;
+		m_Resource_CanDelete = m_Resource_LoadOveride = m_Resource_IsMain = false;
 	}
 
 	DLL_BUILD virtual ~IResource() {
 		std::cout << "RESOURCE DECONSTUCTOR\n";
-		assert(m_CanDelete);
+		assert(m_Resource_CanDelete);
 	}
 
 	DLL_BUILD void load(const char* a_FileName) {
-		m_FileName = a_FileName;
-		m_IsMainResource = ResourceManager::loadResource(this);
+		m_Resource_FileName = a_FileName;
+		m_Resource_IsMain = ResourceManager::loadResource(this);
 	}
 
 	DLL_BUILD void unload() {
 		std::cout << "RESOURCE UNLOAD\n";
 		ResourceManager::removeResource(this);
-		//if (!m_IsMainResource) {
-		//	m_CanDelete = true;
+		//if (!m_Resource_IsMain) {
+		//	m_Resource_CanDelete = true;
 		//	resourceUnload();
 		//	delete this;
 		//}
@@ -44,9 +44,8 @@ public:
 
 	DLL_BUILD virtual unsigned int getResourceType() const = 0;
 	DLL_BUILD const char* getFilename() const {
-		return m_FileName.c_str();
+		return m_Resource_FileName.c_str();
 	}
-
 protected:
 	//first load of this file
 	DLL_BUILD virtual void resourceLoad() = 0;
@@ -55,9 +54,14 @@ protected:
 	//unloads this resource from memory
 	DLL_BUILD virtual void resourceUnload() = 0;
 
-	std::string m_FileName;
 
-	bool m_IsMainResource = false;
+	//data
+	std::string m_Resource_FileName;
 
-	bool m_CanDelete = false;
+	bool m_Resource_IsMain = false;
+
+	bool m_Resource_CanDelete = false;
+
+	//the loading has already been done so the program wont run
+	bool m_Resource_LoadOveride = true;
 };

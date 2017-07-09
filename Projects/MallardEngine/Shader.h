@@ -24,6 +24,8 @@ public:
 
 	void use();
 
+	static Shader* getCurrentShader();
+
 private:
 	unsigned int getOpenglShaderType(ShaderTypes a_Type);
 	void createShader(ShaderTypes a_Type, const char* const* a_Code);
