@@ -70,8 +70,9 @@ void Shader::createSimpleShader(bool a_Textured) {
 			" "
 			"void main() { "
 			"	vec4 col = texture(TexDiffuse1, vTexCoord); "
-			"	fragColor = (col * color)*col.a; "
-			//"	fragColor = col; "
+			//"	fragColor = (col * color)*col.a; "
+			//"	fragColor = vec4(col.xyz,1); "
+			"	fragColor = col; "
 			"} ";
 	} else {
 		fragment = "#version 410\n"

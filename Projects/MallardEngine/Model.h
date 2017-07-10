@@ -6,30 +6,34 @@
 #include <vector>
 
 class Mesh;
+class Texture;
 
 struct aiScene;
 struct aiNode;
 
-class  Model : public IResource, public IRenderable {
+class DLL_BUILD Model : public IResource, public IRenderable {
 public:
-	DLL_BUILD Model();
-	DLL_BUILD ~Model();
+	Model();
+	~Model();
 
-	DLL_BUILD virtual void draw() override;
+	virtual void draw() override;
 
 	///IResource
-	DLL_BUILD virtual unsigned int getResourceType() const override;
+	virtual unsigned int getResourceType() const override;
 private:
 	///IResource
-	DLL_BUILD virtual void resourceLoad() override;
-	DLL_BUILD virtual void resourceCopy(IResource * a_Resource) override;
-	DLL_BUILD virtual void resourceUnload() override;
+	virtual void resourceLoad() override;
+	virtual void resourceCopy(IResource * a_Resource) override;
+	virtual void resourceUnload() override;
 
 	///model
-	DLL_BUILD void loadNode(aiNode* a_Node);
+	void loadNode(aiNode* a_Node);
+	void loadTextures();
+
 
 	///data
 	std::vector<Mesh*> m_Meshs;
+	std::vector<Texture*> m_Textures;
 
 	const aiScene* m_Scene = nullptr;
 };

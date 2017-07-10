@@ -24,8 +24,8 @@ void TestApp::startUp() {
 	//Texture* t4 = new Texture();
 	m_Texture = new Texture();
 	
-	m_Texture->load("Textures/imageTest.jpg");
-	//m_Texture->load("Textures/imageTest.png");
+	//m_Texture->load("Textures/imageTest.jpg");
+	m_Texture->load("Textures/imageTest.png");
 	//m_Texture->load1x1Texture();
 	//t1->load("Textures/imageTest.png");
 	//t2->load("test2");
@@ -75,7 +75,7 @@ void TestApp::draw() {
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), 16.0f/9.0f, 0.1f, 1000.0f);
 	//glm::mat4 view = glm::lookAt(glm::vec3(1),glm::vec3(0),glm::vec3(0,1,0));
 	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0, 0, -10));
+	view = glm::translate(view, glm::vec3(0, -5, -10));
 	view *= glm::rotate(TimeHandler::getCurrentTime(), glm::vec3(0, 1, 0));
 	//view *= glm::rotate(TimeHandler::getCurrentTime() *0.25f, glm::vec3(1, 0, 0));
 
