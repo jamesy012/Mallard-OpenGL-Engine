@@ -15,6 +15,15 @@ Model::Model() {
 
 
 Model::~Model() {
+	for (size_t i = 0; i < m_Meshs.size(); i++) {
+		delete m_Meshs[i];
+	}
+	for (size_t i = 0; i < m_Textures.size(); i++) {
+		if (m_Textures[i] != nullptr) {
+			m_Textures[i]->unload();
+		}
+	}
+	m_Meshs.clear();
 }
 
 unsigned int Model::getResourceType() const {
@@ -37,6 +46,7 @@ void Model::loadNode(aiNode * a_Node) {
 
 		//apply texture to mesh
 		myMesh->setTexture(m_Textures[mesh->mMaterialIndex]);
+		myMesh->m_TextureIndex = mesh->mMaterialIndex;
 	}
 
 	//go through children
@@ -51,7 +61,7 @@ void Model::loadTextures() {
 
 	aiReturn res;
 
-	for (int i = 0; i < m_Scene->mNumMaterials; i++) {
+	for (size_t i = 0; i < m_Scene->mNumMaterials; i++) {
 		aiMaterial* mat = materials[i];
 		aiString matPath;
 		//todo add materials
@@ -89,6 +99,10 @@ void Model::loadTextures() {
 	}
 }
 
+IResource* Model::resourceCreate() {
+	return new Model();
+}
+
 void Model::resourceLoad() {
 	Assimp::Importer importer;
 	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals);
@@ -111,18 +125,35 @@ void Model::resourceLoad() {
 }
 
 void Model::resourceCopy(IResource * a_Resource) {
+	m_Resource_FileName = a_Resource->getFilename();
+	Model* model = (Model*) a_Resource;
+	//set up vector sizes
+	m_Meshs.resize(model->m_Meshs.size());
+	m_Textures.resize(model->m_Textures.size());
+
+	//copy materials
+	for (int i = 0; i < model->m_Textures.size(); i++) {
+		//if texture doesn't exist
+		if (model->m_Textures[i] == nullptr) {
+			m_Textures[i] = nullptr;
+		} else {//else load normally
+			m_Textures[i] = new Texture();
+			m_Textures[i]->load(model->m_Textures[i]);
+		}
+	}
+
+	//copy mesh
+	for (int i = 0; i < model->m_Meshs.size(); i++) {
+		m_Meshs[i] = new Mesh(*model->m_Meshs[i]);
+		m_Meshs[i]->setTexture(m_Textures[model->m_Meshs[i]->m_TextureIndex]);
+	}
+
+	//todo: write a real copy
+	//resourceLoad();
 }
 
 void Model::resourceUnload() {
-	for (size_t i = 0; i < m_Meshs.size(); i++) {
-		delete m_Meshs[i];
-	}
-	for (size_t i = 0; i < m_Textures.size(); i++) {
-		if (m_Textures[i] != nullptr) {
-			m_Textures[i]->unload();
-		}
-	}
-	m_Meshs.clear();
+
 }
 
 void Model::draw() {

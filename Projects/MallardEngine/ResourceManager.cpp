@@ -13,32 +13,42 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 			assert(false);
 			return false;//we wont add the resource again
 		}
-		a_Resource->resourceCopy(mainReference->resource);
+		//copy has been moved to after this for loop
+		//due to the else part now creating a seperate version,
+		//so we still want to copy the resource anyway
+		//a_Resource->resourceCopy(mainReference->resource);
 	} else {
-		a_Resource->resourceLoad();
+		//a_Resource->resourceLoad();
+		//create new mainResource, copy file path, and load
+		IResource* mainResource = a_Resource->resourceCreate();
+		mainResource->m_Resource_FileName = a_Resource->m_Resource_FileName;
+		mainResource->resourceLoad();
+
 		mainReference = new ResourceReference();
-		mainReference->resource = a_Resource;
+		mainReference->resource = mainResource;
 
 		addResource(mainReference);
 		createdResource = true;
 	}
+	//there is a resource to copy from, so lets do that
+	a_Resource->resourceCopy(mainReference->resource);
 	mainReference->resourceCount++;
+
 	return createdResource;
 }
 
 void ResourceManager::removeResource(IResource * a_Resource) {
 	ResourceReference* mainReference = getMainResource(a_Resource);
 	if (mainReference == nullptr) {
+		delete a_Resource;
 		return;
 	}
 	mainReference->resourceCount--;
 
-	//dont remove main resource yet
-	if (!a_Resource->m_Resource_IsMain) {
-		a_Resource->resourceUnload();
-		a_Resource->m_Resource_CanDelete = true;
-		delete a_Resource;
-	}
+	a_Resource->resourceUnload();
+	a_Resource->m_Resource_CanDelete = true;
+	delete a_Resource;
+	a_Resource = nullptr;
 
 	if (mainReference->resourceCount == 0) {
 		//m_ResourceList[mainReference->resource->getResourceType()]
@@ -90,7 +100,9 @@ void ResourceManager::deleteLeftOverResources() {
 		//it-->first gives you the key (int)
 		//it->second gives you the mapped element (vector)
 		mapData* data = it->second;
-		
+		if (data == nullptr) {
+			continue;
+		}
 		for (size_t i = 0; i < data->size(); i++) {
 			ResourceReference* ref = data->at(i);
 			delete ref;

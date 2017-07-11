@@ -10,10 +10,13 @@ class IResource;
 class  ResourceManager {
 public:
 	struct ResourceReference {
+		//main Resource
 		IResource* resource;//this is the main version of the resource, everything else copys from this one
 		//todo store a separate copy of this resource
 		//so if the original is edited and something else trys to load from it,
 		//it will still get the original instead of the modified version
+		
+		//amount of resources loaded from this
 		unsigned int resourceCount = 0;
 	};
 

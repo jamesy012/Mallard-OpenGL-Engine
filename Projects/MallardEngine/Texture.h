@@ -11,6 +11,8 @@ enum TextureType {
 };
 
 class  Texture : public IResource {
+private:
+	typedef unsigned char DataFormat;
 public:
 	DLL_BUILD Texture();
 	DLL_BUILD ~Texture();
@@ -29,9 +31,10 @@ private:
 	DLL_BUILD virtual void resourceLoad() override;
 	DLL_BUILD virtual void resourceCopy(IResource * a_Resource) override;
 	DLL_BUILD virtual void resourceUnload() override;
+	DLL_BUILD virtual IResource* resourceCreate() override;
 
 	///texture
-	void bindTexture(const unsigned char* a_Data);
+	void bindTexture();
 
 
 	///data
@@ -39,6 +42,7 @@ private:
 	int m_TextureWidth;
 	int m_TextureHeight;
 	unsigned int m_TextureId;
+	DataFormat* m_TextureData;
 
 };
 

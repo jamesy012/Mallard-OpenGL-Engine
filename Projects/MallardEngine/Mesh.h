@@ -22,6 +22,7 @@ private:
 public:
 	Mesh();
 	~Mesh();
+	Mesh(const Mesh& a_Mesh);
 
 	//creates a box for this mesh
 	//if there is already a mesh here then it will overwrite the old mesh
@@ -37,6 +38,9 @@ public:
 
 	void setTexture(Texture* a_Texture);
 
+	//temporary fix 
+	//this stores the index of which texture this is using in it's model
+	int m_TextureIndex = 0;
 private:
 	std::vector<VerticesType> m_Vertices;
 	std::vector<IndicesType> m_Indices;

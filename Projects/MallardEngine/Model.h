@@ -25,6 +25,7 @@ private:
 	virtual void resourceLoad() override;
 	virtual void resourceCopy(IResource * a_Resource) override;
 	virtual void resourceUnload() override;
+	virtual IResource* resourceCreate() override;
 
 	///model
 	void loadNode(aiNode* a_Node);

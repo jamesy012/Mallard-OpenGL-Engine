@@ -13,26 +13,41 @@ enum ResourceTypes {
 	RESOUCE_END_TYPE_LIST
 };
 
-class  IResource {
+class DLL_BUILD IResource {
 	friend ResourceManager;
 
 public:
-	DLL_BUILD IResource() {
+	//sets up basic information for this IResource
+	IResource() {
 		std::cout << "RESOURCE CONSTUCTOR\n";
-		m_Resource_CanDelete = m_Resource_LoadOveride = m_Resource_IsMain = false;
+		m_Resource_CanDelete = true;
+		m_Resource_LoadOveride = m_Resource_IsMain = false;
 	}
 
-	DLL_BUILD virtual ~IResource() {
+	//checks to see if we should have deleted this object or not
+	//will delete the memory from the pointer
+	virtual ~IResource() {
 		std::cout << "RESOURCE DECONSTUCTOR\n";
 		assert(m_Resource_CanDelete);
 	}
 
-	DLL_BUILD void load(const char* a_FileName) {
+	//will start the loading process for this resource
+	//handled by ResourceManager
+	void load(const char* a_FileName) {
 		m_Resource_FileName = a_FileName;
 		m_Resource_IsMain = ResourceManager::loadResource(this);
 	}
 
-	DLL_BUILD void unload() {
+	//will use that resources file name to load
+	//handled by ResourceManager
+	void load(IResource* a_Resource) {
+		m_Resource_FileName = a_Resource->m_Resource_FileName;
+		m_Resource_IsMain = ResourceManager::loadResource(this);
+	}
+
+	//Call this instead of delete
+	//deleting will be handled by resource manager
+	void unload() {
 		std::cout << "RESOURCE UNLOAD\n";
 		ResourceManager::removeResource(this);
 		//if (!m_Resource_IsMain) {
@@ -41,18 +56,24 @@ public:
 		//	delete this;
 		//}
 	}
-
-	DLL_BUILD virtual unsigned int getResourceType() const = 0;
-	DLL_BUILD const char* getFilename() const {
+	//the filepath that was given when the file was loaded
+	const char* getFilename() const {
 		return m_Resource_FileName.c_str();
 	}
+	//returns the type of the resource
+	virtual unsigned int getResourceType() const = 0;
 protected:
+	///functions to overwrite when implementing IResource into a class
 	//first load of this file
-	DLL_BUILD virtual void resourceLoad() = 0;
+	virtual void resourceLoad() = 0;
 	//loading this file from a already loaded version
-	DLL_BUILD virtual void resourceCopy(IResource* a_Resource) = 0;
+	virtual void resourceCopy(IResource* a_Resource) = 0;
 	//unloads this resource from memory
-	DLL_BUILD virtual void resourceUnload() = 0;
+	//MIGHT BE UNUSED, still called tho
+	virtual void resourceUnload() = 0;
+	//returns a new copy of the class
+	//eg return new Texture();
+	virtual IResource* resourceCreate() = 0;
 
 
 	//data

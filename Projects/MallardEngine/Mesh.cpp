@@ -13,6 +13,17 @@ Mesh::Mesh() {
 Mesh::~Mesh() {
 }
 
+Mesh::Mesh(const Mesh & a_Mesh) {
+	m_Vertices = a_Mesh.m_Vertices;
+	m_Indices = a_Mesh.m_Indices;
+	if (a_Mesh.m_Texture != nullptr) {
+		//maybe use the same texture??
+		//m_Texture = new Texture();
+		//m_Texture->load(a_Mesh.m_Texture->getFilename());
+	}
+	bind();
+}
+
 void Mesh::createBox() {
 	//data from a obj file made in blender
 	glm::vec4 vertPos[] = {
@@ -140,13 +151,6 @@ void Mesh::loadFromMesh(aiMesh * a_Mesh) {
 
 		bind();
 	}
-
-
-	//materials
-	//todo
-	//needs scene to get materials
-
-
 }
 
 void Mesh::bind() {
