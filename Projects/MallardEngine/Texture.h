@@ -28,7 +28,7 @@ public:
 	DLL_BUILD virtual unsigned int getResourceType() const override;
 private:
 	///IResource
-	DLL_BUILD virtual void resourceLoad() override;
+	DLL_BUILD virtual bool resourceLoad() override;
 	DLL_BUILD virtual void resourceCopy(IResource * a_Resource) override;
 	DLL_BUILD virtual void resourceUnload() override;
 	DLL_BUILD virtual IResource* resourceCreate() override;

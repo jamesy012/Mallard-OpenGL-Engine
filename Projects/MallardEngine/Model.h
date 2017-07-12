@@ -22,7 +22,7 @@ public:
 	virtual unsigned int getResourceType() const override;
 private:
 	///IResource
-	virtual void resourceLoad() override;
+	virtual bool resourceLoad() override;
 	virtual void resourceCopy(IResource * a_Resource) override;
 	virtual void resourceUnload() override;
 	virtual IResource* resourceCreate() override;

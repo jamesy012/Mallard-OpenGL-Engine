@@ -66,10 +66,10 @@ unsigned int Texture::getResourceType() const {
 	return ResourceTypes::RESOUCE_TEXTURE;
 }
 
-void Texture::resourceLoad() {
+bool Texture::resourceLoad() {
 	//loading has already been completed before this
 	if (m_Resource_LoadOveride) {
-		return;
+		return true;
 	}
 	std::cout << "TEXTURE LOAD\n";
 
@@ -81,7 +81,7 @@ void Texture::resourceLoad() {
 
 	if (m_TextureData == nullptr || m_TextureData == '\0') {
 		printf("Could not load Image: %s\n", m_Resource_FileName.c_str());
-		return;
+		return false;
 	}
 
 	switch (imageFormat) {
@@ -102,6 +102,7 @@ void Texture::resourceLoad() {
 
 	//free texture
 	//stbi_image_free(data);
+	return true;
 }
 
 void Texture::resourceCopy(IResource * a_Resource) {

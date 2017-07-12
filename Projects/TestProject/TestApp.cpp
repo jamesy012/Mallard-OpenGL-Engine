@@ -39,7 +39,10 @@ void TestApp::startUp() {
 
 	m_Model = new Model();
 
-	m_Model->load("Models/Nanosuit/nanosuit.obj");
+	//m_Model->load("Models/Nanosuit/nanosuit.obj");
+	//m_Model->load("Models/ModelTest/ModelTest.fbx");
+	m_Model->load("Models/ModelTest/ModelTest.obj");
+
 
 	m_Shader = new Shader();
 

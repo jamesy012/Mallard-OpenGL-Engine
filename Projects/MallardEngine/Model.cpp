@@ -35,6 +35,18 @@ void Model::loadNode(aiNode * a_Node) {
 	const unsigned int childCount = a_Node->mNumChildren;
 	//const char* name = a_Node->mName.C_Str();
 
+	aiMatrix4x4 transform = a_Node->mTransformation;
+
+	aiQuaternion rotation;
+	aiVector3D scale,position;
+
+	transform.Decompose(scale, rotation, position);
+
+	std::cout << a_Node->mName.C_Str() << std::endl;
+	std::cout << "p: (" << position.x << ", " << position.y << ", " << position.z << ")\n";
+	std::cout << "r: (" << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << ")\n";
+
+
 	//go through mesh's
 	for (size_t i = 0; i < meshCount; i++) {
 		unsigned int meshIndex = a_Node->mMeshes[i];
@@ -103,14 +115,14 @@ IResource* Model::resourceCreate() {
 	return new Model();
 }
 
-void Model::resourceLoad() {
+bool Model::resourceLoad() {
 	Assimp::Importer importer;
 	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals);
 	
 	if (m_Scene == nullptr || m_Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || m_Scene->mRootNode == nullptr) {
 		//model failed to load
-		unload();
-		return;
+		//unload();
+		return false;
 	}
 
 	//load mesh's
@@ -122,6 +134,7 @@ void Model::resourceLoad() {
 	loadTextures();
 
 	loadNode(m_Scene->mRootNode);
+	return true;
 }
 
 void Model::resourceCopy(IResource * a_Resource) {

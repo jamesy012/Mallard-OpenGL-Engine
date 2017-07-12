@@ -65,7 +65,8 @@ public:
 protected:
 	///functions to overwrite when implementing IResource into a class
 	//first load of this file
-	virtual void resourceLoad() = 0;
+	//true for if the resource loaded correctly
+	virtual bool resourceLoad() = 0;
 	//loading this file from a already loaded version
 	virtual void resourceCopy(IResource* a_Resource) = 0;
 	//unloads this resource from memory

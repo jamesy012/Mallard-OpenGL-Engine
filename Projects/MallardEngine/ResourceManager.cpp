@@ -21,8 +21,14 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 		//a_Resource->resourceLoad();
 		//create new mainResource, copy file path, and load
 		IResource* mainResource = a_Resource->resourceCreate();
+		mainResource->m_Resource_IsMain = true;
 		mainResource->m_Resource_FileName = a_Resource->m_Resource_FileName;
-		mainResource->resourceLoad();
+		bool didLoad = mainResource->resourceLoad();
+		if (!didLoad) {
+			//failed to load
+			delete mainResource;
+			return false;
+		}
 
 		mainReference = new ResourceReference();
 		mainReference->resource = mainResource;
