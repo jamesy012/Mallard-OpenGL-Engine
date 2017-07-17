@@ -11,7 +11,7 @@ static Shader* m_LastUsed = nullptr;
 
 Shader::Shader() {
 	m_Program = 0;
-	for (int i = 0; i < END_TYPES; i++) {
+	for (int i = 0; i < SHADER_TYPES_SIZE; i++) {
 		m_Shaders[i] = 0;
 	}
 	m_Linked = false;
@@ -19,6 +19,7 @@ Shader::Shader() {
 
 
 Shader::~Shader() {
+	//todo delete program
 }
 
 void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
@@ -85,8 +86,8 @@ void Shader::createSimpleShader(bool a_Textured) {
 			"} ";
 	}
 
-	setFromText(TYPE_VERTEX, vertex.c_str());
-	setFromText(TYPE_FRAGMENT, fragment.c_str());
+	setFromText(ShaderTypes::TYPE_VERTEX, vertex.c_str());
+	setFromText(ShaderTypes::TYPE_FRAGMENT, fragment.c_str());
 	linkShader();
 
 }
@@ -109,27 +110,22 @@ void Shader::linkShader() {
 	}
 
 	//create shader
-	for (int i = 0; i < END_TYPES; i++) {
+	for (int i = 0; i < SHADER_TYPES_SIZE; i++) {
 		if (m_Shaders[i] != 0) {
 			glAttachShader(m_Program, m_Shaders[i]);
 		}
 	}
 	glLinkProgram(m_Program);
 
-	GLint success = false;
-	glGetProgramiv(m_Program, GL_LINK_STATUS, &success);
-	if (!success) {
-		GLchar infoLog[512];
-		glGetProgramInfoLog(m_Program, 512, NULL, infoLog);
-		printf("ERROR::SHADER::PROGRAM::LINKING_FAILED\n%s\n", infoLog);
-	}
+	checkGlErrorProgram(GL_LINK_STATUS, m_Program, "LINKING_FAILED");
 
-	for (int i = 0; i < END_TYPES; i++) {
+	for (int i = 0; i < SHADER_TYPES_SIZE; i++) {
 		if (m_Shaders[i] != 0) {
 			glDeleteShader(m_Shaders[i]);
 			m_Shaders[i] = 0;
 		}
 	}
+
 }
 
 unsigned int Shader::getProgram() {
@@ -147,9 +143,9 @@ Shader * Shader::getCurrentShader() {
 
 unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) {
 	switch (a_Type) {
-		case TYPE_VERTEX:
+		case ShaderTypes::TYPE_VERTEX:
 			return GL_VERTEX_SHADER;
-		case TYPE_FRAGMENT:
+		case ShaderTypes::TYPE_FRAGMENT:
 			return GL_FRAGMENT_SHADER;
 		default:
 			return 0;
@@ -161,13 +157,29 @@ void Shader::createShader(ShaderTypes a_Type, const char * const * a_Code) {
 	glShaderSource(shaderIndex, 1, a_Code, NULL);
 	glCompileShader(shaderIndex);
 
+	checkGlErrorShader(GL_COMPILE_STATUS, shaderIndex, "COMPILATION_FAILED");
+
+	m_Shaders[(int)a_Type] = shaderIndex;
+}
+
+bool Shader::checkGlErrorProgram(const int a_ErrorType, const unsigned int a_Program, const char * a_ErrorMessage) {
 	GLint success;
-	glGetShaderiv(shaderIndex, GL_COMPILE_STATUS, &success);
+	glGetProgramiv(a_Program, a_ErrorType, &success);
 	if (!success) {
 		GLchar infoLog[512];
-		glGetShaderInfoLog(shaderIndex, 512, NULL, infoLog);
-		printf("ERROR::SHADER::_%i_::COMPILATION_FAILED\n%s\n", a_Type, infoLog);
+		glGetProgramInfoLog(a_Program, 512, NULL, infoLog);
+		printf("ERROR::SHADER::_%i_::%s\n%s\n", a_Program, a_ErrorMessage, infoLog);
 	}
+	return !success;
+}
 
-	m_Shaders[a_Type] = shaderIndex;
+bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shader, const char * a_ErrorMessage) {
+	GLint success;
+	glGetShaderiv(a_Shader, a_ErrorType, &success);
+	if (!success) {
+		GLchar infoLog[512];
+		glGetShaderInfoLog(a_Shader, 512, NULL, infoLog);
+		printf("ERROR::SHADER::_%i_::%s\n%s\n", a_Shader, a_ErrorMessage, infoLog);
+	}
+	return !success;
 }
