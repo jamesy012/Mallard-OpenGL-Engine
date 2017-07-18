@@ -13,7 +13,9 @@ public:
 	Shader();
 	~Shader();
 
+	//sets up the shader a_Type and compiles it
 	void setFromPath(ShaderTypes a_Type, const char* a_FilePath);
+	//sets up the shader a_Type and compiles it
 	void setFromText(ShaderTypes a_Type, const char* a_ShaderText);
 
 	//sets up a simple shader

@@ -17,6 +17,8 @@
 #include "Mesh.h"
 #include "Shader.h"
 
+#include "Font.h"
+
 void TestApp::startUp() {
 	//Texture* t1 = new Texture();
 	//Texture* t2 = new Texture();
@@ -56,6 +58,42 @@ void TestApp::startUp() {
 	//delete t2;
 	//delete t3;
 	//delete t4;
+
+	m_Font = new Font();
+	m_Font->loadFont("c:/windows/fonts/times.ttf",48);
+	m_Font->genText("TESt TexT 1,2,3,4 .!@");
+
+	//todo, move to Font
+	const char* textVertex = R"(
+            #version 330 core
+			layout(location = 0) in vec4 position;
+			layout(location = 2) in vec2 texCoord0;
+
+            uniform mat4 projectionViewMatrix;
+	        out vec2 uv0;
+            void main()
+	        {
+	            gl_Position = projectionViewMatrix * position;
+	            uv0 = texCoord0;
+	        }
+        )";
+	const char* textFragment = R"(
+	        #version 330 core
+            uniform sampler2D TexDiffuse1;
+			uniform vec4 color = vec4(1,1,1,1);
+            in vec2 uv0;
+	        out vec4 fragColor;
+            void main()
+	        {
+                vec4 c = texture(TexDiffuse1, uv0);
+    	        fragColor = c.rrrr * color;
+	        }
+	    )";
+
+	m_TextShader = new Shader();
+	m_TextShader->setFromText(ShaderTypes::TYPE_VERTEX, textVertex);
+	m_TextShader->setFromText(ShaderTypes::TYPE_FRAGMENT, textFragment);
+	m_TextShader->linkShader();
 }
 
 void TestApp::shutDown() {
@@ -63,6 +101,8 @@ void TestApp::shutDown() {
 	m_Texture->unload();
 	delete m_Shader;
 	delete m_Mesh;
+	delete m_Font;
+	delete m_TextShader;
 }
 
 void TestApp::update() {
@@ -78,7 +118,7 @@ void TestApp::draw() {
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), 16.0f/9.0f, 0.1f, 1000.0f);
 	//glm::mat4 view = glm::lookAt(glm::vec3(1),glm::vec3(0),glm::vec3(0,1,0));
 	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0, -5, -10));
+	view = glm::translate(view, glm::vec3(0, -2, -20));
 	view *= glm::rotate(TimeHandler::getCurrentTime(), glm::vec3(0, 1, 0));
 	//view *= glm::rotate(TimeHandler::getCurrentTime() *0.25f, glm::vec3(1, 0, 0));
 
@@ -93,8 +133,35 @@ void TestApp::draw() {
 
 	m_Model->draw();
 	m_Mesh->draw();
+
+	m_TextShader->use();
+	unsigned int colorLoc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "color");
+	glUniform4f(colorLoc, 1, 1, 1, (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f));
+
+	view = glm::mat4(1.0f);
+	view = glm::translate(view, glm::vec3(-32, -16, -50));
+	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime()/1.83f)*0.5f + 0.5f) * -350,0,0));
+	projectionView = projection*view;
+
+	projectionViewMatrixLoc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "projectionViewMatrix");
+
+	glUniformMatrix4fv(projectionViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(projectionView));
+
+	//glDisable(GL_CULL_FACE);
+	//glDepthMask(GL_TRUE);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_LEQUAL);
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	m_Font->draw();
+	//m_Model->draw();
+
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void TestApp::drawUi() {
-	
+	//m_Font->draw();
 }

@@ -68,7 +68,7 @@ void Mesh::createBox() {
 	m_Vertices.reserve(indexSize);
 	m_Indices.reserve(indexSize);
 	for (unsigned int i = 0; i < indexSize; i += 3) {
-		Vertex vert;
+		MeshVertex vert;
 		vert.position = vertPos[indexData[i] - 1];
 		vert.texCoord = texCoords[indexData[i + 1] - 1];
 		vert.normal = normals[indexData[i + 2] - 1];
@@ -100,7 +100,7 @@ void Mesh::draw() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Mesh::applyData(std::vector<VerticesType> a_Verts, std::vector<IndicesType> a_Indices) {
+void Mesh::applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices) {
 	m_Vertices = a_Verts;
 	m_Indices = a_Indices;
 }
@@ -116,7 +116,7 @@ void Mesh::loadFromMesh(aiMesh * a_Mesh) {
 		//vertices
 		for (unsigned int i = 0; i < verticesAmount; i++) {
 
-			Vertex vert;
+			MeshVertex vert;
 			vert.position.x = a_Mesh->mVertices[i].x;
 			vert.position.y = a_Mesh->mVertices[i].y;
 			vert.position.z = a_Mesh->mVertices[i].z;
@@ -149,7 +149,9 @@ void Mesh::loadFromMesh(aiMesh * a_Mesh) {
 			currIndex += facesAmount;
 		}
 
-		bind();
+		//dont bind, the object that loads from aiScene/aiNode will not be rendered
+		//we just need it for the data
+		//bind();
 	}
 }
 
@@ -164,22 +166,22 @@ void Mesh::bind() {
 
 	//bind data
 	glBindBuffer(GL_ARRAY_BUFFER, m_Vbo);
-	glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(VerticesType), &m_Vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(MeshVerticesType), &m_Vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(IndicesType), &m_Indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(MeshIndicesType), &m_Indices[0], GL_STATIC_DRAW);
 
 	//position
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(VerticesType), (GLvoid*) 0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(MeshVerticesType), (GLvoid*) 0);
 
 	//normal
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VerticesType), (GLvoid*) offsetof(Vertex, normal));
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(MeshVerticesType), (GLvoid*) offsetof(MeshVertex, normal));
 
 	//texture coord
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VerticesType), (GLvoid*) offsetof(Vertex, texCoord));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVerticesType), (GLvoid*) offsetof(MeshVertex, texCoord));
 
 	glBindVertexArray(0);
 }

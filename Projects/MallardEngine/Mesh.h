@@ -9,16 +9,17 @@
 struct aiMesh;
 class Texture;
 
-struct Vertex {
+struct MeshVertex {
 	glm::vec4 position;
 	glm::vec4 normal;
 	glm::vec2 texCoord;
 };
 
+typedef MeshVertex MeshVerticesType;
+typedef unsigned int MeshIndicesType;
+
 class DLL_BUILD Mesh : public IRenderable {
-private:
-	typedef Vertex VerticesType;
-	typedef unsigned int IndicesType;
+
 public:
 	Mesh();
 	~Mesh();
@@ -31,7 +32,7 @@ public:
 	// Inherited via IRenderable
 	virtual void draw() override;
 
-	void applyData(std::vector<VerticesType> a_Verts, std::vector<IndicesType> a_Indices);
+	void applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices);
 	void loadFromMesh(aiMesh* a_Mesh);
 
 	void bind();
@@ -42,8 +43,8 @@ public:
 	//this stores the index of which texture this is using in it's model
 	int m_TextureIndex = 0;
 private:
-	std::vector<VerticesType> m_Vertices;
-	std::vector<IndicesType> m_Indices;
+	std::vector<MeshVerticesType> m_Vertices;
+	std::vector<MeshIndicesType> m_Indices;
 	
 	//todo change to material
 	//test Texture

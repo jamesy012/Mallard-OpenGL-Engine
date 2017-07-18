@@ -15,6 +15,7 @@ private:
 	typedef unsigned char DataFormat;
 public:
 	DLL_BUILD Texture();
+	DLL_BUILD Texture(unsigned int a_TextureID,int a_Width,int a_Height);
 	DLL_BUILD ~Texture();
 
 	//todo add color parameter
@@ -43,6 +44,8 @@ private:
 	int m_TextureHeight;
 	unsigned int m_TextureId;
 	DataFormat* m_TextureData;
+
+	bool m_CreatedTexture;
 
 };
 

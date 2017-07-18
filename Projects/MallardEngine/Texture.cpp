@@ -9,16 +9,21 @@
 
 
 Texture::Texture() {
-	std::cout << "TEXTURE CREATE\n";
-
 	m_TextureHeight = m_TextureWidth = 0;
 	m_TextureType = TextureType::None;
+	//todo this might need to change, if i allow texture id's to be set later
+	m_CreatedTexture = true;
+}
+
+Texture::Texture(unsigned int a_TextureID, int a_Width, int a_Height) {
+	m_TextureId = a_TextureID;
+	m_TextureWidth = a_Width;
+	m_TextureHeight = a_Height;
+	m_CreatedTexture = false;
 }
 
 
 Texture::~Texture() {
-	std::cout << "TEXTURE DECONSTUCTOR\n";
-
 	if (m_TextureId != 0) {
 		glDeleteTextures(1, &m_TextureId);
 		m_TextureId = 0;
@@ -71,8 +76,6 @@ bool Texture::resourceLoad() {
 	if (m_Resource_LoadOveride) {
 		return true;
 	}
-	std::cout << "TEXTURE LOAD\n";
-
 	//stbi image format
 	int imageFormat;
 
@@ -98,7 +101,7 @@ bool Texture::resourceLoad() {
 	}
 
 	//bind texture
-	bindTexture();
+	//bindTexture();
 
 	//free texture
 	//stbi_image_free(data);
@@ -106,7 +109,6 @@ bool Texture::resourceLoad() {
 }
 
 void Texture::resourceCopy(IResource * a_Resource) {
-	std::cout << "TEXTURE COPY\n";
 	Texture* tex = (Texture*)a_Resource;
 	m_TextureWidth = tex->m_TextureWidth;
 	m_TextureHeight = tex->m_TextureHeight;
@@ -131,7 +133,6 @@ void Texture::resourceCopy(IResource * a_Resource) {
 }
 
 void Texture::resourceUnload() {
-	std::cout << "TEXTURE UNLOAD\n";
 }
 
 DLL_BUILD IResource * Texture::resourceCreate() {

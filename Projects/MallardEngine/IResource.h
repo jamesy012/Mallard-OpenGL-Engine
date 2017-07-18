@@ -19,7 +19,6 @@ class DLL_BUILD IResource {
 public:
 	//sets up basic information for this IResource
 	IResource() {
-		std::cout << "RESOURCE CONSTUCTOR\n";
 		m_Resource_CanDelete = true;
 		m_Resource_LoadOveride = m_Resource_IsMain = false;
 	}
@@ -27,7 +26,6 @@ public:
 	//checks to see if we should have deleted this object or not
 	//will delete the memory from the pointer
 	virtual ~IResource() {
-		std::cout << "RESOURCE DECONSTUCTOR\n";
 		assert(m_Resource_CanDelete);
 	}
 
@@ -48,7 +46,6 @@ public:
 	//Call this instead of delete
 	//deleting will be handled by resource manager
 	void unload() {
-		std::cout << "RESOURCE UNLOAD\n";
 		ResourceManager::removeResource(this);
 		//if (!m_Resource_IsMain) {
 		//	m_Resource_CanDelete = true;
