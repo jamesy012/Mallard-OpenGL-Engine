@@ -57,7 +57,7 @@ public:
 	Font();
 	~Font();
 
-	void loadFont(const char* a_FontPath, int a_FontSize);
+	void loadFont(const char* a_FontPath, float a_FontSize);
 
 	void genText(std::string a_Text);
 
@@ -71,12 +71,7 @@ private:
 	//to prevent font.h from having the stb_truetype included in it, this struct is in the cpp
 	FontCppData* m_Data;
 
-	Mesh* m_TextMesh;
-	unsigned int m_Vao = 0;
-	unsigned int m_VertexBuffer = 0;
-	unsigned int m_UvBuffer = 0;
-	unsigned int m_IndexBuffer = 0;
-	unsigned int m_NumOfIndices = 0;
+	Mesh* m_TextMesh = nullptr;
 
 	Texture* m_Texture = nullptr;
 	unsigned int m_TextureId = 0;

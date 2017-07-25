@@ -145,7 +145,7 @@ void Model::resourceCopy(IResource * a_Resource) {
 	m_Textures.resize(model->m_Textures.size());
 
 	//copy materials
-	for (int i = 0; i < model->m_Textures.size(); i++) {
+	for (size_t i = 0; i < model->m_Textures.size(); i++) {
 		//if texture doesn't exist
 		if (model->m_Textures[i] == nullptr) {
 			m_Textures[i] = nullptr;
@@ -156,7 +156,7 @@ void Model::resourceCopy(IResource * a_Resource) {
 	}
 
 	//copy mesh
-	for (int i = 0; i < model->m_Meshs.size(); i++) {
+	for (size_t i = 0; i < model->m_Meshs.size(); i++) {
 		m_Meshs[i] = new Mesh(*model->m_Meshs[i]);
 		m_Meshs[i]->setTexture(m_Textures[model->m_Meshs[i]->m_TextureIndex]);
 	}

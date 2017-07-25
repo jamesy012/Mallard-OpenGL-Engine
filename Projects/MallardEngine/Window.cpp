@@ -194,6 +194,8 @@ void Window::windowSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height
 }
 
 void Window::windowFramebufferSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height) {
+	glViewport(0, 0, a_Width, a_Height);
+	//hacky fix, make a callback function pointer so application.cpp can do this
 }
 
 void Window::windowFocusCallback(GLFWwindow * a_Window, int a_Focused) {
