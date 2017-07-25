@@ -1,6 +1,8 @@
 #include "Transform.h"
 
 #include <glm\ext.hpp>
+//for m_LastUpdateTime
+#include "TimeHandler.h"
 
 //global Root Transform of project, can be set at run time
 static Transform* m_RootTransform;
@@ -68,7 +70,7 @@ void Transform::translate(const glm::vec3 a_Translation, const bool a_World) {
 	if (a_World) {
 		m_Position += a_Translation;
 	} else {
-		m_Position = glm::vec3(glm::translate(getLocalTransform(), a_Translation)[3]);
+		m_Position = glm::vec3(glm::translate(getLocalMatrix(), a_Translation)[3]);
 	}
 	setDirty();
 }
@@ -184,7 +186,7 @@ glm::vec3 Transform::getGlobalPosition() {
 	if (m_Parent == nullptr) {
 		return m_Position;
 	}
-	return glm::vec3(m_Parent->getGlobalTransform() * glm::vec4(m_Position, 1));
+	return glm::vec3(m_Parent->getGlobalMatrix() * glm::vec4(m_Position, 1));
 }
 
 glm::quat Transform::getGlobalRotation() {
@@ -237,14 +239,14 @@ glm::vec3 Transform::getGlobalScale() {
 	return glm::vec3(m_Parent->getGlobalScale() * m_Scale);
 }
 
-glm::mat4 Transform::getLocalTransform() {
+glm::mat4 Transform::getLocalMatrix() {
 	if (m_IsDirty) {
 		updateTransform();
 	}
 	return m_LocalTransform;
 }
 
-glm::mat4 Transform::getGlobalTransform() {
+glm::mat4 Transform::getGlobalMatrix() {
 	if (isParentDirty()) {
 		updateTransform();
 	}
@@ -276,12 +278,14 @@ void Transform::updateTransform() {
 	if (m_Parent == nullptr) {
 		m_GlobalTransform = m_LocalTransform;
 	} else {
-		m_GlobalTransform = m_Parent->getGlobalTransform() * m_LocalTransform;
+		m_GlobalTransform = m_Parent->getGlobalMatrix() * m_LocalTransform;
 	}
 
 	for (size_t i = 0; i < m_Children.size(); i++) {
 		m_Children[i]->updateTransform();
 	}
+
+	m_LastUpdateFrame = TimeHandler::getCurrentFrameNumber();
 }
 
 void Transform::setDirty() {

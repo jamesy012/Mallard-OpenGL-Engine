@@ -10,12 +10,12 @@ static float m_DeltaTime;
 static float m_UnscaledDeltaTime;
 static float m_PreviousTime;
 static float m_CurrentTime;
-static int m_CurrentFrame;
+static unsigned int m_CurrentFrame;
 
 static float m_DeltaTimeScale = 1.0f;
 static float m_MaxDeltaTime = 0.5f;
 
-int TimeHandler::getCurrentFrameNumber() {
+unsigned int TimeHandler::getCurrentFrameNumber() {
 	return m_CurrentFrame;
 }
 

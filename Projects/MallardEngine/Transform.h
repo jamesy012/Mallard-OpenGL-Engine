@@ -79,10 +79,10 @@ public:
 	DLL_BUILD glm::vec3 getGlobalScale();
 
 	//gets the local mat4, contains position/scale and rotation
-	DLL_BUILD glm::mat4 getLocalTransform();
+	DLL_BUILD glm::mat4 getLocalMatrix();
 	//gets the global mat4, which is a combination of localTransform and parents' globalTransform
 	//if transform is dirty, it will update when calling this
-	DLL_BUILD glm::mat4 getGlobalTransform();
+	DLL_BUILD glm::mat4 getGlobalMatrix();
 	//updates local and global transforms
 	//using data from position/scale/rotation
 	//and for global, the parents global
@@ -122,6 +122,14 @@ public:
 	//if no transform under then, will return nullptr
 	DLL_BUILD static Transform* findTransform(const char* a_TransformName);
 
+	//returns the last time in frame count this transform was updated
+	DLL_BUILD unsigned int getLastTransformUpdate() {
+		return m_LastUpdateFrame;
+	}
+
+	//goes through each parent till it finds a dirty parent
+	DLL_BUILD bool isParentDirty() const;
+
 	//name of transform
 	std::string m_Name;
 
@@ -129,9 +137,6 @@ public:
 	bool m_ShowInHierarchy = true;
 
 protected:
-	//goes through each parent till it finds a dirty parent
-	DLL_BUILD bool isParentDirty() const;
-
 	//local position of transform
 	glm::vec3 m_Position;
 	//local scale of transform
@@ -164,5 +169,7 @@ private:
 
 	//a flag to check
 	bool m_IsRootTransform = false;
+
+	unsigned int m_LastUpdateFrame = 0;
 };
 

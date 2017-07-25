@@ -8,7 +8,7 @@ class DLL_BUILD TimeHandler {
 	friend Application;
 public:
 
-	static int getCurrentFrameNumber();
+	static unsigned int getCurrentFrameNumber();
 	static float getCurrentTime();
 	static float getPreviousTime();
 	static float getDeltaTime();
