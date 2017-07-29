@@ -25,7 +25,7 @@ void TestApp::startUp() {
 	//Texture* t3 = new Texture();
 	//Texture* t4 = new Texture();
 	m_Texture = new Texture();
-	
+
 	//m_Texture->load("Textures/imageTest.jpg");
 	m_Texture->load("Textures/imageTest.png");
 	//m_Texture->load1x1Texture();
@@ -53,14 +53,14 @@ void TestApp::startUp() {
 	m_Mesh = new Mesh();
 	m_Mesh->createBox();
 	m_Mesh->setTexture(m_Texture);
-	
+
 	//delete t1;
 	//delete t2;
 	//delete t3;
 	//delete t4;
 
 	m_Font = new Font();
-	m_Font->loadFont("c:/windows/fonts/times.ttf",48);
+	m_Font->loadFont("c:/windows/fonts/times.ttf", 48);
 	m_Font->genText("TESt TexT 1,2,3,4 .!@");
 
 	//todo, move to Font
@@ -69,11 +69,13 @@ void TestApp::startUp() {
 			layout(location = 0) in vec4 position;
 			layout(location = 2) in vec2 texCoord0;
 
-            uniform mat4 projectionViewMatrix;
-	        out vec2 uv0;
+			uniform mat4 projectionViewMatrix;
+			uniform mat4 model = mat4(1);
+
+			        out vec2 uv0;
             void main()
 	        {
-	            gl_Position = projectionViewMatrix * position;
+	            gl_Position = projectionViewMatrix * model * position;
 	            uv0 = texCoord0;
 	        }
         )";
@@ -113,39 +115,63 @@ void TestApp::update() {
 }
 
 void TestApp::draw() {
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 projectionView;
+	glm::mat4 model;
+
+	ShaderUniformData* uniformPVM;
+	ShaderUniformData* uniformModel;
+
+	///NORMAL RENDER
 	m_Shader->use();
 
-	glm::mat4 projection = glm::perspective(glm::radians(60.0f), 16.0f/9.0f, 0.1f, 1000.0f);
-	//glm::mat4 view = glm::lookAt(glm::vec3(1),glm::vec3(0),glm::vec3(0,1,0));
-	glm::mat4 view = glm::mat4(1.0f);
+	//set up data
+	projection = glm::perspective(glm::radians(60.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
+	view = glm::mat4(1.0f);
 	view = glm::translate(view, glm::vec3(0, -2, -20));
 	view *= glm::rotate(TimeHandler::getCurrentTime(), glm::vec3(0, 1, 0));
-	//view *= glm::rotate(TimeHandler::getCurrentTime() *0.25f, glm::vec3(1, 0, 0));
+	projectionView = projection*view;
 
-	glm::mat4 projectionView = projection*view;
-	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::mat4(1.0f);
 
-	unsigned int projectionViewMatrixLoc = glGetUniformLocation(m_Shader->getProgram(), "projectionViewMatrix");
-	unsigned int modelMatrixLoc = glGetUniformLocation(m_Shader->getProgram(), "model");
+	//get uniforms
+	uniformPVM = m_Shader->m_CommonUniforms.m_ProjectionViewMatrix;
+	uniformModel = m_Shader->m_CommonUniforms.m_ModelMatrix;
 
-	glUniformMatrix4fv(projectionViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(projectionView));
-	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(model));
+	//set data
+	uniformPVM->setData(glm::value_ptr(projectionView));
+	uniformModel->setData(glm::value_ptr(model));
 
+	//apply uniforms
+	Shader::applyUniform(uniformPVM);
+	Shader::applyUniform(uniformModel);
+
+	//draw models
 	m_Model->draw();
 	m_Mesh->draw();
 
+	///TEXT RENDER
+
+	ShaderUniformData* uniformColor;
+
 	m_TextShader->use();
-	unsigned int colorLoc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "color");
-	glUniform4f(colorLoc, 1, 1, 1, (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f));
+	//get uniforms
+	uniformColor = m_TextShader->m_CommonUniforms.m_Color;
+	uniformPVM = m_TextShader->m_CommonUniforms.m_ProjectionViewMatrix;
 
 	view = glm::mat4(1.0f);
 	view = glm::translate(view, glm::vec3(-32, -16, -50));
-	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime()/1.83f)*0.5f + 0.5f) * -350,0,0));
+	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime() / 1.83f)*0.5f + 0.5f) * -350, 0, 0));
 	projectionView = projection*view;
 
-	projectionViewMatrixLoc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "projectionViewMatrix");
 
-	glUniformMatrix4fv(projectionViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(projectionView));
+	uniformPVM->setData(glm::value_ptr(projectionView));
+	//change the alpha of the uniform
+	uniformColor->modifyData(3, { (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f) });
+
+	Shader::applyUniform(uniformPVM);
+	Shader::applyUniform(uniformColor);
 
 	//glDisable(GL_CULL_FACE);
 	//glDepthMask(GL_TRUE);

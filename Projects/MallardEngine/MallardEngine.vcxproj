@@ -30,6 +30,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderUniformData.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TimeHandler.h" />
     <ClInclude Include="Transform.h" />

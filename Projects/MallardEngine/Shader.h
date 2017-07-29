@@ -1,11 +1,9 @@
 #pragma once
 #include "DLLBuild.h"
 
-//for the ShaderUniformData variadic set data function
-#include <stdarg.h>
-
-#include <string>
 #include <vector>
+
+#include "ShaderUniformData.h"
 
 enum class ShaderTypes {
 	TYPE_VERTEX,
@@ -13,21 +11,6 @@ enum class ShaderTypes {
 	END_TYPES
 };
 static const int SHADER_TYPES_SIZE = (int) ShaderTypes::END_TYPES;
-
-enum class ShaderUniformTypes {
-	MAT4,
-	VEC3,
-	VEC4,
-	FLOAT,
-	INT,
-	BOOL,
-	SAMPLER2D,
-	END_UNIFORM_TYPES
-};
-static const int SHADER_UNIFORMS_TYPES_SIZE = (int) ShaderUniformTypes::END_UNIFORM_TYPES;
-
-//forward deceleration
-struct ShaderUniformData;
 
 class DLL_BUILD Shader {
 public:
@@ -62,9 +45,31 @@ public:
 	//will be nullptr if no shader has been used yet
 	static Shader* getCurrentShader();
 
+	//finds a uniform with the name of a_Name, and the type of a_Type
+	//returns nullptr if no uniform found
 	ShaderUniformData* getUniform(ShaderUniformTypes a_Type, const char* a_Name);
 
-	void applyUniform(ShaderUniformData* a_Data);
+	//apply a_Data to the shader that is currently in use
+	//it uses the type of a_Data to find out which opengl call to use
+	//will cause a error if a_Data is not a ShaderUniformData or if its nullptr
+	static void applyUniform(ShaderUniformData* a_Data);
+
+	//list of common uniforms for easy and quick access to them
+	//these are set up after linking
+	struct {
+		//direct reference to the projectionView Matrix
+		//this is a mat4, in the Vertex Shader
+		//it is used to place the camera around the 
+		ShaderUniformData* m_ProjectionViewMatrix = nullptr;
+		//direct reference to the Model matrix
+		//this is a mat4, in the Vertex Shader
+		//it is used to set the position/rotation and scale of the current model
+		ShaderUniformData* m_ModelMatrix = nullptr;
+		//direct reference to the rgba color of the object
+		//this is a vec4, in the Fragment Shader
+		//it is used to modify the color of the object
+		ShaderUniformData* m_Color = nullptr;
+	} m_CommonUniforms;
 
 private:
 	//Converts a ShaderTypes into the opengl version of that Shader
@@ -100,44 +105,4 @@ private:
 
 	//shader data split up by it's shader type
 	std::vector<ShaderUniformData*> m_UniformData[SHADER_UNIFORMS_TYPES_SIZE];
-};
-
-//used to store and modify uniform information
-struct DLL_BUILD ShaderUniformData {
-	//todo after the data is edited turn that uniform dirty
-	//then when rendering something or using the shader update all variables that are dirty
-	friend Shader;
-private:
-	//pointer for the data
-	//void* to allow different types of data
-	void* m_Data;
-	//type of this data
-	//used in conjunction with m_Data so you can tell what type it is
-	ShaderUniformTypes m_Type;
-	//name of the uniform in the shader
-	std::string m_Name;
-	//location of the uniform on the shader
-	unsigned int m_UniformLocation;
-	//size of the memory in m_Data
-	//example for vec4: 4 * sizeof(float)
-	unsigned int m_DataSize;
-public:
-	//copy's the data from a_NewData into the memory at m_Data
-	//unknown results if you put in data that 
-	void setData(void* a_NewData) {
-		//copy from a_NewData to m_Data
-		//total memory size of m_DataSize
-		memcpy(m_Data, a_NewData, m_DataSize);
-	}
-	//Varidaic version for setting data
-	//to allow the ability to set values separately 
-	void setDataVaridaic(int a_Count, ...) {
-		va_list ap;
-		va_start(ap, a_Count);
-		for (int i = 0; i < a_Count; i++) {
-			void* value = va_arg(ap, void*);
-			m_Data = &value;
-		}
-		va_end(ap);
-	}
 };

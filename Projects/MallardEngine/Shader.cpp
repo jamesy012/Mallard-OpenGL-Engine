@@ -89,7 +89,7 @@ void Shader::createSimpleShader(bool a_Textured) {
 			"	vec4 col = texture(TexDiffuse1, vTexCoord); "
 			//"	fragColor = (col * color)*col.a; "
 			//"	fragColor = vec4(col.xyz,1); "
-			"	fragColor = col; "
+			"	fragColor = col * color; "
 			"} ";
 	} else {
 		fragment = "#version 410\n"
@@ -263,17 +263,20 @@ void Shader::getShaderUniforms() {
 		//gets the type and creates the data with the correct size
 		switch (type) {
 			case GL_FLOAT_MAT4:
-				uniformData->m_DataSize = 16 * sizeof(float);
+				uniformData->m_DataSize = sizeof(float);
+				uniformData->m_DataCount = 16;
 				uniformData->m_Data = new float[16]{ 0 };
 				uniformData->m_Type = ShaderUniformTypes::MAT4;
 				break;
 			case GL_FLOAT_VEC4:
-				uniformData->m_DataSize = 4 * sizeof(float);
+				uniformData->m_DataSize = sizeof(float);
+				uniformData->m_DataCount = 4;
 				uniformData->m_Data = new float[4]{ 0 };
 				uniformData->m_Type = ShaderUniformTypes::VEC4;
 				break;
 			case GL_FLOAT_VEC3:
-				uniformData->m_DataSize = 3 * sizeof(float);
+				uniformData->m_DataSize = sizeof(float);
+				uniformData->m_DataCount = 3;
 				uniformData->m_Data = new float[3]{ 0 };
 				uniformData->m_Type = ShaderUniformTypes::VEC3;
 				break;
@@ -291,6 +294,29 @@ void Shader::getShaderUniforms() {
 
 		//add the uniform data to the full list
 		m_UniformData[(int) uniformData->m_Type].push_back(uniformData);
+
+		//setting up common uniforms
+		//todo move to array for easy setting/comparisons
+		//there is a better way of doing what is below...
+
+		//compare uniform name against name of the common uniforms
+		//if it matches then it will set the common uniform to reference the uniform data
+		if (strcmp(name, "projectionViewMatrix") == 0) {
+			m_CommonUniforms.m_ProjectionViewMatrix = uniformData;
+		} else if (strcmp(name, "model") == 0) {
+			m_CommonUniforms.m_ModelMatrix = uniformData;
+		} else if (strcmp(name, "color") == 0) {
+			m_CommonUniforms.m_Color = uniformData;
+		}
+
+		//copy defaults from the shader
+		switch (uniformData->m_Type) {
+			case ShaderUniformTypes::MAT4:
+			case ShaderUniformTypes::VEC4:
+			case ShaderUniformTypes::VEC3:
+				glGetUniformfv(m_Program, uniformData->m_UniformLocation, (GLfloat*)uniformData->m_Data);
+				break;
+		}
 
 	}
 }
