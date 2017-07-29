@@ -20,6 +20,22 @@ Shader::Shader() {
 
 Shader::~Shader() {
 	//todo delete program
+	if (m_Program != 0) {
+		glDeleteProgram(m_Program);
+		m_Program = 0;
+	}
+	//go through shader types
+	for (int i = 0; i < SHADER_UNIFORMS_TYPES_SIZE; i++) {
+		//go through vector for that type
+		for (int q = 0; q < m_UniformData[i].size(); q++) {
+			//get shader uniform
+			ShaderUniformData* uData = m_UniformData[i][q];
+			//delete void* data
+			delete uData->m_Data;
+			//delete uniform
+			delete uData;
+		}
+	}
 }
 
 void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
@@ -125,7 +141,7 @@ void Shader::linkShader() {
 			m_Shaders[i] = 0;
 		}
 	}
-
+	getShaderUniforms();
 }
 
 unsigned int Shader::getProgram() {
@@ -141,6 +157,35 @@ Shader * Shader::getCurrentShader() {
 	return m_LastUsed;
 }
 
+ShaderUniformData * Shader::getUniform(ShaderUniformTypes a_Type, const char * a_Name) {
+	ShaderUniformData* uniform = nullptr;
+	int uniformType = (int) a_Type;
+
+	//go through each uniform of the given type
+	//and check if it's name matches the name supplied
+	for (int i = 0; i < m_UniformData[uniformType].size(); i++) {
+		if (m_UniformData[uniformType][i]->m_Name == a_Name) {
+			uniform = m_UniformData[uniformType][i];
+			break;
+		}
+	}
+
+	//if no uniform was found it will return nullptr
+	return uniform;
+}
+
+void Shader::applyUniform(ShaderUniformData * a_Data) {
+	int loc = a_Data->m_UniformLocation;
+	switch (a_Data->m_Type) {
+		case ShaderUniformTypes::MAT4:
+			glUniformMatrix4fv(loc, 1, GL_FALSE, (float*) a_Data->m_Data);
+			break;
+		case ShaderUniformTypes::VEC4:
+			glUniform4fv(loc, 1, (float*) a_Data->m_Data);
+			break;
+	}
+}
+
 unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) {
 	switch (a_Type) {
 		case ShaderTypes::TYPE_VERTEX:
@@ -152,16 +197,19 @@ unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) {
 	}
 }
 
+//creates a shader for a_Type using the code from a_Code
 void Shader::createShader(ShaderTypes a_Type, const char * const * a_Code) {
 	unsigned int shaderIndex = glCreateShader(getOpenglShaderType(a_Type));
 	glShaderSource(shaderIndex, 1, a_Code, NULL);
 	glCompileShader(shaderIndex);
 
-	checkGlErrorShader(GL_COMPILE_STATUS, shaderIndex, "COMPILATION_FAILED");
+	checkGlErrorShader(GL_COMPILE_STATUS, shaderIndex, "createShader::COMPILATION_FAILED");
 
-	m_Shaders[(int)a_Type] = shaderIndex;
+	m_Shaders[(int) a_Type] = shaderIndex;
 }
 
+//Gets error message for shaders from opengl using a_ErrorType
+//no checks to see if it's a real error
 bool Shader::checkGlErrorProgram(const int a_ErrorType, const unsigned int a_Program, const char * a_ErrorMessage) {
 	GLint success;
 	glGetProgramiv(a_Program, a_ErrorType, &success);
@@ -173,6 +221,8 @@ bool Shader::checkGlErrorProgram(const int a_ErrorType, const unsigned int a_Pro
 	return !success;
 }
 
+//Gets error message for shaders from opengl using a_ErrorType
+//no checks to see if it's a real error
 bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shader, const char * a_ErrorMessage) {
 	GLint success;
 	glGetShaderiv(a_Shader, a_ErrorType, &success);
@@ -182,4 +232,65 @@ bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shad
 		printf("ERROR::SHADER::_%i_::%s\n%s\n", a_Shader, a_ErrorMessage, infoLog);
 	}
 	return !success;
+}
+
+//sets all the programs uniform data into the m_UniformData
+//gets information from OpenGL about the uniforms
+//it also creates the memory for each data type
+void Shader::getShaderUniforms() {
+
+	GLint count;
+
+	GLint size; // size of the variable
+	GLenum type; // type of the variable (float, vec3 or mat4, etc)
+
+	const GLsizei bufSize = 32; // maximum name length
+	GLchar name[bufSize]; // variable name in GLSL
+	GLsizei length; // name length
+
+	//gets number of uniforms
+	glGetProgramiv(m_Program, GL_ACTIVE_UNIFORMS, &count);
+
+	//goes through each uniform and creates a ShaderUniformData object to store and allow
+	//modification of uniforms
+	for (int i = 0; i < count; i++) {
+		//gets uniform name and type
+		glGetActiveUniform(m_Program, (GLuint) i, bufSize, &length, &size, &type, name);
+
+		//sets up a shaderUniformData object
+		ShaderUniformData* uniformData = new ShaderUniformData();
+
+		//gets the type and creates the data with the correct size
+		switch (type) {
+			case GL_FLOAT_MAT4:
+				uniformData->m_DataSize = 16 * sizeof(float);
+				uniformData->m_Data = new float[16]{ 0 };
+				uniformData->m_Type = ShaderUniformTypes::MAT4;
+				break;
+			case GL_FLOAT_VEC4:
+				uniformData->m_DataSize = 4 * sizeof(float);
+				uniformData->m_Data = new float[4]{ 0 };
+				uniformData->m_Type = ShaderUniformTypes::VEC4;
+				break;
+			case GL_FLOAT_VEC3:
+				uniformData->m_DataSize = 3 * sizeof(float);
+				uniformData->m_Data = new float[3]{ 0 };
+				uniformData->m_Type = ShaderUniformTypes::VEC3;
+				break;
+			default:
+				//shader type was not listed
+				//log error about missing type
+				delete uniformData;
+				printf("ERROR WITH SHADER, GETTING UNIFORM TYPE %u, Name: %s\n", type, name);
+				continue;
+		}
+
+		//gets uniform location (Appears to be the same as i)
+		uniformData->m_UniformLocation = glGetUniformLocation(m_Program, name);
+		uniformData->m_Name = name;
+
+		//add the uniform data to the full list
+		m_UniformData[(int) uniformData->m_Type].push_back(uniformData);
+
+	}
 }
