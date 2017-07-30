@@ -9,14 +9,18 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
 
-#include "Mesh.h"
 #include "Texture.h"
+#include "Shader.h"
+#include "Text.h"
 
 struct {
 	const unsigned int textureWidth = 1024;
 	const unsigned int textureHeight = 1024;
 } m_Font;
 
+//holds the data from stb true type
+//loaded from loadFont
+//used in loading and getting character glyphs
 struct FontCppData {
 	std::unique_ptr<stbtt_packedchar[]> m_Info;
 };
@@ -34,9 +38,7 @@ Font::~Font() {
 	if (m_Texture != nullptr) {
 		delete m_Texture;
 	}
-	if (m_TextMesh != nullptr) {
-		delete m_TextMesh;
-	}
+
 }
 
 
@@ -91,66 +93,10 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 	m_Texture = new Texture(m_TextureId, m_Font.textureWidth, m_Font.textureHeight);
 }
 
-void Font::draw() {
-
-
-	if (m_TextMesh != nullptr) {
-		m_TextMesh->draw();
-	}
-
-}
-
-void Font::genText(std::string  a_Text) {
-	if (m_TextMesh != nullptr) {
-		delete m_TextMesh;
-	} else {
-		m_TextMesh = new Mesh();
-	}
-
-	std::vector<MeshVerticesType> vertices;
-	std::vector<MeshIndicesType> indexes;
-
-	vertices.resize(a_Text.size() * 4);
-	indexes.resize(a_Text.size() * 6);
-
-	uint16_t lastIndex = 0;
-	float offsetX = 0, offsetY = 0;
-	for (size_t i = 0; i < a_Text.size(); i++) {
-		unsigned char letter = a_Text[i];
-		if (letter == '\n') {
-			offsetY += m_FontSize/1.5f;
-			offsetX = 0;
-			continue;
-		}
-		GlyphData glyphInfo = getGlyphInfo(letter, offsetX, offsetY);
-		offsetX = glyphInfo.offsetX;
-		offsetY = glyphInfo.offsetY;
-
-		for (int q = 0; q < 4; q++) {
-			vertices[(i * 4) + q].position.x = glyphInfo.positions[q].x;
-			vertices[(i * 4) + q].position.y = glyphInfo.positions[q].y;
-			vertices[(i * 4) + q].position.z = glyphInfo.positions[q].z;
-			vertices[(i * 4) + q].position.w = 1.0f;
-			vertices[(i * 4) + q].texCoord.x = glyphInfo.uvs[q].u;
-			vertices[(i * 4) + q].texCoord.y = glyphInfo.uvs[q].v;
-		}
-
-		indexes[(i * 6) + 0] = ((i * 4) + 0);
-		indexes[(i * 6) + 1] = ((i * 4) + 1);
-		indexes[(i * 6) + 2] = ((i * 4) + 3);
-		indexes[(i * 6) + 3] = ((i * 4) + 0);
-		indexes[(i * 6) + 4] = ((i * 4) + 3);
-		indexes[(i * 6) + 5] = ((i * 4) + 2);
-	}
-	m_TextMesh->applyData(vertices, indexes);
-
-	m_TextMesh->bind();
-
-	m_TextMesh->setTexture(m_Texture);
-
-}
-
-Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_OffsetY) {
+//uses stbtt to get the character's quad position
+//offset is added to the position via stbtt
+//all data is then stored into the GlphaData struct
+Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_OffsetY) const {
 	stbtt_aligned_quad quad;
 
 	stbtt_GetPackedQuad(m_Data->m_Info.get(), m_Font.textureWidth, m_Font.textureHeight, a_Character - firstChar, &a_OffsetX, &a_OffsetY, &quad, 1);
@@ -181,6 +127,48 @@ Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_Off
 	gd.uvs[3] = { xMax, yMax };
 
 	return gd;
+}
+
+void Font::drawText(const char * a_Text) const {
+	//create text with a reference to this font
+	Text text(this);
+	//gen mesh using a_Text
+	text.generateText(a_Text);
+	//render it
+	text.draw();
+}
+
+void Font::generateShaderCode(Shader * a_ShaderRef) {
+	const char* textVertex = R"(
+            #version 330 core
+			layout(location = 0) in vec4 position;
+			layout(location = 2) in vec2 texCoord0;
+
+					uniform mat4 projectionViewMatrix;
+			uniform mat4 model = mat4(1);
+
+					        out vec2 uv0;
+            void main()
+	        {
+	            gl_Position = projectionViewMatrix * model * position;
+	            uv0 = texCoord0;
+	        }
+        )";
+	const char* textFragment = R"(
+	        #version 330 core
+            uniform sampler2D TexDiffuse1;
+			uniform vec4 color = vec4(1,1,1,1);
+            in vec2 uv0;
+	        out vec4 fragColor;
+            void main()
+	        {
+                vec4 c = texture(TexDiffuse1, uv0);
+    	        fragColor = c.rrrr * color;
+	        }
+	    )";
+
+	a_ShaderRef->setFromText(ShaderTypes::TYPE_VERTEX, textVertex);
+	a_ShaderRef->setFromText(ShaderTypes::TYPE_FRAGMENT, textFragment);
 }
 
 std::vector<unsigned char> Font::loadFile(const char* a_FilePath) {

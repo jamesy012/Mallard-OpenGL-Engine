@@ -7,6 +7,7 @@ class Mesh;
 class Shader;
 class Texture;
 class Font;
+class Text;
 
 class TestApp :
 	public Application {
@@ -25,5 +26,6 @@ private:
 	Shader* m_TextShader;
 	Texture* m_Texture;
 	Font* m_Font;
+	Text* m_TestText;
 };
 

@@ -18,6 +18,7 @@
 #include "Shader.h"
 
 #include "Font.h"
+#include "Text.h"
 
 void TestApp::startUp() {
 	//Texture* t1 = new Texture();
@@ -61,40 +62,15 @@ void TestApp::startUp() {
 
 	m_Font = new Font();
 	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
-	m_Font->genText("~ Test Text, 1234!@#$ ~\nNew Line");
+
+	m_TestText = new Text(m_Font);
+	m_TestText->generateText("~ Test Text, 1234!@#$ ~\nNew Line");
 
 	//todo, move to Font
-	const char* textVertex = R"(
-            #version 330 core
-			layout(location = 0) in vec4 position;
-			layout(location = 2) in vec2 texCoord0;
-
-			uniform mat4 projectionViewMatrix;
-			uniform mat4 model = mat4(1);
-
-			        out vec2 uv0;
-            void main()
-	        {
-	            gl_Position = projectionViewMatrix * model * position;
-	            uv0 = texCoord0;
-	        }
-        )";
-	const char* textFragment = R"(
-	        #version 330 core
-            uniform sampler2D TexDiffuse1;
-			uniform vec4 color = vec4(1,1,1,1);
-            in vec2 uv0;
-	        out vec4 fragColor;
-            void main()
-	        {
-                vec4 c = texture(TexDiffuse1, uv0);
-    	        fragColor = c.rrrr * color;
-	        }
-	    )";
+	
 
 	m_TextShader = new Shader();
-	m_TextShader->setFromText(ShaderTypes::TYPE_VERTEX, textVertex);
-	m_TextShader->setFromText(ShaderTypes::TYPE_FRAGMENT, textFragment);
+	Font::generateShaderCode(m_TextShader);
 	m_TextShader->linkShader();
 }
 
@@ -104,6 +80,7 @@ void TestApp::shutDown() {
 	delete m_Shader;
 	delete m_Mesh;
 	delete m_Font;
+	delete m_TestText;
 	delete m_TextShader;
 }
 
@@ -132,7 +109,7 @@ void TestApp::draw() {
 	view = glm::translate(view, glm::vec3(0, -2, -20));
 	view *= glm::rotate(TimeHandler::getCurrentTime(), glm::vec3(0, 1, 0));
 	projectionView = projection*view;
-	
+
 	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, 0, 0) * 100.0f);
 
 	//get uniforms
@@ -159,19 +136,23 @@ void TestApp::draw() {
 	//get uniforms
 	uniformColor = m_TextShader->m_CommonUniforms.m_Color;
 	uniformPVM = m_TextShader->m_CommonUniforms.m_ProjectionViewMatrix;
+	uniformModel = m_TextShader->m_CommonUniforms.m_ModelMatrix;
 
 	view = glm::mat4(1.0f);
 	view = glm::translate(view, glm::vec3(-32, -16, -400));
 	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime() / 1.83f)*0.5f + 0.5f) * -350, 200, 0));
 	projectionView = projection*view;
 
+	model.setRotation(glm::vec3(0));
 
 	uniformPVM->setData(&projectionView);
 	//change just the alpha of the uniform
-	uniformColor->modifyData(3, { (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f) });
+	uniformColor->modifyData(3, (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f));
+	uniformModel->setData(&model);
 
 	Shader::applyUniform(uniformPVM);
 	Shader::applyUniform(uniformColor);
+	Shader::applyUniform(uniformModel);
 
 	//glDisable(GL_CULL_FACE);
 	//glDepthMask(GL_TRUE);
@@ -181,8 +162,26 @@ void TestApp::draw() {
 	glDisable(GL_DEPTH_TEST);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	m_Font->draw();
+	m_TestText->draw();
 	//m_Model->draw();
+
+	//move the position 2 lines down
+	model.setPosition(glm::vec3(0, -m_Font->getLineOffset(2), 0));
+
+	uniformModel->setData(&model);
+	Shader::applyUniform(uniformModel);
+
+	//update text color to a redish color
+	float newFontColor[] = { 0.9f,0.4f,0.5f,1.0f };
+	uniformColor->setData(newFontColor);
+	Shader::applyUniform(uniformColor);
+	//testing the quick and not as efficient text rendering
+	m_Font->drawText("    Font Text Draw Test");
+
+	//reset font color after drawing with it, do not apply because we dont need to
+	//next time it renders the reset values will be applied by our alpha change
+	float resetFontColor[] = { 1.0f,1.0f,1.0f,1.0f };
+	uniformColor->setData(resetFontColor);
 
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
