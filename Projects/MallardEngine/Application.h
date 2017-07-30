@@ -3,6 +3,7 @@
 
 class Window;
 
+class Transform;
 
 class DLL_BUILD Application {
 public:
@@ -29,5 +30,8 @@ private:
 	void setCallbacksForWindow(Window* a_Window);
 
 	void checkHandles();
+
+	//root transform for every transform
+	Transform* m_RootTransform;
 };
 

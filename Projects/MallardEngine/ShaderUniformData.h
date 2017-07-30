@@ -1,12 +1,22 @@
 #pragma once
 #include "DLLBuild.h"
+
 //have tested varidic functions, cant seem to get floats and ints to works the same
+//#include <stdarg.h> 
 
 	//todo after the data is edited turn that uniform dirty
 	//then when rendering something or using the shader update all variables that are dirty
 
 #include <string>
 
+//glm forward declare
+#include <glm/fwd.hpp>
+
+class Transform;
+
+
+//the different kind of types a shader can be
+//at the moment, this is missing a lot of types
 enum class ShaderUniformTypes {
 	MAT4,
 	VEC3,
@@ -23,7 +33,7 @@ static const int SHADER_UNIFORMS_TYPES_SIZE = (int) ShaderUniformTypes::END_UNIF
 class Shader;
 
 //used to store and modify uniform information
-struct DLL_BUILD ShaderUniformData {
+class DLL_BUILD ShaderUniformData {
 	friend Shader;
 private:
 	//pointer for the data
@@ -42,34 +52,25 @@ private:
 	//amount of data we have
 	//vec4 example: 4
 	unsigned int m_DataCount;
+	//a flag to check if this uniform is dirty
+	//when dirty, it means this data has been modified and has not been used since
+	bool m_IsDirty = false;
 public:
 	//copy's the data from a_NewData into the memory at m_Data
-	//unknown results if you put in data that 
-	void setData(const void* a_NewData) {
-		//copy from a_NewData to m_Data
-		//total memory size of m_DataSize
-		memcpy(m_Data, a_NewData, m_DataSize * m_DataCount);
-	}
+	//unknown results if you put in data that is not of the same type
+	//or more or less then required
+	void setData(const void* a_NewData);
 
 	//sets the data for this uniform using 4 floats
 	//does no checks to see if there is enough memory allocated
 	//or if the data is a float
-	void setData(const float a_V0, const float a_V1, const float a_V2, const float a_V3) {
-		//cast to float ptr
-		//and index using the float to go through the data
-		((float*) m_Data)[0] = a_V0;
-		((float*) m_Data)[1] = a_V1;
-		((float*) m_Data)[2] = a_V2;
-		((float*) m_Data)[3] = a_V3;
-	}
+	void setData(const float a_V0, const float a_V1, const float a_V2, const float a_V3);
 
 	//copys the float from a_Data
 	//into m_Data with the array index of a_Offset
 	//does no checks to see if there is enough memory allocated
 	//or if the data is a float
-	void modifyData(int a_Offset, const float a_Data) {
-		((float*) m_Data)[a_Offset] = a_Data;
-	}
+	void modifyData(int a_Offset, const float a_Data);
 
 	//copys the data from a_Data into this uniform
 	//allows for offset for where the data will be placed in the uniform (a_Offset)
@@ -80,24 +81,24 @@ public:
 	//uniform->modifyData(0, &rgb, 3, 0);
 	//now the uniform is 0.9, 0.5, 0.4, 1
 	//note, it does not check if the data is out of range for both offsets and for a_Size
-	void modifyData(const unsigned int a_Offset, const void* a_Data, const unsigned int a_Size, const unsigned int a_DataOffset = 0) {
-		//so whats going on here?
-		//converting m_Data from void* to char*
-		//because the size of a char is 1
-		//then using [] to get to the start of the data we want to change
-		//since it's a char, and increments by 1 we have to multiply by the data size
-		//then we use & to get the reference of the data 
-		void* to = &((char*) m_Data)[a_Offset * m_DataSize];//our data
-		void* from = &((char*) a_Data)[a_DataOffset * m_DataSize];//passed in data
+	void modifyData(const unsigned int a_Offset, const void* a_Data, const unsigned int a_Size, const unsigned int a_DataOffset = 0);
 
-		memcpy(to, from, a_Size * m_DataSize);//and finally the copy with size of dataSize * data
+	///Setting Data with types
 
-		//Alternate version
-		//does that same thing, but limits it to float only
+	//allowing easy setting for the mat4 data type
+	//does checks to see if the uniform is a mat4, it it's not then this wont do anything
+	void setData(const glm::mat4* a_Data);
 
-		//for (int i = 0; i < a_Size; i++) {
-		//	((float*) m_Data)[a_Offset + i] = ((float*) a_Data)[a_DataOffset + i];
-		//}
+	//allowing easy setting for the Transform data type
+	//it uses the transforms getGlobalMatrix
+	//does checks to see if the uniform is a mat4, it it's not then this wont do anything
+	void setData(Transform* a_Data);
+private:
+	//sets this uniform as dirty
+	//use this after data has been modified
+	void setDirty() {
+		m_IsDirty = true;
 	}
+	
 };
 

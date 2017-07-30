@@ -21,8 +21,9 @@ struct FontCppData {
 	std::unique_ptr<stbtt_packedchar[]> m_Info;
 };
 
-const char firstChar = ' ';
-const char charCount = '~' - ' ';
+//go from space to then end of the special characters
+const int firstChar = ' ';
+const int charCount = 255 - ' ';
 
 Font::Font() {
 	m_Data = new FontCppData();
@@ -43,6 +44,7 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 	if (m_Texture != nullptr) {
 		return;
 	}
+	m_FontSize = a_FontSize;
 	auto fontData = loadFile(a_FontPath);
 
 	//create the image data
@@ -114,7 +116,13 @@ void Font::genText(std::string  a_Text) {
 	uint16_t lastIndex = 0;
 	float offsetX = 0, offsetY = 0;
 	for (size_t i = 0; i < a_Text.size(); i++) {
-		GlyphData glyphInfo = getGlyphInfo(a_Text[i], offsetX, offsetY);
+		unsigned char letter = a_Text[i];
+		if (letter == '\n') {
+			offsetY += m_FontSize/1.5f;
+			offsetX = 0;
+			continue;
+		}
+		GlyphData glyphInfo = getGlyphInfo(letter, offsetX, offsetY);
 		offsetX = glyphInfo.offsetX;
 		offsetY = glyphInfo.offsetY;
 
@@ -142,7 +150,7 @@ void Font::genText(std::string  a_Text) {
 
 }
 
-Font::GlyphData Font::getGlyphInfo(char a_Character, float a_OffsetX, float a_OffsetY) {
+Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_OffsetY) {
 	stbtt_aligned_quad quad;
 
 	stbtt_GetPackedQuad(m_Data->m_Info.get(), m_Font.textureWidth, m_Font.textureHeight, a_Character - firstChar, &a_OffsetX, &a_OffsetY, &quad, 1);

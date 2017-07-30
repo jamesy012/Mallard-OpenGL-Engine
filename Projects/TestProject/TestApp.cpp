@@ -1,4 +1,4 @@
-#include "TestApp.h"
+﻿#include "TestApp.h"
 
 #include <stdio.h>
 
@@ -60,8 +60,8 @@ void TestApp::startUp() {
 	//delete t4;
 
 	m_Font = new Font();
-	m_Font->loadFont("c:/windows/fonts/times.ttf", 48);
-	m_Font->genText("TESt TexT 1,2,3,4 .!@");
+	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
+	m_Font->genText("~ Test Text, 1234!@#$ ~\nNew Line");
 
 	//todo, move to Font
 	const char* textVertex = R"(
@@ -118,7 +118,7 @@ void TestApp::draw() {
 	glm::mat4 projection;
 	glm::mat4 view;
 	glm::mat4 projectionView;
-	glm::mat4 model;
+	Transform model;
 
 	ShaderUniformData* uniformPVM;
 	ShaderUniformData* uniformModel;
@@ -132,16 +132,16 @@ void TestApp::draw() {
 	view = glm::translate(view, glm::vec3(0, -2, -20));
 	view *= glm::rotate(TimeHandler::getCurrentTime(), glm::vec3(0, 1, 0));
 	projectionView = projection*view;
-
-	model = glm::mat4(1.0f);
+	
+	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, 0, 0) * 100.0f);
 
 	//get uniforms
 	uniformPVM = m_Shader->m_CommonUniforms.m_ProjectionViewMatrix;
 	uniformModel = m_Shader->m_CommonUniforms.m_ModelMatrix;
 
 	//set data
-	uniformPVM->setData(glm::value_ptr(projectionView));
-	uniformModel->setData(glm::value_ptr(model));
+	uniformPVM->setData(&projectionView);
+	uniformModel->setData(&model);
 
 	//apply uniforms
 	Shader::applyUniform(uniformPVM);
@@ -161,13 +161,13 @@ void TestApp::draw() {
 	uniformPVM = m_TextShader->m_CommonUniforms.m_ProjectionViewMatrix;
 
 	view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(-32, -16, -50));
-	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime() / 1.83f)*0.5f + 0.5f) * -350, 0, 0));
+	view = glm::translate(view, glm::vec3(-32, -16, -400));
+	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime() / 1.83f)*0.5f + 0.5f) * -350, 200, 0));
 	projectionView = projection*view;
 
 
-	uniformPVM->setData(glm::value_ptr(projectionView));
-	//change the alpha of the uniform
+	uniformPVM->setData(&projectionView);
+	//change just the alpha of the uniform
 	uniformColor->modifyData(3, { (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f) });
 
 	Shader::applyUniform(uniformPVM);

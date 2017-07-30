@@ -65,7 +65,7 @@ public:
 	virtual void draw() override;
 
 private:
-	GlyphData getGlyphInfo(char a_Character, float a_OffsetX, float a_OffsetY);
+	GlyphData getGlyphInfo(int a_Character, float a_OffsetX, float a_OffsetY);
 	std::vector<unsigned char> loadFile(const char* a_FilePath);
 
 	//to prevent font.h from having the stb_truetype included in it, this struct is in the cpp
@@ -75,5 +75,8 @@ private:
 
 	Texture* m_Texture = nullptr;
 	unsigned int m_TextureId = 0;
+
+	//size of the font that was loaded
+	float m_FontSize;
 };
 

@@ -10,6 +10,7 @@
 #include "TimeHandler.h"
 #include "Input.h"
 #include "ResourceManager.h"
+#include "Transform.h"
 
 #include "Window.h"
 
@@ -66,6 +67,9 @@ void Application::run() {
 		return;
 	}	
 
+	//set up scene root transform
+	m_RootTransform = new Transform("Root Transform");
+
 	//set up default clear color
 	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
 
@@ -121,6 +125,11 @@ void Application::run() {
 	}
 
 	shutDown();
+
+	//clean up
+
+	//remove root transform
+	delete m_RootTransform;
 
 	aiDetachAllLogStreams();
 	ResourceManager::deleteLeftOverResources();
