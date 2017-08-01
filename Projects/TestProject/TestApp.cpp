@@ -28,7 +28,8 @@ void TestApp::startUp() {
 	m_Texture = new Texture();
 
 	//m_Texture->load("Textures/imageTest.jpg");
-	m_Texture->load("Textures/imageTest.png");
+	//m_Texture->load("Textures/imageTest.png");
+	m_Texture->load("Textures/redWhite.jpg");
 	//m_Texture->load1x1Texture();
 	//t1->load("Textures/imageTest.png");
 	//t2->load("test2");
@@ -52,7 +53,7 @@ void TestApp::startUp() {
 	m_Shader->createSimpleShader(true);
 
 	m_Mesh = new Mesh();
-	m_Mesh->createBox();
+	m_Mesh->createPlane();
 	m_Mesh->setTexture(m_Texture);
 
 	//delete t1;

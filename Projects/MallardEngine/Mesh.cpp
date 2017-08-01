@@ -79,6 +79,41 @@ void Mesh::createBox() {
 	bind();
 }
 
+void Mesh::createPlane() {
+	glm::vec4 vertPos[] = {
+		glm::vec4(-1,  0, -1, 1),
+		glm::vec4( 1,  0, -1, 1),
+		glm::vec4(-1,  0,  1, 1),
+		glm::vec4( 1,  0,  1, 1),
+	};
+	glm::vec4 normals[]{
+		glm::vec4(0, 1, 0, 0),
+	};
+	glm::vec2 texCoords[]{//y coords have been flipped
+		glm::vec2(0,0),
+		glm::vec2(1,0),
+		glm::vec2(0,1),
+		glm::vec2(1,1),
+	};
+	unsigned int indexSize = 18;//by mousing over data below
+	unsigned int indexData[]{
+		1 , 1 , 1,	 2 , 2 , 1,	 3 , 3 , 1,
+		2 , 2 , 1,	 4 , 4 , 1,	 3 , 3 , 1,
+	};
+	m_Vertices.reserve(indexSize);
+	m_Indices.reserve(indexSize);
+	for (unsigned int i = 0; i < indexSize; i += 3) {
+		MeshVertex vert;
+		vert.position = vertPos[indexData[i] - 1];
+		vert.texCoord = texCoords[indexData[i + 1] - 1];
+		vert.normal = normals[indexData[i + 2] - 1];
+
+		m_Vertices.push_back(vert);
+		m_Indices.push_back(i / 3);
+	}
+	bind();
+}
+
 void Mesh::draw() {
 	unsigned int loc = 0;
 	if (m_Texture != nullptr) {
