@@ -2,9 +2,6 @@
 
 #include <stdio.h>
 
-
-#include <gl\glew.h>
-
 #include <glm\glm.hpp>
 #include <glm\ext.hpp>
 
@@ -73,6 +70,11 @@ void TestApp::startUp() {
 	m_TextShader = new Shader();
 	Font::generateShaderCode(m_TextShader);
 	m_TextShader->linkShader();
+
+
+	//set up camera
+	m_GameCamera->m_Transform.setPosition(glm::vec3(0, 0, 20));
+
 }
 
 void TestApp::shutDown() {
@@ -93,9 +95,6 @@ void TestApp::update() {
 }
 
 void TestApp::draw() {
-	glm::mat4 projection;
-	glm::mat4 view;
-	glm::mat4 projectionView;
 	Transform model;
 
 	ShaderUniformData* uniformPVM;
@@ -105,11 +104,14 @@ void TestApp::draw() {
 	m_Shader->use();
 
 	//set up data
-	projection = glm::perspective(glm::radians(60.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
-	view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0, -2, -20));
-	view *= glm::rotate(TimeHandler::getCurrentTime(), glm::vec3(0, 1, 0));
-	projectionView = projection*view;
+	static float lerpTime = 0.6f;
+	static float lerpScale = 0.25f;
+	lerpTime += lerpScale * TimeHandler::getDeltaTime();
+	if (lerpTime > 1 || lerpTime < 0) {
+		lerpScale = -lerpScale;
+	}
+	glm::vec3 camPos = glm::lerp(glm::vec3(-5, 2, 20), glm::vec3(5, -2, 20), lerpTime);
+	m_GameCamera->m_Transform.setPosition(camPos);
 
 	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, 0, 0) * 100.0f);
 
@@ -118,7 +120,7 @@ void TestApp::draw() {
 	uniformModel = m_Shader->m_CommonUniforms.m_ModelMatrix;
 
 	//set data
-	uniformPVM->setData(&projectionView);
+	uniformPVM->setData(&m_MainCamera->getProjectionViewMatrix());
 	uniformModel->setData(&model);
 
 	//apply uniforms
@@ -128,10 +130,13 @@ void TestApp::draw() {
 	//draw models
 	m_Model->draw();
 	m_Mesh->draw();
+}
 
-	///TEXT RENDER
-
+void TestApp::drawUi() {
+	ShaderUniformData* uniformPVM;
+	ShaderUniformData* uniformModel;
 	ShaderUniformData* uniformColor;
+	Transform model;
 
 	m_TextShader->use();
 	//get uniforms
@@ -139,14 +144,10 @@ void TestApp::draw() {
 	uniformPVM = m_TextShader->m_CommonUniforms.m_ProjectionViewMatrix;
 	uniformModel = m_TextShader->m_CommonUniforms.m_ModelMatrix;
 
-	view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(-32, -16, -400));
-	view = glm::translate(view, glm::vec3((sin(TimeHandler::getCurrentTime() / 1.83f)*0.5f + 0.5f) * -350, 200, 0));
-	projectionView = projection*view;
+	//move ui up one line to show the new line
+	model.setPosition(glm::vec3(0, m_Font->getLineOffset(1), 0));
 
-	model.setRotation(glm::vec3(0));
-
-	uniformPVM->setData(&projectionView);
+	uniformPVM->setData(&m_MainCamera->getProjectionViewMatrix());
 	//change just the alpha of the uniform
 	uniformColor->modifyData(3, (sin(TimeHandler::getCurrentTime())*0.5f + 0.5f));
 	uniformModel->setData(&model);
@@ -159,15 +160,13 @@ void TestApp::draw() {
 	//glDepthMask(GL_TRUE);
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_LEQUAL);
-	glEnable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
+
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	m_TestText->draw();
-	//m_Model->draw();
 
-	//move the position 2 lines down
-	model.setPosition(glm::vec3(0, -m_Font->getLineOffset(2), 0));
+	//move the position up 1 more line for the quick draw
+	model.translate(glm::vec3(0, m_Font->getLineOffset(1), 0));
 
 	uniformModel->setData(&model);
 	Shader::applyUniform(uniformModel);
@@ -184,10 +183,5 @@ void TestApp::draw() {
 	float resetFontColor[] = { 1.0f,1.0f,1.0f,1.0f };
 	uniformColor->setData(resetFontColor);
 
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-}
 
-void TestApp::drawUi() {
-	//m_Font->draw();
 }

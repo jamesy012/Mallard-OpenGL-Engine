@@ -1,8 +1,9 @@
 #pragma once
 #include "DLLBuild.h"
 
-class Window;
+#include "Camera.h"
 
+class Window;
 class Transform;
 
 class DLL_BUILD Application {
@@ -26,6 +27,12 @@ protected:
 	bool m_CloseOnEscape = true;
 
 	Window* m_AppWindow = nullptr;
+
+	//reference to the main camera in the scene
+	Camera* m_MainCamera;
+	//Game Camera and UI Camera
+	Camera* m_GameCamera = nullptr;
+	Camera* m_UiCamera = nullptr;
 private:
 	void setCallbacksForWindow(Window* a_Window);
 
@@ -33,5 +40,7 @@ private:
 
 	//root transform for every transform
 	Transform* m_RootTransform;
+
+
 };
 

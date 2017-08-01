@@ -70,12 +70,14 @@ void ShaderUniformData::modifyData(const unsigned int a_Offset, const void * a_D
 //applys data from the mat4 into this
 void ShaderUniformData::setData(const glm::mat4 * a_Mat4) {
 	if (m_Type == ShaderUniformTypes::MAT4) {
+		//uses value_ptr to get the start of the data
 		setData(glm::value_ptr(*a_Mat4));
 	}
 }
 
 void ShaderUniformData::setData(Transform * a_Data) {
 	if (m_Type == ShaderUniformTypes::MAT4) {
+		//gets global matrix mat4 then uses value_ptr to get the start of the data
 		setData(glm::value_ptr(a_Data->getGlobalMatrix()));
 	}
 }

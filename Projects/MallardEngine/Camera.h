@@ -1,9 +1,10 @@
 #pragma once
+#include "DLLBuild.h"
 
 #include <glm\glm.hpp>
 #include "Transform.h"
 
-class Camera {
+class DLL_BUILD Camera {
 private:
 	struct CameraData {
 		union {

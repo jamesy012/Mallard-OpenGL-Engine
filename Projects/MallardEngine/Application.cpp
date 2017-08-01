@@ -14,6 +14,7 @@
 
 #include "Window.h"
 
+
 /* assimp include files. These three are usually needed. */
 //these are needed for the logging system
 #include <assimp/cimport.h>
@@ -65,10 +66,16 @@ void Application::run() {
 	if (glewInit() != GLEW_OK) {
 		printf("Failed to initialize GLEW\n");
 		return;
-	}	
+	}
 
 	//set up scene root transform
 	m_RootTransform = new Transform("Root Transform");
+
+	//set up cameras
+	m_GameCamera = new Camera();
+	m_GameCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+	m_UiCamera = new Camera();
+	m_UiCamera->setOrthographic(0, m_AppWindow->getFramebufferWidth(), 0, m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
 	//set up default clear color
 	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
@@ -105,6 +112,10 @@ void Application::run() {
 
 		//call virtual functions
 		{
+			//update to game camera
+			m_MainCamera = m_GameCamera;
+
+
 			update();
 
 			//clear framebuffer?
@@ -113,10 +124,23 @@ void Application::run() {
 			draw();
 
 			//draw framebuffer
-			
-			//draw ui ontop of framebuffer
-			//change camera?
+
+			//draw ui not on the frame buffer
+
+
+			//Start UI render
+			//set up gl property's 
+			glEnable(GL_BLEND);
+			glDisable(GL_DEPTH_TEST);
+			//update to ui camera
+			m_MainCamera = m_UiCamera;
+
+			//draw the ui
 			drawUi();
+
+			//reset gl property's 
+			glDisable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
 		}
 
 		//draw framebuffer
@@ -128,6 +152,8 @@ void Application::run() {
 
 	//clean up
 
+	delete m_GameCamera;
+	delete m_UiCamera;
 	//remove root transform
 	delete m_RootTransform;
 
