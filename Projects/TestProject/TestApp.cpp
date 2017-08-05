@@ -17,26 +17,15 @@
 #include "Font.h"
 #include "Text.h"
 
+#include "Camera.h"
+#include "Framebuffer.h"
+
 void TestApp::startUp() {
-	//Texture* t1 = new Texture();
-	//Texture* t2 = new Texture();
-	//Texture* t3 = new Texture();
-	//Texture* t4 = new Texture();
 	m_Texture = new Texture();
 
 	//m_Texture->load("Textures/imageTest.jpg");
 	//m_Texture->load("Textures/imageTest.png");
 	m_Texture->load("Textures/redWhite.jpg");
-	//m_Texture->load1x1Texture();
-	//t1->load("Textures/imageTest.png");
-	//t2->load("test2");
-	//t3->load("Textures/imageTest.png");
-	//t4->load("Textures/imageTest.png");
-	//
-	//t1->unload();
-	//t2->unload();
-	//t3->unload();
-	//t4->unload();
 
 	m_Model = new Model();
 
@@ -53,11 +42,6 @@ void TestApp::startUp() {
 	m_Mesh->createPlane();
 	m_Mesh->setTexture(m_Texture);
 
-	//delete t1;
-	//delete t2;
-	//delete t3;
-	//delete t4;
-
 	m_Font = new Font();
 	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
 
@@ -65,7 +49,7 @@ void TestApp::startUp() {
 	m_TestText->generateText("~ Test Text, 1234!@#$ ~\nNew Line");
 
 	//todo, move to Font
-	
+
 
 	m_TextShader = new Shader();
 	Font::generateShaderCode(m_TextShader);
@@ -74,6 +58,22 @@ void TestApp::startUp() {
 
 	//set up camera
 	m_GameCamera->m_Transform.setPosition(glm::vec3(0, 0, 20));
+
+
+	//FRAME BUFFER TEST
+	m_FbTest = new Framebuffer();
+	m_FbTest->setSize(64, 64);
+	m_FbTest->genFramebuffer();
+
+	m_FbPlane = new Mesh();
+	m_FbPlane->createPlane();
+	m_FbPlane->setTexture(m_FbTest->getTexture());
+
+	m_FbCamera = new Camera();
+	//m_FbCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+	m_FbCamera->setOrthographic(-8, 8, -8, 8, 0.1f, 1000.0f);
+	m_FbCamera->m_Transform.setPosition(glm::vec3(10, 10, 10));
+	m_FbCamera->m_Transform.setLookAt(glm::vec3(0, 0, 0));
 
 }
 
@@ -85,6 +85,10 @@ void TestApp::shutDown() {
 	delete m_Font;
 	delete m_TestText;
 	delete m_TextShader;
+
+	delete m_FbCamera;
+	delete m_FbTest;
+	delete m_FbPlane;
 }
 
 void TestApp::update() {
@@ -95,6 +99,9 @@ void TestApp::update() {
 }
 
 void TestApp::draw() {
+	//framebuffer test
+	runFramebufferTest();
+
 	Transform model;
 
 	ShaderUniformData* uniformPVM;
@@ -130,6 +137,15 @@ void TestApp::draw() {
 	//draw models
 	m_Model->draw();
 	m_Mesh->draw();
+
+	//model.setPosition(glm::vec3(0, 0, -5) + (m_GameCamera->m_Transform.getLocalPosition() * glm::vec3(1, 1, 0)));
+	//model.setScale(glm::vec3(5, 5, 5));
+	model.setPosition(glm::vec3(0, 0, -100));
+	model.setScale(50.0f);
+	model.setRotation(glm::vec3(90, 0, 0));
+	uniformModel->setData(&model);
+	Shader::applyUniform(uniformModel);
+	m_FbPlane->draw();
 }
 
 void TestApp::drawUi() {
@@ -184,4 +200,44 @@ void TestApp::drawUi() {
 	uniformColor->setData(resetFontColor);
 
 
+}
+
+void TestApp::runFramebufferTest() {
+	Framebuffer::use(m_FbTest);
+
+	Transform model;
+
+	ShaderUniformData* uniformPVM;
+	ShaderUniformData* uniformModel;
+
+	///NORMAL RENDER
+	m_Shader->use();
+
+	//set up data
+	static float lerpTime = 0.6f;
+	static float lerpScale = 0.25f;
+	lerpTime += lerpScale * TimeHandler::getDeltaTime();
+	if (lerpTime > 1 || lerpTime < 0) {
+		lerpScale = -lerpScale;
+	}
+
+	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, 0, 0) * 100.0f);
+
+	//get uniforms
+	uniformPVM = m_Shader->m_CommonUniforms.m_ProjectionViewMatrix;
+	uniformModel = m_Shader->m_CommonUniforms.m_ModelMatrix;
+
+	//set data
+	uniformPVM->setData(&m_FbCamera->getProjectionViewMatrix());
+	uniformModel->setData(&model);
+
+	//apply uniforms
+	Shader::applyUniform(uniformPVM);
+	Shader::applyUniform(uniformModel);
+
+	//draw models
+	m_Model->draw();
+	m_Mesh->draw();
+
+	Framebuffer::use(nullptr);
 }

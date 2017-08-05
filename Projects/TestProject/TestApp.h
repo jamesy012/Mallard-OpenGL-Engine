@@ -8,6 +8,7 @@ class Shader;
 class Texture;
 class Font;
 class Text;
+class Framebuffer;
 
 class TestApp :
 	public Application {
@@ -20,6 +21,9 @@ public:
 	virtual void drawUi() override;
 
 private:
+
+	void runFramebufferTest();
+
 	Model* m_Model;
 	Mesh* m_Mesh;
 	Shader* m_Shader;
@@ -27,5 +31,9 @@ private:
 	Texture* m_Texture;
 	Font* m_Font;
 	Text* m_TestText;
+
+	Camera* m_FbCamera;
+	Mesh* m_FbPlane;
+	Framebuffer* m_FbTest;
 };
 

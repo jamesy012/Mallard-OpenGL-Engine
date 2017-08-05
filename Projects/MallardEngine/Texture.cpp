@@ -24,12 +24,14 @@ Texture::Texture(unsigned int a_TextureID, int a_Width, int a_Height) {
 
 
 Texture::~Texture() {
-	if (m_TextureId != 0) {
-		glDeleteTextures(1, &m_TextureId);
-		m_TextureId = 0;
+	if (m_CreatedTexture) {
+		if (m_TextureId != 0) {
+			glDeleteTextures(1, &m_TextureId);
+			m_TextureId = 0;
+		}
+		m_TextureWidth = m_TextureHeight = 0;
+		stbi_image_free(m_TextureData);
 	}
-	m_TextureWidth = m_TextureHeight = 0;
-	stbi_image_free(m_TextureData);
 }
 
 DLL_BUILD void Texture::load1x1Texture() {

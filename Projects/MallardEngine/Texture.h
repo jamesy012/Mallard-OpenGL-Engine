@@ -39,12 +39,21 @@ private:
 
 
 	///data
+	//the type of this texture
+	//use this to get the strides for the m_TextureData
 	TextureType m_TextureType;
 	int m_TextureWidth;
 	int m_TextureHeight;
+	//Id for the texture it's referencing on the gpu/OpenGL
 	unsigned int m_TextureId;
+
+	//this is the data to the texture
+	//use TextureType to get the strides/type of data this is
 	DataFormat* m_TextureData;
 
+	//this tells the class weather it loaded and created the texture ID
+	//will be true if file loaded by string
+	//will be false if a texture ID was given to it (IE: the constructor)
 	bool m_CreatedTexture;
 
 };

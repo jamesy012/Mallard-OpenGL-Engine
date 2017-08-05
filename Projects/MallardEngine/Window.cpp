@@ -144,8 +144,12 @@ GLFWwindow * Window::getWindow() const {
 	return m_ThisWindow;
 }
 
-GLFWwindow * Window::getMainWindow() const {
+GLFWwindow * Window::getMainWindowGLFW() {
 	return m_MainWindow->m_ThisWindow;
+}
+
+Window * Window::getMainWindow() {
+	return m_MainWindow;
 }
 
 void Window::setCallbacks() const {
@@ -194,6 +198,9 @@ void Window::windowSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height
 }
 
 void Window::windowFramebufferSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height) {
+	Window* window = getWindowFromGlfwWindow(a_Window);
+	window->m_FramebufferWidth = a_Width;
+	window->m_FramebufferHeight = a_Height;
 	glViewport(0, 0, a_Width, a_Height);
 	//hacky fix, make a callback function pointer so application.cpp can do this
 }

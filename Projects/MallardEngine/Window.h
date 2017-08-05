@@ -34,7 +34,8 @@ public:
 	void setWindowData(int a_width, int a_Height,const char* a_Title);
 
 	GLFWwindow* getWindow() const;
-	GLFWwindow* getMainWindow() const;
+	static GLFWwindow* getMainWindowGLFW();
+	static Window* getMainWindow();
 
 	void setCallbacks() const;
 
