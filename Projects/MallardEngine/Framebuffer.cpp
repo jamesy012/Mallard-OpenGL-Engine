@@ -8,7 +8,7 @@
 
 Framebuffer::Framebuffer() {
 	m_FboTexture = nullptr;
-	m_Fbo = m_FboDepth = 0;
+	m_Fbo = m_RboDepth = 0;
 	m_Width = m_Height = 1;//1x1 starting size
 }
 
@@ -23,9 +23,9 @@ Framebuffer::~Framebuffer() {
 		m_Fbo = 0;
 	}
 	//check depth
-	if (m_FboDepth != 0) {
-		glDeleteRenderbuffers(1, &m_FboDepth);
-		m_FboDepth = 0;
+	if (m_RboDepth != 0) {
+		glDeleteRenderbuffers(1, &m_RboDepth);
+		m_RboDepth = 0;
 	}
 }
 
@@ -55,7 +55,9 @@ void Framebuffer::genFramebuffer() {
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
+	//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_Width, m_Height, 0, GL_RGB, GL_FLOAT, 0);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -65,8 +67,8 @@ void Framebuffer::genFramebuffer() {
 	m_FboTexture = new Texture(textureID, m_Width, m_Height);
 
 	//depth buffer
-	glGenFramebuffers(1, &m_FboDepth);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_FboDepth);
+	glGenRenderbuffers(1, &m_RboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_RboDepth);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, m_Width, m_Height);
 
 	//frame buffer
@@ -75,7 +77,7 @@ void Framebuffer::genFramebuffer() {
 
 	//bind the above
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureID, 0);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_FboDepth);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RboDepth);
 
 	//color attachments
 	GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };

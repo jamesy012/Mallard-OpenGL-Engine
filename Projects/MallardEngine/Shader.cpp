@@ -155,6 +155,7 @@ void Shader::linkShader() {
 	for (int i = 0; i < SHADER_TYPES_SIZE; i++) {
 		if (m_Shaders[i].m_ShaderID != 0) {
 			glDeleteShader(m_Shaders[i].m_ShaderID);
+			glDetachShader(m_Program, m_Shaders[i].m_ShaderID);
 			m_Shaders[i].m_ShaderID = 0;
 		}
 	}

@@ -100,6 +100,7 @@ void TestApp::update() {
 
 void TestApp::draw() {
 	//framebuffer test
+	m_Shader->use();
 	runFramebufferTest();
 
 	Transform model;
@@ -108,7 +109,6 @@ void TestApp::draw() {
 	ShaderUniformData* uniformModel;
 
 	///NORMAL RENDER
-	m_Shader->use();
 
 	//set up data
 	static float lerpTime = 0.6f;
@@ -211,15 +211,6 @@ void TestApp::runFramebufferTest() {
 	ShaderUniformData* uniformModel;
 
 	///NORMAL RENDER
-	m_Shader->use();
-
-	//set up data
-	static float lerpTime = 0.6f;
-	static float lerpScale = 0.25f;
-	lerpTime += lerpScale * TimeHandler::getDeltaTime();
-	if (lerpTime > 1 || lerpTime < 0) {
-		lerpScale = -lerpScale;
-	}
 
 	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, 0, 0) * 100.0f);
 

@@ -26,6 +26,6 @@ private:
 	//unsigned int m_FboTexture;
 	Texture* m_FboTexture;
 	unsigned int m_Fbo;
-	unsigned int m_FboDepth;
+	unsigned int m_RboDepth;
 };
 
