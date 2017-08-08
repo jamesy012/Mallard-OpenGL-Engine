@@ -10,7 +10,7 @@
 
 Texture::Texture() {
 	m_TextureHeight = m_TextureWidth = 0;
-	m_TextureType = TextureType::None;
+	m_TextureType = TextureType::NONE;
 	//todo this might need to change, if i allow texture id's to be set later
 	m_CreatedTexture = true;
 }

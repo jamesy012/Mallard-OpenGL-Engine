@@ -63,7 +63,8 @@ void TestApp::startUp() {
 	//FRAME BUFFER TEST
 	m_FbTest = new Framebuffer();
 	m_FbTest->setSize(64, 64);
-	m_FbTest->genFramebuffer();
+	m_FbTest->createRenderTarget();
+	//m_FbTest->genFramebuffer();
 
 	m_FbPlane = new Mesh();
 	m_FbPlane->createPlane();

@@ -5,7 +5,7 @@
 #include "IResource.h"
 
 enum TextureType {
-	None,
+	NONE,
 	RGB,
 	RGBA
 };
