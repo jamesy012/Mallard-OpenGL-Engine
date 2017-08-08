@@ -18,7 +18,7 @@ Framebuffer::~Framebuffer() {
 		m_Fbo = 0;
 	}
 	//go through all attached components and delete their opengl info
-	for (int i = 0; i < m_AttachedComponents.size(); i++) {
+	for (unsigned int i = 0; i < m_AttachedComponents.size(); i++) {
 		Component* component = m_AttachedComponents[i];
 		switch (component->m_Type) {
 			case FramebufferBufferTypes::TEXTURE:
@@ -66,7 +66,7 @@ void Framebuffer::genFramebuffer() {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_Fbo);
 
 	//add normal components
-	for (int i = 0; i < m_OtherAttachments.size(); i++) {
+	for (unsigned int i = 0; i < m_OtherAttachments.size(); i++) {
 		Component* component = m_OtherAttachments[i];
 		switch (component->m_Type) {
 			case FramebufferBufferTypes::TEXTURE:
@@ -81,7 +81,7 @@ void Framebuffer::genFramebuffer() {
 	//add color attachments
 	std::vector<unsigned int> drawBuffers;
 
-	for (int i = 0; i < m_ColorAttachments.size(); i++) {
+	for (unsigned int i = 0; i < m_ColorAttachments.size(); i++) {
 		Component* component = m_ColorAttachments[i];
 		//note: this can go above the max amount of color attachments
 		unsigned int colorAttachment = GL_COLOR_ATTACHMENT0 + i;

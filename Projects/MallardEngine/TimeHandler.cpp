@@ -1,4 +1,5 @@
 #include "TimeHandler.h"
+#include "TimeHandler.h"
 
 #include <GLFW\glfw3.h>
 
@@ -14,6 +15,9 @@ static unsigned int m_CurrentFrame;
 
 static float m_DeltaTimeScale = 1.0f;
 static float m_MaxDeltaTime = 0.5f;
+
+static unsigned int m_Fps = 0;
+static float m_FpsDt = 0;//delta time counter for the fps
 
 unsigned int TimeHandler::getCurrentFrameNumber() {
 	return m_CurrentFrame;
@@ -39,6 +43,10 @@ float TimeHandler::getDeltaTimeScale() {
 	return m_DeltaTimeScale;
 }
 
+unsigned int TimeHandler::getFps() {
+	return m_Fps;
+}
+
 void TimeHandler::setDeltaTimeScale(float a_Scale) {
 	m_DeltaTimeScale = a_Scale;
 }
@@ -48,19 +56,27 @@ void TimeHandler::setMaxDeltaTime(float a_MaxDt) {
 }
 
 void TimeHandler::update() {
+	//frame counter
 	m_CurrentFrame++;
 
+	//time and delta time calc
 	float time = (float)glfwGetTime();
 	m_UnscaledDeltaTime = time - m_PreviousTime;
 	m_PreviousTime = time;
 
+	//preventing massive deltatime
 	m_UnscaledDeltaTime = m_UnscaledDeltaTime > m_MaxDeltaTime ? m_MaxDeltaTime : m_UnscaledDeltaTime;
 	//printf("deltaTime: %f\n", m_UnscaledDeltaTime);
 
+	//add delta time to current time
 	m_CurrentTime += m_UnscaledDeltaTime;
 
+	//work out scaled delta time
 	m_DeltaTime = m_UnscaledDeltaTime * m_DeltaTimeScale;
 
+	//calculate fps
+	m_FpsDt += (m_UnscaledDeltaTime - m_FpsDt) * 0.1f;
+	m_Fps = roundl(1.0f / m_FpsDt);
 	
 }
 

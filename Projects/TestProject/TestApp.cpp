@@ -193,7 +193,9 @@ void TestApp::drawUi() {
 	uniformColor->setData(newFontColor);
 	Shader::applyUniform(uniformColor);
 	//testing the quick and not as efficient text rendering
-	m_Font->drawText("    Font Text Draw Test");
+	std::string quickText = "FPS: ";
+	quickText += std::to_string(TimeHandler::getFps());
+	m_Font->drawText(quickText.c_str());
 
 	//reset font color after drawing with it, do not apply because we dont need to
 	//next time it renders the reset values will be applied by our alpha change

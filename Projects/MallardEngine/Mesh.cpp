@@ -11,6 +11,11 @@ Mesh::Mesh() {
 }
 
 Mesh::~Mesh() {
+	if (m_Vao != 0) {
+		glDeleteVertexArrays(1, &m_Vao);
+		glDeleteBuffers(1, &m_Vbo);
+		glDeleteBuffers(1, &m_Ebo);
+	}
 }
 
 Mesh::Mesh(const Mesh & a_Mesh) {
