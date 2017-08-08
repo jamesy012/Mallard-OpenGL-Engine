@@ -9,20 +9,24 @@ static Transform* m_RootTransform;
 //a list of all Transforms made before there was a root Transform
 static std::vector<Transform*> m_TransformsBeforeRoot;
 
-Transform::Transform() {
-	if (m_RootTransform != nullptr) {
-		setParent(m_RootTransform);
-	} else {
-		m_TransformsBeforeRoot.push_back(this);
+Transform::Transform(bool a_AddToRoot) {
+	if (a_AddToRoot) {
+		if (m_RootTransform != nullptr) {
+			setParent(m_RootTransform);
+		} else {
+			m_TransformsBeforeRoot.push_back(this);
+		}
 	}
 	m_Name = "Untitled";
 }
 
-Transform::Transform(std::string a_Name) {
-	if (m_RootTransform != nullptr) {
-		setParent(m_RootTransform);
-	} else {
-		m_TransformsBeforeRoot.push_back(this);
+Transform::Transform(std::string a_Name, bool a_AddToRoot) {
+	if (a_AddToRoot) {
+		if (m_RootTransform != nullptr) {
+			setParent(m_RootTransform);
+		} else {
+			m_TransformsBeforeRoot.push_back(this);
+		}
 	}
 	m_Name = a_Name;
 }
@@ -204,7 +208,7 @@ glm::quat Transform::getGlobalRotation() {
 	}
 	return m_Parent->getGlobalRotation() * glm::quat(m_Rotation);
 #endif // USE_QUATERNIONS
-}
+	}
 
 glm::vec3 Transform::getGlobalRotationEulers() {
 	return glm::degrees(glm::eulerAngles(getGlobalRotation()));

@@ -1,10 +1,8 @@
 #pragma once
 #include "DLLBuild.h"
+#include "Object.h"
 
-#include <glm\glm.hpp>
-#include "Transform.h"
-
-class DLL_BUILD Camera {
+class DLL_BUILD Camera : public Object {
 private:
 	struct CameraData {
 		union {
@@ -35,21 +33,28 @@ public:
 	glm::mat4 getViewMatrix();
 	glm::mat4 getProjectionMatrix();
 	glm::mat4 getProjectionViewMatrix();
-
-	Transform m_Transform;
 private:
 	//uses the Transform to update the ViewMatrix
 	void updateView();
 
+	//updates the view
+	//and if something has changed since the last time the pv matrix was made
+	//it will create it again
 	void updatePV();
 
+	//storage for the perspective/orthographic info that was given to the camera
 	CameraData m_Data;
 
 	glm::mat4 m_ViewMatrix;
 	glm::mat4 m_ProjectionMatrix;
 	glm::mat4 m_ProjectionViewMatrix;
 
+	//number relating to the last frame the View matrix was updated
 	unsigned int m_LastViewMatrixUpdateFrame = 0;
+
+	//a check to see if this camera is dirty
+	//this will be true if the perspective, orthographic or m_Transform was changed
+	//and false again after updatePV is called
 	bool m_IsDirty = false;
 
 };

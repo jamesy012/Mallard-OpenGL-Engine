@@ -70,12 +70,13 @@ void Application::run() {
 
 	//set up scene root transform
 	m_RootTransform = new Transform("Root Transform");
+	Transform::setRootTransform(m_RootTransform);
 
 	//set up cameras
 	m_GameCamera = new Camera();
 	m_GameCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 	m_UiCamera = new Camera();
-	m_UiCamera->setOrthographic(0, m_AppWindow->getFramebufferWidth(), 0, m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+	m_UiCamera->setOrthographic(0.0f, (float)m_AppWindow->getFramebufferWidth(), 0.0f, (float)m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
 	//set up default clear color
 	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);

@@ -100,12 +100,12 @@ void Framebuffer::genFramebuffer() {
 	}
 
 	//color attachments
-	glDrawBuffers(1, drawBuffers.data());
+	glDrawBuffers(m_ColorAttachments.size(), drawBuffers.data());
 
 	//simple error checker
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
-		printf("Framebuffer Error ID: %i\n",status);
+		printf("Framebuffer Error ID: %i\n", status);
 	}
 
 	//done, lets unbind the buffer
@@ -216,7 +216,7 @@ Texture * Framebuffer::getTexture() const {
 	if (m_ColorAttachments.size() == 0) {
 		return nullptr;
 	}
-	return ((FramebufferTexture*)m_ColorAttachments[0])->m_TextureObject;
+	return ((FramebufferTexture*) m_ColorAttachments[0])->m_TextureObject;
 }
 
 //converts a_Format and a_FormatSize into their opengl counterparts
@@ -318,7 +318,7 @@ unsigned int Framebuffer::getGLAttachment(FramebufferBufferFormats a_Format) {
 	switch (a_Format) {
 		case FramebufferBufferFormats::R:
 		case FramebufferBufferFormats::RG:
-		case FramebufferBufferFormats::RGB:	
+		case FramebufferBufferFormats::RGB:
 		case FramebufferBufferFormats::RGBA:
 			return GL_COLOR_ATTACHMENT0;
 		case FramebufferBufferFormats::DEPTH:

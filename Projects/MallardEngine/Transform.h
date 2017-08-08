@@ -19,9 +19,11 @@
 class Transform {
 public:
 	//sets up globalRoot parent gives default name
-	DLL_BUILD Transform();
+	//bool to check if we should add this transform as a child to the root transform
+	DLL_BUILD Transform(bool a_AddToRoot = true);
 	//sets up globalRoot parent with a_Name
-	DLL_BUILD Transform(std::string a_Name);
+	//bool to check if we should add this transform as a child to the root transform
+	DLL_BUILD Transform(std::string a_Name, bool a_AddToRoot = true);
 	DLL_BUILD ~Transform();
 	
 	//TODO make these rule of 3/5 functions for Transform

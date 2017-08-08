@@ -1,9 +1,10 @@
 #include "Camera.h"
 
+#include <glm\glm.hpp>
 //perspective/ortho
 #include <glm\ext.hpp>
 
-Camera::Camera() {
+Camera::Camera() : Object("BaseCamera") {
 }
 
 
@@ -41,21 +42,29 @@ void Camera::setOrthographic(const float a_Left, const float a_Right, const floa
 									m_Data.m_Far);
 }
 
+//runs UpdateView to check if we should update the view matrix by using the transform
+//then returns the view matrix
 glm::mat4 Camera::getViewMatrix() {
 	updateView();
 	return m_ViewMatrix;
 }
 
+//this doesn't require updating since it's from the setPerspective and setOrthographic functions
 glm::mat4 Camera::getProjectionMatrix() {
 	return m_ProjectionMatrix;
 }
 
+//runs the update on the updatePV function then returns the m_ProjectionViewMatrix
+//this also updates the view matrix
 glm::mat4 Camera::getProjectionViewMatrix() {
 	updatePV();
 	return m_ProjectionViewMatrix;
 }
 
+//the view matrix is the inverse of the globalMatrix of the transform
 void Camera::updateView() {
+	//check to see if the transforms last update was different to the last time the camera updated it's view matrix
+	//or the transform/parent is dirty
 	if (m_Transform.getLastTransformUpdate() != m_LastViewMatrixUpdateFrame || m_Transform.isParentDirty()) {
 		//sets the view matrix to the inverse of the transforms matrix
 		m_ViewMatrix = glm::inverse(m_Transform.getGlobalMatrix());
