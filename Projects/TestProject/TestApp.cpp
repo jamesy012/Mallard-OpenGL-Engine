@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include <gl\glew.h>
 #include <glm\glm.hpp>
 #include <glm\ext.hpp>
 
@@ -62,7 +63,7 @@ void TestApp::startUp() {
 
 	//FRAME BUFFER TEST
 	m_FbTest = new Framebuffer();
-	m_FbTest->setSize(64, 64);
+	m_FbTest->setSize(512,512);
 	m_FbTest->createRenderTarget();
 	//m_FbTest->genFramebuffer();
 
@@ -75,6 +76,11 @@ void TestApp::startUp() {
 	m_FbCamera->setOrthographic(-8, 8, -8, 8, 0.1f, 1000.0f);
 	m_FbCamera->m_Transform.setPosition(glm::vec3(10, 10, 10));
 	m_FbCamera->m_Transform.setLookAt(glm::vec3(0, 0, 0));
+
+	m_PostprocessingBlur = new Shader();
+	m_PostprocessingBlur->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+	m_PostprocessingBlur->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/BoxBlur.frag");
+	m_PostprocessingBlur->linkShader();
 
 }
 
@@ -90,6 +96,8 @@ void TestApp::shutDown() {
 	delete m_FbCamera;
 	delete m_FbTest;
 	delete m_FbPlane;
+
+	delete m_PostprocessingBlur;
 }
 
 void TestApp::update() {
@@ -103,6 +111,10 @@ void TestApp::draw() {
 	//framebuffer test
 	m_Shader->use();
 	runFramebufferTest();
+
+
+
+	m_Shader->use();
 
 	Transform model;
 
@@ -233,5 +245,13 @@ void TestApp::runFramebufferTest() {
 	m_Model->draw();
 	m_Mesh->draw();
 
+	glDisable(GL_DEPTH_TEST);
+
+	m_PostprocessingBlur->use();
+
+	m_FbPlane->draw();
+
 	Framebuffer::use(nullptr);
+
+	glEnable(GL_DEPTH_TEST);
 }

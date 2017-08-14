@@ -28,6 +28,7 @@ private:
 	Mesh* m_Mesh;
 	Shader* m_Shader;
 	Shader* m_TextShader;
+	Shader* m_PostprocessingBlur;
 	Texture* m_Texture;
 	Font* m_Font;
 	Text* m_TestText;
