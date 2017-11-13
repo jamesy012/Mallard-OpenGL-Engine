@@ -31,6 +31,8 @@ public:
 	//with a bool to make it textured or not
 	void createSimpleShader(bool a_Textured);
 
+	void reloadShaders();
+
 	///SETTING UP SHADERS FOR USE
 
 	//creates program for this shader
@@ -46,20 +48,20 @@ public:
 
 	//gets the program id for this shader
 	//will be nullptr if unused
-	unsigned int getProgram();
+	unsigned int getProgram() const;
 
 	//will use shader program
-	void use();
+	static void use(const Shader* a_Shader);
 
 	//returns the last used shader,
 	//will be nullptr if no shader has been used yet
-	static Shader* getCurrentShader();
+	static const Shader* getCurrentShader();
 
 	///UNIFORM FUNCTIONS
 
 	//finds a uniform with the name of a_Name, and the type of a_Type
 	//returns nullptr if no uniform found
-	ShaderUniformData* getUniform(ShaderUniformTypes a_Type, const char* a_Name);
+	ShaderUniformData* getUniform(const ShaderUniformTypes a_Type, const char* a_Name) const;
 
 	//apply a_Data to the shader that is currently in use
 	//it uses the type of a_Data to find out which opengl call to use
@@ -92,7 +94,7 @@ private:
 	//Converts a ShaderTypes into the opengl version of that Shader
 	//input: ShaderTypes::TYPE_VERTEX 
 	//output: GL_VERTEX_SHADER define from opengl header
-	unsigned int getOpenglShaderType(ShaderTypes a_Type);
+	unsigned int getOpenglShaderType(ShaderTypes a_Type) const;
 	
 	//Creates and compiles a shader using the type and code provided
 	//will print a error if there was a issue with the shader code provided
@@ -131,10 +133,14 @@ private:
 		//after linking these are reset to 0 as the shaders are deleted
 		//used to store a reference for each shader type for the shader
 		unsigned int m_ShaderID = 0;
+		//What was the type of this shader
+		ShaderTypes m_ShaderType;
 		//path to the file
 		//if the shader was not loaded from a file path then it will be empty
 		//if the shader fails to load/find the file, this will still have the path
-		std::string m_FilePath;
+		std::string m_FilePath = "";
+		//copy of the shader that was loaded from text
+		std::string m_LoadedFromText = "";
 	} m_Shaders[SHADER_TYPES_SIZE];
 
 	//is this program linked to it's shaders

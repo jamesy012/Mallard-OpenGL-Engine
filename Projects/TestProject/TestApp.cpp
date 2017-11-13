@@ -9,6 +9,7 @@
 #include "TimeHandler.h"
 #include "Window.h"
 #include "Transform.h"
+#include "Input.h"
 
 #include "Texture.h"
 #include "Model.h"
@@ -30,9 +31,9 @@ void TestApp::startUp() {
 
 	m_Model = new Model();
 
-	//m_Model->load("Models/Nanosuit/nanosuit.obj");
+	m_Model->load("Models/Nanosuit/nanosuit.obj");
 	//m_Model->load("Models/ModelTest/ModelTest.fbx");
-	m_Model->load("Models/ModelTest/ModelTest.obj");
+	//m_Model->load("Models/ModelTest/ModelTest.obj");
 
 
 	m_Shader = new Shader();
@@ -105,16 +106,36 @@ void TestApp::update() {
 	//
 	//// Keep running
 	//printf("Frame: %i dt: %f\n", TimeHandler::getCurrentFrameNumber(), TimeHandler::getDeltaTime());
+
+	if (Input::wasKeyPressed(73)) {
+		m_PostprocessingBlur->reloadShaders();
+	}
+	int leftOrRight = Input::isKeyDown(263)<<0 | Input::isKeyDown(262)<<1;
+	//printf("left or right: %i\n", leftOrRight);
+	if (leftOrRight != 0) {
+		ShaderUniformData* blurIntensity = m_PostprocessingBlur->getUniform(ShaderUniformTypes::FLOAT, "Intensity");
+		float value = *(float*) blurIntensity->getDataVoid();
+		printf("left or right: Before: %f", value);
+		if (leftOrRight & (1)) {//left
+			value -= TimeHandler::getDeltaTime()*5;
+			if (value < 0) {
+				value = 0;
+			}
+		} else {//right
+			value += TimeHandler::getDeltaTime()*5;
+		}
+		printf(" After: %f\n", value);
+		blurIntensity->setData(&value);
+		Shader::use(m_PostprocessingBlur);
+		m_PostprocessingBlur->applyUniform(blurIntensity);
+	}
 }
 
 void TestApp::draw() {
 	//framebuffer test
-	m_Shader->use();
 	runFramebufferTest();
 
-
-
-	m_Shader->use();
+	Shader::use(m_Shader);
 
 	Transform model;
 
@@ -167,7 +188,7 @@ void TestApp::drawUi() {
 	ShaderUniformData* uniformColor;
 	Transform model;
 
-	m_TextShader->use();
+	Shader::use(m_TextShader);
 	//get uniforms
 	uniformColor = m_TextShader->m_CommonUniforms.m_Color;
 	uniformPVM = m_TextShader->m_CommonUniforms.m_ProjectionViewMatrix;
@@ -218,6 +239,7 @@ void TestApp::drawUi() {
 }
 
 void TestApp::runFramebufferTest() {
+	Shader::use(m_Shader);
 	Framebuffer::use(m_FbTest);
 
 	Transform model;
@@ -247,7 +269,7 @@ void TestApp::runFramebufferTest() {
 
 	glDisable(GL_DEPTH_TEST);
 
-	m_PostprocessingBlur->use();
+	Shader::use(m_PostprocessingBlur);
 
 	m_FbPlane->draw();
 

@@ -55,6 +55,8 @@ private:
 	//a flag to check if this uniform is dirty
 	//when dirty, it means this data has been modified and has not been used since
 	bool m_IsDirty = false;
+	//where did this uniform come from?
+	Shader* m_ParentShader = nullptr;
 public:
 	//copy's the data from a_NewData into the memory at m_Data
 	//unknown results if you put in data that is not of the same type
@@ -93,6 +95,11 @@ public:
 	//it uses the transforms getGlobalMatrix
 	//does checks to see if the uniform is a mat4, it it's not then this wont do anything
 	void setData(Transform* a_Data);
+
+	///Getting Data
+
+	//returns a pointer to the data
+	void* getDataVoid();
 private:
 	//sets this uniform as dirty
 	//use this after data has been modified

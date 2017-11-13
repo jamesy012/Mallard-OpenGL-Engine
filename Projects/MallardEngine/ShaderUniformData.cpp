@@ -82,3 +82,7 @@ void ShaderUniformData::setData(Transform * a_Data) {
 	}
 }
 
+void * ShaderUniformData::getDataVoid() {
+	return m_Data;
+}
+

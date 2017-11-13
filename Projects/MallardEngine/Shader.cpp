@@ -8,7 +8,7 @@
 #include <string> //std::string
 
 
-static Shader* m_LastUsed = nullptr;
+static const Shader* m_LastUsed = nullptr;
 
 Shader::Shader() {
 	m_Program = 0;
@@ -62,6 +62,8 @@ void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
 void Shader::setFromText(ShaderTypes a_Type, const char * a_ShaderText) {
 	//reset file path
 	m_Shaders[(int) a_Type].m_FilePath = "";
+	m_Shaders[(int) a_Type].m_LoadedFromText = a_ShaderText;
+
 
 	createShader(a_Type, &a_ShaderText);
 }
@@ -119,6 +121,44 @@ void Shader::createSimpleShader(bool a_Textured) {
 
 }
 
+void Shader::reloadShaders() {
+	//_ASSERT_EXPR(m_Linked, "Cant reload shader, when it hasent been linked");
+	m_Linked = false;
+	for (unsigned int i = 0; i < SHADER_TYPES_SIZE; i++) {
+		ShaderData* sd = &m_Shaders[i];
+		if (sd->m_ShaderID != 0) {
+			glDeleteShader(sd->m_ShaderID);
+			sd->m_ShaderID = 0;
+		}
+		//if loaded from text
+		if (sd->m_FilePath == "") {
+			setFromText((ShaderTypes)i, sd->m_LoadedFromText.c_str());
+		} else {//else loaded from file
+			setFromPath((ShaderTypes) i, sd->m_FilePath.c_str());
+		}
+	}
+
+	//go through shader types
+	for (int i = 0; i < SHADER_UNIFORMS_TYPES_SIZE; i++) {
+		//go through vector for that type
+		for (size_t q = 0; q < m_UniformData[i].size(); q++) {
+			//get shader uniform
+			ShaderUniformData* uData = m_UniformData[i][q];
+			//delete void* data
+			delete uData->m_Data;
+			//delete uniform
+			delete uData;
+		}
+		m_UniformData[i].clear();
+	}
+
+	linkShader();
+
+	if (m_LastUsed == this) {
+		Shader::use(this);
+	}
+}
+
 void Shader::createProgram() {
 	if (m_Program != 0) {
 		printf("shader already had a program");
@@ -149,7 +189,7 @@ void Shader::linkShader() {
 	glLinkProgram(m_Program);
 
 	//check for errors during the link process
-	checkGlErrorProgram(GL_LINK_STATUS, m_Program, "LINKING_FAILED");
+	bool linked = !checkGlErrorProgram(GL_LINK_STATUS, m_Program, "LINKING_FAILED");
 
 	//delete the shaders, since now they are apart of the program
 	for (int i = 0; i < SHADER_TYPES_SIZE; i++) {
@@ -159,26 +199,34 @@ void Shader::linkShader() {
 			m_Shaders[i].m_ShaderID = 0;
 		}
 	}
+	if (!linked) {
+		return;
+	}
+	m_Linked = true;
 
 	//load all uniforms attached to the program
 	getShaderUniforms();
 }
 
-unsigned int Shader::getProgram() {
+unsigned int Shader::getProgram() const {
 	return m_Program;
 }
 
-void Shader::use() {
+void Shader::use(const Shader* a_Shader) {
+	if (m_LastUsed == a_Shader) {
+		return;
+	}
+
 	//tell OpenGL to use the program
-	glUseProgram(m_Program);
-	m_LastUsed = this;
+	glUseProgram(a_Shader->m_Program);
+	m_LastUsed = a_Shader;
 }
 
-Shader * Shader::getCurrentShader() {
+const Shader * Shader::getCurrentShader() {
 	return m_LastUsed;
 }
 
-ShaderUniformData * Shader::getUniform(ShaderUniformTypes a_Type, const char * a_Name) {
+ShaderUniformData * Shader::getUniform(const ShaderUniformTypes a_Type, const char * a_Name) const {
 	ShaderUniformData* uniform = nullptr;
 	int uniformType = (int) a_Type;
 
@@ -199,6 +247,7 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 	if (a_Data == nullptr) {
 		return;
 	}
+
 	//check to see if the data has been modified
 	if (a_Data->m_IsDirty) {
 		a_Data->m_IsDirty = false;
@@ -212,11 +261,17 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 			case ShaderUniformTypes::VEC4:
 				glUniform4fv(loc, 1, (float*) a_Data->m_Data);
 				break;
+			case ShaderUniformTypes::FLOAT:
+				glUniform1fv(loc, 1, (float*) a_Data->m_Data);
+				break;
+			default:
+				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %u, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
+				break;
 		}
 	}
 }
 
-unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) {
+unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
 	switch (a_Type) {
 		case ShaderTypes::TYPE_VERTEX:
 			return GL_VERTEX_SHADER;
@@ -236,6 +291,7 @@ void Shader::createShader(ShaderTypes a_Type, const char * const * a_Code) {
 	checkGlErrorShader(GL_COMPILE_STATUS, shaderIndex, "createShader::COMPILATION_FAILED");
 
 	m_Shaders[(int) a_Type].m_ShaderID = shaderIndex;
+	m_Shaders[(int) a_Type].m_ShaderType = a_Type;
 }
 
 //Gets error message for shaders from opengl using a_ErrorType
@@ -289,6 +345,7 @@ void Shader::getShaderUniforms() {
 
 		//sets up a shaderUniformData object
 		ShaderUniformData* uniformData = new ShaderUniformData();
+		uniformData->m_ParentShader = this;
 
 		//gets the type and creates the data with the correct size
 		switch (type) {
@@ -310,6 +367,12 @@ void Shader::getShaderUniforms() {
 				uniformData->m_Data = new float[3]{ 0 };
 				uniformData->m_Type = ShaderUniformTypes::VEC3;
 				break;
+			case GL_FLOAT:
+				uniformData->m_DataSize = sizeof(float);
+				uniformData->m_DataCount = 1;
+				uniformData->m_Data = new float[1]{ 0 };
+				uniformData->m_Type = ShaderUniformTypes::FLOAT;
+				break;
 			case GL_SAMPLER_2D:
 				uniformData->m_DataSize = sizeof(int);
 				uniformData->m_DataCount = 1;
@@ -326,7 +389,7 @@ void Shader::getShaderUniforms() {
 
 		//gets uniform location (Appears to be the same as i)
 		uniformData->m_UniformLocation = glGetUniformLocation(m_Program, name);
-		uniformData->m_Name = name;
+		uniformData-> m_Name= name;
 
 		//add the uniform data to the full list
 		m_UniformData[(int) uniformData->m_Type].push_back(uniformData);
@@ -350,10 +413,14 @@ void Shader::getShaderUniforms() {
 			case ShaderUniformTypes::MAT4:
 			case ShaderUniformTypes::VEC4:
 			case ShaderUniformTypes::VEC3:
+			case ShaderUniformTypes::FLOAT:
 				glGetUniformfv(m_Program, uniformData->m_UniformLocation, (GLfloat*) uniformData->m_Data);
 				break;
 			case ShaderUniformTypes::SAMPLER2D:
 				glGetUniformiv(m_Program, uniformData->m_UniformLocation, (GLint*) uniformData->m_Data);
+				break;
+			default:
+				printf("ERROR WITH SHADER, GETTING UNIFORM DEFAULT DATA %u, Name: %s\n", type, name);
 				break;
 		}
 
