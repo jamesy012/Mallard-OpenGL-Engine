@@ -5,6 +5,7 @@
 
 class Window;
 class Transform;
+class Framebuffer;
 
 class DLL_BUILD Application {
 public:
@@ -24,17 +25,26 @@ protected:
 	bool m_Quit = false;
 
 	//flags/handles
-	bool m_CloseOnEscape = true;
+	struct Flags {
+		bool m_CloseOnEscape = true;
+		bool m_UpdateUICameraToScreenSize = true;
+	} m_Flags;
 
 	Window* m_AppWindow = nullptr;
 
 	//reference to the main camera in the scene
+	//Main Camera will be set to m_GameCamera at the start of draw()
+	//and set to m_UiCamera at the start of drawUi()
 	Camera* m_MainCamera;
 	//Game Camera and UI Camera
 	Camera* m_GameCamera = nullptr;
 	Camera* m_UiCamera = nullptr;
+
+	//
+	Framebuffer* m_GameFrame;
 private:
 	void setCallbacksForWindow(Window* a_Window);
+	static void windowResize(int a_Width, int a_Height);
 
 	void checkHandles();
 

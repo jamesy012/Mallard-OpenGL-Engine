@@ -7,6 +7,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#if _DEBUG
+#include "Framebuffer.h"
+#endif // _DEBUG
+
 
 Texture::Texture() {
 	m_TextureHeight = m_TextureWidth = 0;
@@ -63,6 +67,15 @@ DLL_BUILD unsigned int Texture::getGLTypeFromTextureType(const TextureType a_Typ
 }
 
 DLL_BUILD void Texture::bindTexture(int a_Slot) {
+#if _DEBUG
+	Framebuffer* m_Fb = Framebuffer::getCurrentFramebuffer();
+	if (m_Fb != nullptr) {
+		Texture* framebufferTexture = m_Fb->getTexture();
+		if (framebufferTexture->m_TextureId == m_TextureId) {
+			_ASSERT_EXPR(false, L"Binded texture is being used in the current framebuffer");
+		}
+	}
+#endif // DEBUG
 	//m_TextureId can be 0, and it will just unbind that texture
 
 	glActiveTexture(GL_TEXTURE0 + a_Slot);

@@ -35,10 +35,10 @@ void Text::generateText(const std::string a_Text) {
 	m_Text = a_Text;
 	//reset the text mesh
 	if (m_TextMesh != nullptr) {
+		//perhaps don't delete, but release the data instead
 		delete m_TextMesh;
-	} else {
-		m_TextMesh = new Mesh();
 	}
+		m_TextMesh = new Mesh();
 
 	//data storage types from Mesh
 	std::vector<MeshVerticesType> vertices;

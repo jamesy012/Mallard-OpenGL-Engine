@@ -3,9 +3,8 @@
 
 #include <vector>
 
-
 class Texture;
-
+class Application;
 
 class DLL_BUILD Framebuffer {
 public:
@@ -35,6 +34,12 @@ public:
 
 	static void use(Framebuffer* a_Framebuffer);
 
+	//Sets the default Framebuffer.
+	//The default frame buffer is used
+	static void setDefaultFramebuffer(Framebuffer* a_Framebuffer);
+
+	static Framebuffer* getCurrentFramebuffer();
+
 	//does the final linkage for this Framebuffer
 	//will add everything from addBuffer to the Framebuffer
 	void genFramebuffer();
@@ -59,7 +64,7 @@ public:
 	//returns a reference to the texture used by this Framebuffer
 	//will be nullptr if no framebuffer has been generated
 	Texture* getTexture() const;
-
+	
 private:
 	//returns the unsigned int referencing OpenGL's format with it's size
 	//will return the base version of the format if a incorrect format size is given

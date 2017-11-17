@@ -32,9 +32,11 @@ private:
 	Texture* m_Texture;
 	Font* m_Font;
 	Text* m_TestText;
+	Text* m_IntensityText;
 
 	Camera* m_FbCamera;
 	Mesh* m_FbPlane;
 	Framebuffer* m_FbTest;
+	Framebuffer* m_FbTestBlured;
 };
 

@@ -6,6 +6,9 @@
 #include "Texture.h"
 #include "Window.h"
 
+static Framebuffer* m_DefaultFramebuffer = nullptr;
+static Framebuffer* m_CurrentFramebuffer = nullptr;
+
 Framebuffer::Framebuffer() {
 	m_Fbo = 0;
 	m_Width = m_Height = 1;//1x1 starting size
@@ -23,12 +26,12 @@ Framebuffer::~Framebuffer() {
 		switch (component->m_Type) {
 			case FramebufferBufferTypes::TEXTURE:
 				//convert component into FramebufferTexture, then get the address of m_TextureID and m_TextureObject
-				glDeleteTextures(1, &((FramebufferTexture*) component)->m_TextureID);
-				delete ((FramebufferTexture*) component)->m_TextureObject;
+				glDeleteTextures(1, &((FramebufferTexture*)component)->m_TextureID);
+				delete ((FramebufferTexture*)component)->m_TextureObject;
 				break;
 			case FramebufferBufferTypes::RENDERBUFFER:
 				//convert component into FramebufferRenderbuffer, then get the address of m_RenderbufferID
-				glDeleteRenderbuffers(1, &((FramebufferRenderbuffer*) component)->m_RenderbufferID);
+				glDeleteRenderbuffers(1, &((FramebufferRenderbuffer*)component)->m_RenderbufferID);
 				break;
 		}
 		//finaly delete the component
@@ -46,18 +49,36 @@ void Framebuffer::setSize(const unsigned int a_Width, const unsigned int a_Heigh
 }
 
 void Framebuffer::use(Framebuffer * a_Framebuffer) {
-	if (a_Framebuffer == nullptr) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		Window* window = Window::getMainWindow();
-		glViewport(0, 0, window->getFramebufferWidth(), window->getFramebufferHeight());
-		glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		return;
+	//if we are setting the current framebuffer to nullprt or 0
+	if (a_Framebuffer == nullptr || a_Framebuffer->m_Fbo == 0) {
+		//then check what if the default framebuffer is null or 0
+		//if it is then render to fbo 0 (the window)
+		if (m_DefaultFramebuffer == nullptr || m_DefaultFramebuffer->m_Fbo == 0) {
+			m_CurrentFramebuffer = m_DefaultFramebuffer;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			Window* window = Window::getMainWindow();
+			glViewport(0, 0, window->getFramebufferWidth(), window->getFramebufferHeight());
+			glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
+			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			return;
+		} else {
+			//else render to the default framebuffer
+			a_Framebuffer = m_DefaultFramebuffer;
+		}
 	}
+	m_CurrentFramebuffer = a_Framebuffer;
 	glBindFramebuffer(GL_FRAMEBUFFER, a_Framebuffer->m_Fbo);
 	glViewport(0, 0, a_Framebuffer->m_Width, a_Framebuffer->m_Height);
 	//glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Framebuffer::setDefaultFramebuffer(Framebuffer * a_Framebuffer) {
+	m_DefaultFramebuffer = a_Framebuffer;
+}
+
+Framebuffer * Framebuffer::getCurrentFramebuffer() {
+	return m_CurrentFramebuffer;
 }
 
 void Framebuffer::genFramebuffer() {
@@ -70,10 +91,10 @@ void Framebuffer::genFramebuffer() {
 		Component* component = m_OtherAttachments[i];
 		switch (component->m_Type) {
 			case FramebufferBufferTypes::TEXTURE:
-				glFramebufferTexture(GL_FRAMEBUFFER, getGLAttachment(component->m_Format), ((FramebufferTexture*) component)->m_TextureID, 0);
+				glFramebufferTexture(GL_FRAMEBUFFER, getGLAttachment(component->m_Format), ((FramebufferTexture*)component)->m_TextureID, 0);
 				break;
 			case FramebufferBufferTypes::RENDERBUFFER:
-				glFramebufferRenderbuffer(GL_FRAMEBUFFER, getGLAttachment(component->m_Format), GL_RENDERBUFFER, ((FramebufferRenderbuffer*) component)->m_RenderbufferID);
+				glFramebufferRenderbuffer(GL_FRAMEBUFFER, getGLAttachment(component->m_Format), GL_RENDERBUFFER, ((FramebufferRenderbuffer*)component)->m_RenderbufferID);
 				break;
 		}
 	}
@@ -90,10 +111,10 @@ void Framebuffer::genFramebuffer() {
 		//and apply the component to the framebuffer
 		switch (component->m_Type) {
 			case FramebufferBufferTypes::TEXTURE:
-				glFramebufferTexture(GL_FRAMEBUFFER, colorAttachment, ((FramebufferTexture*) component)->m_TextureID, 0);
+				glFramebufferTexture(GL_FRAMEBUFFER, colorAttachment, ((FramebufferTexture*)component)->m_TextureID, 0);
 				break;
 			case FramebufferBufferTypes::RENDERBUFFER:
-				glFramebufferRenderbuffer(GL_FRAMEBUFFER, colorAttachment, GL_RENDERBUFFER, ((FramebufferRenderbuffer*) component)->m_RenderbufferID);
+				glFramebufferRenderbuffer(GL_FRAMEBUFFER, colorAttachment, GL_RENDERBUFFER, ((FramebufferRenderbuffer*)component)->m_RenderbufferID);
 				break;
 		}
 
@@ -107,6 +128,8 @@ void Framebuffer::genFramebuffer() {
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		printf("Framebuffer Error ID: %i\n", status);
 	}
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//done, lets unbind the buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -124,51 +147,53 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 	unsigned int glFormat = getGLFormatSize(a_Format, a_FormatSize);
 	Component* component = nullptr;
 	switch (a_Type) {
-		case Framebuffer::TEXTURE: {
-				unsigned int baseGLFormat = getGLFormat(a_Format);
-				unsigned int textureID = 0;
-				//create texture
-				glGenTextures(1, &textureID);
-				glBindTexture(GL_TEXTURE_2D, textureID);
+		case Framebuffer::TEXTURE:
+		{
+			unsigned int baseGLFormat = getGLFormat(a_Format);
+			unsigned int textureID = 0;
+			//create texture
+			glGenTextures(1, &textureID);
+			glBindTexture(GL_TEXTURE_2D, textureID);
 
-				//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
-				glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, baseGLFormat, GL_FLOAT, 0);
+			//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
+			glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, baseGLFormat, GL_FLOAT, 0);
 
-				//basic texture filters
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			//basic texture filters
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-				//unbind texture
-				glBindTexture(GL_TEXTURE_2D, 0);
+			//unbind texture
+			glBindTexture(GL_TEXTURE_2D, 0);
 
-				//create TextureObject
-				Texture* textureObject = new Texture(textureID, m_Width, m_Height);
+			//create TextureObject
+			Texture* textureObject = new Texture(textureID, m_Width, m_Height);
 
-				//set up component
-				component = new FramebufferTexture();
-				((FramebufferTexture*) component)->m_TextureID = textureID;
-				((FramebufferTexture*) component)->m_TextureObject = textureObject;
-				break;
-			}
+			//set up component
+			component = new FramebufferTexture();
+			((FramebufferTexture*)component)->m_TextureID = textureID;
+			((FramebufferTexture*)component)->m_TextureObject = textureObject;
+			break;
+		}
 
-		case Framebuffer::RENDERBUFFER: {
-				unsigned int renderBuffer = 0;
+		case Framebuffer::RENDERBUFFER:
+		{
+			unsigned int renderBuffer = 0;
 
-				//create renderbuffer
-				glGenRenderbuffers(1, &renderBuffer);
-				glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-				//set up renderbuffer
-				glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_Width, m_Height);
+			//create renderbuffer
+			glGenRenderbuffers(1, &renderBuffer);
+			glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+			//set up renderbuffer
+			glRenderbufferStorage(GL_RENDERBUFFER, glFormat, m_Width, m_Height);
 
-				//unbind renderbuffer
-				glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			//unbind renderbuffer
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-				//set up component
-				component = new FramebufferRenderbuffer();
-				((FramebufferRenderbuffer*) component)->m_RenderbufferID = renderBuffer;
+			//set up component
+			component = new FramebufferRenderbuffer();
+			((FramebufferRenderbuffer*)component)->m_RenderbufferID = renderBuffer;
 
-				break;
-			}
+			break;
+		}
 	}
 	component->m_Type = a_Type;
 	component->m_Format = a_Format;
@@ -216,7 +241,7 @@ Texture * Framebuffer::getTexture() const {
 	if (m_ColorAttachments.size() == 0) {
 		return nullptr;
 	}
-	return ((FramebufferTexture*) m_ColorAttachments[0])->m_TextureObject;
+	return ((FramebufferTexture*)m_ColorAttachments[0])->m_TextureObject;
 }
 
 //converts a_Format and a_FormatSize into their opengl counterparts
@@ -224,67 +249,72 @@ Texture * Framebuffer::getTexture() const {
 //result GL_RGB16 (0x8054)
 unsigned int Framebuffer::getGLFormatSize(FramebufferBufferFormats a_Format, unsigned int a_FormatSize) {
 	switch (a_Format) {
-		case FramebufferBufferFormats::R: {
-				switch (a_FormatSize) {
-					case 8:
-						return GL_R8;
-					case 16:
-						return GL_R16;
-				}
-				return GL_R;
+		case FramebufferBufferFormats::R:
+		{
+			switch (a_FormatSize) {
+				case 8:
+					return GL_R8;
+				case 16:
+					return GL_R16;
 			}
-		case FramebufferBufferFormats::RG: {
-				switch (a_FormatSize) {
-					case 8:
-						return GL_RG8;
-					case 16:
-						return GL_RG16;
-				}
-				return GL_RG;
+	_ASSERT_EXPR(false, L"FramebufferBufferFormats::R does not have a_FormatSize");
+		}
+		case FramebufferBufferFormats::RG:
+		{
+			switch (a_FormatSize) {
+				case 8:
+					return GL_RG8;
+				case 16:
+					return GL_RG16;
 			}
-		case FramebufferBufferFormats::RGB: {
-				switch (a_FormatSize) {
-					case 4:
-						return GL_RGB4;
-					case 5:
-						return GL_RGB5;
-					case 8:
-						return GL_RGB8;
-					case 10:
-						return GL_RGB10;
-					case 12:
-						return GL_RGB12;
-					case 16:
-						return GL_RGB16;
-				}
-				return GL_RGB;
+			_ASSERT_EXPR(false, L"FramebufferBufferFormats::RG does not have a_FormatSize");
+		}
+		case FramebufferBufferFormats::RGB:
+		{
+			switch (a_FormatSize) {
+				case 4:
+					return GL_RGB4;
+				case 5:
+					return GL_RGB5;
+				case 8:
+					return GL_RGB8;
+				case 10:
+					return GL_RGB10;
+				case 12:
+					return GL_RGB12;
+				case 16:
+					return GL_RGB16;
 			}
-		case FramebufferBufferFormats::RGBA: {
-				switch (a_FormatSize) {
-					case 2:
-						return GL_RGBA2;
-					case 4:
-						return GL_RGBA4;
-					case 8:
-						return GL_RGBA8;
-					case 12:
-						return GL_RGBA12;
-					case 16:
-						return GL_RGBA16;
-				}
-				return GL_RGBA;
+			_ASSERT_EXPR(false, L"FramebufferBufferFormats::RGB does not have a_FormatSize");
+		}
+		case FramebufferBufferFormats::RGBA:
+		{
+			switch (a_FormatSize) {
+				case 2:
+					return GL_RGBA2;
+				case 4:
+					return GL_RGBA4;
+				case 8:
+					return GL_RGBA8;
+				case 12:
+					return GL_RGBA12;
+				case 16:
+					return GL_RGBA16;
 			}
-		case FramebufferBufferFormats::DEPTH: {
-				switch (a_FormatSize) {
-					case 16:
-						return GL_DEPTH_COMPONENT16;
-					case 24:
-						return GL_DEPTH_COMPONENT24;
-					case 32:
-						return GL_DEPTH_COMPONENT32;
-				}
-				return GL_DEPTH_COMPONENT;
+			_ASSERT_EXPR(false, L"FramebufferBufferFormats::RGBA does not have a_FormatSize");
+		}
+		case FramebufferBufferFormats::DEPTH:
+		{
+			switch (a_FormatSize) {
+				case 16:
+					return GL_DEPTH_COMPONENT16;
+				case 24:
+					return GL_DEPTH_COMPONENT24;
+				case 32:
+					return GL_DEPTH_COMPONENT32;
 			}
+			_ASSERT_EXPR(false, L"FramebufferBufferFormats::DEPTH does not have a_FormatSize");
+		}
 		case FramebufferBufferFormats::STENCIL:
 			return GL_STENCIL;
 		case FramebufferBufferFormats::DEPTH_STENCIL:

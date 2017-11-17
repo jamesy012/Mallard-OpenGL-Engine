@@ -195,6 +195,8 @@ void Window::windowSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height
 	Window* window = getWindowFromGlfwWindow(a_Window);
 	window->m_Width = a_Width;
 	window->m_Height = a_Height;
+	//call function pointer
+	window->m_WindowResizeCallback(a_Width, a_Height);
 }
 
 void Window::windowFramebufferSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height) {
@@ -228,7 +230,7 @@ void Window::checkIfWindowShouldBeMain() {
 }
 
 void Window::updateWindowSize() {
-	glfwSetWindowSize(m_ThisWindow, m_Width,m_Height);
+	glfwSetWindowSize(m_ThisWindow, m_Width, m_Height);
 }
 
 GLFWwindow * Window::getMainContext() {

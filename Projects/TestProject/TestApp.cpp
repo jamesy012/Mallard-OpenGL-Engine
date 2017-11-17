@@ -50,6 +50,10 @@ void TestApp::startUp() {
 	m_TestText = new Text(m_Font);
 	m_TestText->generateText("~ Test Text, 1234!@#$ ~\nNew Line");
 
+	m_IntensityText = new Text(m_Font);
+	m_IntensityText->generateText("Blur");
+
+
 	//todo, move to Font
 
 
@@ -64,8 +68,12 @@ void TestApp::startUp() {
 
 	//FRAME BUFFER TEST
 	m_FbTest = new Framebuffer();
-	m_FbTest->setSize(512,512);
+	m_FbTest->setSize(512, 512);
 	m_FbTest->createRenderTarget();
+
+	m_FbTestBlured = new Framebuffer();
+	m_FbTestBlured->setSize(512, 512);
+	m_FbTestBlured->createRenderTarget();//can do without the depth buffer
 	//m_FbTest->genFramebuffer();
 
 	m_FbPlane = new Mesh();
@@ -74,7 +82,7 @@ void TestApp::startUp() {
 
 	m_FbCamera = new Camera();
 	//m_FbCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-	m_FbCamera->setOrthographic(-8, 8, -8, 8, 0.1f, 1000.0f);
+	m_FbCamera->setOrthographic(-16, 16, -16, 16, 0.1f, 1000.0f);
 	m_FbCamera->m_Transform.setPosition(glm::vec3(10, 10, 10));
 	m_FbCamera->m_Transform.setLookAt(glm::vec3(0, 0, 0));
 
@@ -96,8 +104,10 @@ void TestApp::shutDown() {
 
 	delete m_FbCamera;
 	delete m_FbTest;
+	delete m_FbTestBlured;
 	delete m_FbPlane;
 
+	delete m_IntensityText;
 	delete m_PostprocessingBlur;
 }
 
@@ -124,6 +134,7 @@ void TestApp::update() {
 		} else {//right
 			value += TimeHandler::getDeltaTime()*5;
 		}
+		m_IntensityText->generateText("Blur: " + std::to_string(value));
 		printf(" After: %f\n", value);
 		blurIntensity->setData(&value);
 		Shader::use(m_PostprocessingBlur);
@@ -179,6 +190,8 @@ void TestApp::draw() {
 	model.setRotation(glm::vec3(90, 0, 0));
 	uniformModel->setData(&model);
 	Shader::applyUniform(uniformModel);
+
+	m_FbPlane->setTexture(m_FbTestBlured->getTexture());
 	m_FbPlane->draw();
 }
 
@@ -235,6 +248,11 @@ void TestApp::drawUi() {
 	float resetFontColor[] = { 1.0f,1.0f,1.0f,1.0f };
 	uniformColor->setData(resetFontColor);
 
+	//draw Blur text
+	model.setPosition(glm::vec3(Window::getMainWindow()->getWindowWidth()/2.0f, Window::getMainWindow()->getWindowHeight()/4.0f, 0));
+	uniformModel->setData(&model);
+	Shader::applyUniform(uniformModel);
+	m_IntensityText->draw();
 
 }
 
@@ -248,8 +266,7 @@ void TestApp::runFramebufferTest() {
 	ShaderUniformData* uniformModel;
 
 	///NORMAL RENDER
-
-	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, 0, 0) * 100.0f);
+	model.rotate(glm::vec3(TimeHandler::getCurrentTime()*0.32f, TimeHandler::getCurrentTime()*0.17f, 0) * 100.0f);
 
 	//get uniforms
 	uniformPVM = m_Shader->m_CommonUniforms.m_ProjectionViewMatrix;
@@ -267,13 +284,12 @@ void TestApp::runFramebufferTest() {
 	m_Model->draw();
 	m_Mesh->draw();
 
-	glDisable(GL_DEPTH_TEST);
-
+	//render the framebuffer to a new one which only has the blur data
+	Framebuffer::use(m_FbTestBlured);
 	Shader::use(m_PostprocessingBlur);
-
+	//set it to the other framebuffers texture
+	m_FbPlane->setTexture(m_FbTest->getTexture());
 	m_FbPlane->draw();
 
 	Framebuffer::use(nullptr);
-
-	glEnable(GL_DEPTH_TEST);
 }

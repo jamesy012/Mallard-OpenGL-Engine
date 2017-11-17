@@ -21,6 +21,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+static Application* m_Application = nullptr;
 
 Application::Application() {
 }
@@ -34,6 +35,8 @@ Application::~Application() {
 }
 
 void Application::run() {
+
+	m_Application = this;
 
 	//start glfw
 	if (!glfwInit()) {
@@ -56,6 +59,8 @@ void Application::run() {
 	m_AppWindow = new Window();
 	m_AppWindow->createWindow(640, 480, "Window");
 	m_AppWindow->makeContextCurrent();//make context so we can render to it
+
+	m_AppWindow->m_WindowResizeCallback = windowResize;
 
 	//set up callbacks for window
 	setCallbacksForWindow(m_AppWindow);
@@ -171,8 +176,15 @@ void Application::setCallbacksForWindow(Window * a_Window) {
 
 }
 
+void Application::windowResize(int a_Width, int a_Height) {
+	if (!m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
+		return;
+	}
+	m_Application->m_UiCamera->setOrthographic(0.0f, (float)m_Application->m_AppWindow->getFramebufferWidth(), 0.0f, (float)m_Application->m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+}
+
 void Application::checkHandles() {
-	if (m_CloseOnEscape) {
+	if (m_Flags.m_CloseOnEscape) {
 		if (Input::wasKeyPressed(GLFW_KEY_ESCAPE)) {
 			m_Quit = true;
 		}

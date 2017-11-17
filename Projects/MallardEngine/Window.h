@@ -13,6 +13,10 @@ public:
 	//will use that window as a base for this class
 	Window(GLFWwindow* a_Window);
 
+	//temporary function pointer for window sizes
+	typedef void (*WindowResizeFn) (int a_Width, int a_Height);
+	WindowResizeFn m_WindowResizeCallback;
+
 	void destroyWindow();
 
 	/*** Window Creation Functions */
