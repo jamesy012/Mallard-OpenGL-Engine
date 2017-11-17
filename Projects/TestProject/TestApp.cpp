@@ -120,19 +120,20 @@ void TestApp::update() {
 	if (Input::wasKeyPressed(73)) {
 		m_PostprocessingBlur->reloadShaders();
 	}
-	int leftOrRight = Input::isKeyDown(263)<<0 | Input::isKeyDown(262)<<1;
+	int leftOrRight = Input::isKeyDown(263) << 0 | Input::isKeyDown(262) << 1;
 	//printf("left or right: %i\n", leftOrRight);
 	if (leftOrRight != 0) {
 		ShaderUniformData* blurIntensity = m_PostprocessingBlur->getUniform(ShaderUniformTypes::FLOAT, "Intensity");
-		float value = *(float*) blurIntensity->getDataVoid();
+		float value = *(float*)blurIntensity->getDataVoid();
 		printf("left or right: Before: %f", value);
 		if (leftOrRight & (1)) {//left
-			value -= TimeHandler::getDeltaTime()*5;
+			value -= TimeHandler::getDeltaTime() * 5;
 			if (value < 0) {
 				value = 0;
 			}
-		} else {//right
-			value += TimeHandler::getDeltaTime()*5;
+		}
+		if (leftOrRight & (2)) {//right
+			value += TimeHandler::getDeltaTime() * 5;
 		}
 		m_IntensityText->generateText("Blur: " + std::to_string(value));
 		printf(" After: %f\n", value);
@@ -249,7 +250,7 @@ void TestApp::drawUi() {
 	uniformColor->setData(resetFontColor);
 
 	//draw Blur text
-	model.setPosition(glm::vec3(Window::getMainWindow()->getWindowWidth()/2.0f, Window::getMainWindow()->getWindowHeight()/4.0f, 0));
+	model.setPosition(glm::vec3(Window::getMainWindow()->getWindowWidth() / 2.0f, Window::getMainWindow()->getWindowHeight() / 4.0f, 0));
 	uniformModel->setData(&model);
 	Shader::applyUniform(uniformModel);
 	m_IntensityText->draw();

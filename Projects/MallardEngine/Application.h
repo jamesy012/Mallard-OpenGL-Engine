@@ -5,7 +5,10 @@
 
 class Window;
 class Transform;
+
 class Framebuffer;
+class Mesh;
+class Shader;
 
 class DLL_BUILD Application {
 public:
@@ -41,7 +44,9 @@ protected:
 	Camera* m_UiCamera = nullptr;
 
 	//
-	Framebuffer* m_GameFrame;
+	Framebuffer* m_FbGameFrame;
+	Framebuffer* m_FbUIFrame;
+	Framebuffer* m_FbCombinedFrame;
 private:
 	void setCallbacksForWindow(Window* a_Window);
 	static void windowResize(int a_Width, int a_Height);
@@ -51,6 +56,9 @@ private:
 	//root transform for every transform
 	Transform* m_RootTransform;
 
+
+	Mesh* m_FullScreenQuad;
+	Shader* m_PPRender;
 
 };
 

@@ -7,6 +7,7 @@
 #include <sstream> //std::stringstream
 #include <string> //std::string
 
+#include "TimeHandler.h"
 
 static const Shader* m_LastUsed = nullptr;
 
@@ -220,6 +221,13 @@ void Shader::use(const Shader* a_Shader) {
 	//tell OpenGL to use the program
 	glUseProgram(a_Shader->m_Program);
 	m_LastUsed = a_Shader;
+
+	//assign the new time
+	if (a_Shader->m_CommonUniforms.m_Time != nullptr) {
+		float time = TimeHandler::getCurrentTime();
+		a_Shader->m_CommonUniforms.m_Time->setData(&time);
+		a_Shader->applyUniform(a_Shader->m_CommonUniforms.m_Time);
+	}
 }
 
 const Shader * Shader::getCurrentShader() {
@@ -324,7 +332,7 @@ bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shad
 //gets information from OpenGL about the uniforms
 //it also creates the memory for each data type
 void Shader::getShaderUniforms() {
-
+	m_CommonUniforms.m_ProjectionViewMatrix = m_CommonUniforms.m_ModelMatrix = m_CommonUniforms.m_Color = m_CommonUniforms.m_Time = nullptr;
 	GLint count;
 
 	GLint size; // size of the variable
@@ -406,6 +414,8 @@ void Shader::getShaderUniforms() {
 			m_CommonUniforms.m_ModelMatrix = uniformData;
 		} else if (strcmp(name, "color") == 0) {
 			m_CommonUniforms.m_Color = uniformData;
+		} else if (strcmp(name, "time") == 0) {
+			m_CommonUniforms.m_Time = uniformData;
 		}
 
 		//copy defaults from the shader

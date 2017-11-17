@@ -86,6 +86,8 @@ public:
 		//this is a vec4, in the Fragment Shader
 		//it is used to modify the color of the object
 		ShaderUniformData* m_Color = nullptr;
+		//Time of the program since the start
+		ShaderUniformData* m_Time = nullptr;
 	} m_CommonUniforms;
 
 private:

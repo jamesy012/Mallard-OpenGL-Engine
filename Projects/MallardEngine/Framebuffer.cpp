@@ -58,7 +58,7 @@ void Framebuffer::use(Framebuffer * a_Framebuffer) {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			Window* window = Window::getMainWindow();
 			glViewport(0, 0, window->getFramebufferWidth(), window->getFramebufferHeight());
-			glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
+			//glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
 			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			return;
 		} else {
@@ -75,10 +75,20 @@ void Framebuffer::use(Framebuffer * a_Framebuffer) {
 
 void Framebuffer::setDefaultFramebuffer(Framebuffer * a_Framebuffer) {
 	m_DefaultFramebuffer = a_Framebuffer;
+	use(a_Framebuffer);
 }
 
 Framebuffer * Framebuffer::getCurrentFramebuffer() {
 	return m_CurrentFramebuffer;
+}
+
+void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer * a_To) {
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, a_From->m_Fbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, a_To->m_Fbo);
+
+	glBlitFramebuffer(0, 0, a_From->m_Width, a_From->m_Height, 0, 0, a_To->m_Width, a_To->m_Height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFramebuffer->m_Fbo);
 }
 
 void Framebuffer::genFramebuffer() {
@@ -137,7 +147,7 @@ void Framebuffer::genFramebuffer() {
 }
 
 void Framebuffer::createRenderTarget() {
-	addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 8);
+	addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA, 16);
 	addBuffer(FramebufferBufferTypes::RENDERBUFFER, FramebufferBufferFormats::DEPTH, 24);
 	genFramebuffer();
 }
@@ -257,7 +267,7 @@ unsigned int Framebuffer::getGLFormatSize(FramebufferBufferFormats a_Format, uns
 				case 16:
 					return GL_R16;
 			}
-	_ASSERT_EXPR(false, L"FramebufferBufferFormats::R does not have a_FormatSize");
+			_ASSERT_EXPR(false, L"FramebufferBufferFormats::R does not have a_FormatSize");
 		}
 		case FramebufferBufferFormats::RG:
 		{

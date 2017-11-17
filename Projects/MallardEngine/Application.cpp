@@ -12,7 +12,11 @@
 #include "ResourceManager.h"
 #include "Transform.h"
 
+#include "Framebuffer.h"
 #include "Window.h"
+
+#include "Mesh.h"
+#include "Shader.h"
 
 
 /* assimp include files. These three are usually needed. */
@@ -83,8 +87,27 @@ void Application::run() {
 	m_UiCamera = new Camera();
 	m_UiCamera->setOrthographic(0.0f, (float)m_AppWindow->getFramebufferWidth(), 0.0f, (float)m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
+
+	//gen frame buffers
+	{
+		const unsigned int NumOfFames = 3;
+		Framebuffer** frame[NumOfFames] = {&m_FbGameFrame,&m_FbUIFrame,&m_FbCombinedFrame };
+		for (int i = 0; i < NumOfFames; i++) {
+			(*frame[i]) = new Framebuffer();
+			(*frame[i])->setSize(m_AppWindow->getFramebufferWidth()*3, m_AppWindow->getFramebufferHeight()*3);
+			(*frame[i])->createRenderTarget();
+		}
+	}
+
+	m_PPRender = new Shader();
+	m_PPRender->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+	m_PPRender->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
+	m_PPRender->linkShader();
+
+	m_FullScreenQuad = new Mesh();
+	m_FullScreenQuad->createPlane();
+
 	//set up default clear color
-	glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
 
 	//todo Add text that will say loading here
 
@@ -124,6 +147,9 @@ void Application::run() {
 
 			update();
 
+			glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
+
+			Framebuffer::setDefaultFramebuffer(m_FbGameFrame);
 			//clear framebuffer?
 			//set up new empty framebuffer
 
@@ -135,6 +161,10 @@ void Application::run() {
 
 
 			//Start UI render
+			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			//
+			Framebuffer::setDefaultFramebuffer(m_FbUIFrame);
+
 			//set up gl property's 
 			glEnable(GL_BLEND);
 			glDisable(GL_DEPTH_TEST);
@@ -144,9 +174,32 @@ void Application::run() {
 			//draw the ui
 			drawUi();
 
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+
 			//reset gl property's 
+			Shader::use(m_PPRender);
+			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
+			
 			glDisable(GL_BLEND);
+
+			m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture());
+			m_FullScreenQuad->draw();
+
+			glEnable(GL_BLEND);
+
+			m_FullScreenQuad->setTexture(m_FbUIFrame->getTexture());
+			m_FullScreenQuad->draw();
+
+			Framebuffer::setDefaultFramebuffer(nullptr);
+
+			glDisable(GL_BLEND);
+
+			m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
+			m_FullScreenQuad->draw();
+
 			glEnable(GL_DEPTH_TEST);
+
 		}
 
 		//draw framebuffer
@@ -160,6 +213,14 @@ void Application::run() {
 
 	delete m_GameCamera;
 	delete m_UiCamera;
+
+	delete m_FbGameFrame;
+	delete m_FbUIFrame;
+	delete m_FbCombinedFrame;
+
+	delete m_FullScreenQuad;
+	delete m_PPRender;
+
 	//remove root transform
 	delete m_RootTransform;
 

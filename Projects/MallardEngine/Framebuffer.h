@@ -40,6 +40,11 @@ public:
 
 	static Framebuffer* getCurrentFramebuffer();
 
+	//copys the texture from a_From to a_To
+	//Keeps the same binded framebuffer as before
+	//UNTESTED!
+	static void framebufferBlit(const Framebuffer* a_From, const Framebuffer* a_To);
+
 	//does the final linkage for this Framebuffer
 	//will add everything from addBuffer to the Framebuffer
 	void genFramebuffer();
