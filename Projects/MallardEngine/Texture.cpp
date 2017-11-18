@@ -11,6 +11,8 @@
 #include "Framebuffer.h"
 #endif // _DEBUG
 
+#include "Shader.h"
+#include "ShaderUniformData.h"
 
 Texture::Texture() {
 	m_TextureHeight = m_TextureWidth = 0;
@@ -41,7 +43,7 @@ Texture::~Texture() {
 DLL_BUILD void Texture::load1x1Texture() {
 	//is there a better way to do this??
 	m_TextureData = new GLubyte[3];
-	DataFormat data[] = { 0,0,255 };
+	DataFormat data[] = { 255,255,255 };
 	memcpy(m_TextureData, &data, 3 * sizeof(unsigned char));
 
 
@@ -66,12 +68,12 @@ DLL_BUILD unsigned int Texture::getGLTypeFromTextureType(const TextureType a_Typ
 	}
 }
 
-DLL_BUILD void Texture::bindTexture(int a_Slot) {
+DLL_BUILD void Texture::bindTexture(const int a_Slot) const {
 #if _DEBUG
 	Framebuffer* m_Fb = Framebuffer::getCurrentFramebuffer();
 	if (m_Fb != nullptr) {
 		Texture* framebufferTexture = m_Fb->getTexture();
-		if (framebufferTexture->m_TextureId == m_TextureId) {
+		if (framebufferTexture != nullptr && framebufferTexture->m_TextureId == m_TextureId) {
 			_ASSERT_EXPR(false, L"Binded texture is being used in the current framebuffer");
 		}
 	}
@@ -80,6 +82,13 @@ DLL_BUILD void Texture::bindTexture(int a_Slot) {
 
 	glActiveTexture(GL_TEXTURE0 + a_Slot);
 	glBindTexture(GL_TEXTURE_2D, m_TextureId);
+}
+
+DLL_BUILD void Texture::bindAndApplyTexture(const int a_Slot, ShaderUniformData * a_TextureUniform) const {
+	bindTexture(a_Slot);
+
+	a_TextureUniform->setData(&a_Slot);
+	Shader::applyUniform(a_TextureUniform);
 }
 
 unsigned int Texture::getResourceType() const {

@@ -49,6 +49,9 @@ protected:
 	Framebuffer* m_FbUIFrame;
 	Framebuffer* m_FbCombinedFrame;
 
+	Mesh* m_FullScreenQuad;
+	Shader* m_PPShader;
+	Shader* m_BasicShader;
 private:
 	void setCallbacksForWindow(Window* a_Window);
 	static void windowResize(int a_Width, int a_Height);
@@ -59,8 +62,6 @@ private:
 	Transform* m_RootTransform;
 
 
-	Mesh* m_FullScreenQuad;
-	Shader* m_PPRender;
 
 };
 

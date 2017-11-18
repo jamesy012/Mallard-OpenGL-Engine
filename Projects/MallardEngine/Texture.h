@@ -10,6 +10,8 @@ enum TextureType {
 	RGBA
 };
 
+class ShaderUniformData;
+
 class  Texture : public IResource {
 private:
 	typedef unsigned char DataFormat;
@@ -23,7 +25,9 @@ public:
 
 	DLL_BUILD static unsigned int getGLTypeFromTextureType(const TextureType a_Type);
 	//binds this texture to the slot in a_Slot
-	DLL_BUILD void bindTexture(int a_Slot);
+	DLL_BUILD void bindTexture(const int a_Slot) const;
+
+	DLL_BUILD void bindAndApplyTexture(const int a_Slot, ShaderUniformData * a_TextureUniform)const;
 
 	///IResource
 	DLL_BUILD virtual unsigned int getResourceType() const override;

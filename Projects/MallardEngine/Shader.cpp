@@ -125,6 +125,10 @@ void Shader::createSimpleShader(bool a_Textured) {
 void Shader::reloadShaders() {
 	//_ASSERT_EXPR(m_Linked, "Cant reload shader, when it hasent been linked");
 	m_Linked = false;
+
+	//reset m_CommonUniforms
+	m_CommonUniforms = CommonUniforms();
+
 	for (unsigned int i = 0; i < SHADER_TYPES_SIZE; i++) {
 		ShaderData* sd = &m_Shaders[i];
 		if (sd->m_ShaderID != 0) {
@@ -269,8 +273,14 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 			case ShaderUniformTypes::VEC4:
 				glUniform4fv(loc, 1, (float*) a_Data->m_Data);
 				break;
+			case ShaderUniformTypes::VEC3:
+				glUniform3fv(loc, 1, (float*) a_Data->m_Data);
+				break;
 			case ShaderUniformTypes::FLOAT:
 				glUniform1fv(loc, 1, (float*) a_Data->m_Data);
+				break;
+			case ShaderUniformTypes::SAMPLER2D:
+				glUniform1i(loc, *(int*)a_Data->m_Data);
 				break;
 			default:
 				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %u, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());

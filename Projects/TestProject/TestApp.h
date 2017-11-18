@@ -9,6 +9,7 @@ class Texture;
 class Font;
 class Text;
 class Framebuffer;
+class Transform;
 
 class TestApp :
 	public Application {
@@ -21,22 +22,26 @@ public:
 	virtual void drawUi() override;
 
 private:
-
-	void runFramebufferTest();
+	void drawModels();
 
 	Model* m_Model;
-	Mesh* m_Mesh;
-	Shader* m_Shader;
+	Mesh* m_GroundPlane;
+
 	Shader* m_TextShader;
-	Shader* m_PostprocessingBlur;
-	Texture* m_Texture;
 	Font* m_Font;
 	Text* m_TestText;
-	Text* m_IntensityText;
 
-	Camera* m_FbCamera;
-	Mesh* m_FbPlane;
-	Framebuffer* m_FbTest;
-	Framebuffer* m_FbTestBlured;
+	Texture* m_1x1WhiteTexture;
+
+	Framebuffer* m_DirectionalLightFb;
+
+	Shader* m_ShadowGenerationShader;
+	Shader* m_ShadowDrawShader;
+
+	glm::vec3 m_LightDir;
+	glm::mat4 m_LightMatrix;
+
+	float m_Spacing = 10;
+	int m_AmountPerSide = 5u;
 };
 

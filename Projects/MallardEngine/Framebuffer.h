@@ -6,27 +6,27 @@
 class Texture;
 class Application;
 
+//types of formats that can be assigned to a texture or renderbuffer
+enum class FramebufferBufferFormats {
+	R,
+	RG,
+	RGB,
+	RGBA,
+	DEPTH,
+	STENCIL,
+	DEPTH_STENCIL,
+};
+
+//types of buffers that can be added to this Framebuffer
+//Texture if you want to read it
+//RenderBuffer if you dont
+enum class FramebufferBufferTypes {
+	TEXTURE,
+	RENDERBUFFER
+};
+
 class DLL_BUILD Framebuffer {
 public:
-	//types of formats that can be assigned to a texture or renderbuffer
-	enum FramebufferBufferFormats {
-		R,
-		RG,
-		RGB,
-		RGBA,
-		DEPTH,
-		STENCIL,
-		DEPTH_STENCIL,
-	};
-
-	//types of buffers that can be added to this Framebuffer
-	//Texture if you want to read it
-	//RenderBuffer if you dont
-	enum FramebufferBufferTypes {
-		TEXTURE,
-		RENDERBUFFER
-	};
-
 	Framebuffer();
 	~Framebuffer();
 
@@ -69,6 +69,12 @@ public:
 	//will be nullptr if no framebuffer has been generated
 	Texture* getTexture() const;
 	
+	//TODO: Move this out of framebuffer OR intergrate it better
+	enum class GL_CALLS {
+		DEPTH_TEST
+	};
+	static unsigned int getGLCallFromEnum(GL_CALLS a_Call);
+	static void glCall(GL_CALLS a_Call, bool a_Enabled);
 private:
 	//returns the unsigned int referencing OpenGL's format with it's size
 	//will return the base version of the format if a incorrect format size is given
@@ -108,6 +114,8 @@ private:
 	std::vector<Component*> m_ColorAttachments;
 	//list of attached components that are not color attachments
 	std::vector<Component*> m_OtherAttachments;
+
+	std::vector<Texture*> m_Textures;
 
 };
 

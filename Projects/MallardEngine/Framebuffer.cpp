@@ -161,7 +161,7 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 	unsigned int glFormat = getGLFormatSize(a_Format, a_FormatSize);
 	Component* component = nullptr;
 	switch (a_Type) {
-		case Framebuffer::TEXTURE:
+		case FramebufferBufferTypes::TEXTURE:
 		{
 			unsigned int baseGLFormat = getGLFormat(a_Format);
 			unsigned int textureID = 0;
@@ -175,6 +175,8 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 			//basic texture filters
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 			//unbind texture
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -186,10 +188,12 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 			component = new FramebufferTexture();
 			((FramebufferTexture*)component)->m_TextureID = textureID;
 			((FramebufferTexture*)component)->m_TextureObject = textureObject;
+
+			m_Textures.push_back(textureObject);
 			break;
 		}
 
-		case Framebuffer::RENDERBUFFER:
+		case FramebufferBufferTypes::RENDERBUFFER:
 		{
 			unsigned int renderBuffer = 0;
 
@@ -214,10 +218,10 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 
 	//add component to vectors
 	switch (a_Format) {
-		case Framebuffer::R:
-		case Framebuffer::RG:
-		case Framebuffer::RGB:
-		case Framebuffer::RGBA:
+		case FramebufferBufferFormats::R:
+		case FramebufferBufferFormats::RG:
+		case FramebufferBufferFormats::RGB:
+		case FramebufferBufferFormats::RGBA:
 			//add R,RG,RGB,RGBA to color attachments and to attached components
 			m_ColorAttachments.push_back(component);
 			break;
@@ -241,7 +245,7 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 			addBuffer(a_Type, a_Format, 8);
 			break;
 		case FramebufferBufferFormats::DEPTH:
-			addBuffer(a_Type, a_Format, 24);
+			addBuffer(a_Type, a_Format, 16);
 			break;
 		default:
 			//size is not used with this format
@@ -252,10 +256,28 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 }
 
 Texture * Framebuffer::getTexture() const {
-	if (m_ColorAttachments.size() == 0) {
+	if (m_Textures.size() == 0) {
 		return nullptr;
 	}
-	return ((FramebufferTexture*)m_ColorAttachments[0])->m_TextureObject;
+	return m_Textures[0];
+}
+
+unsigned int Framebuffer::getGLCallFromEnum(GL_CALLS a_Call) {
+	switch (a_Call) {
+		case Framebuffer::GL_CALLS::DEPTH_TEST:
+			return GL_DEPTH_TEST;
+		default:
+			return 0;
+	}
+}
+
+void Framebuffer::glCall(GL_CALLS a_Call, bool a_Enabled) {
+	unsigned int glCall = getGLCallFromEnum(a_Call);
+	if (a_Enabled) {
+		glEnable(glCall);
+	} else {
+		glDisable(glCall);
+	}
 }
 
 //converts a_Format and a_FormatSize into their opengl counterparts

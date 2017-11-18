@@ -99,16 +99,19 @@ void Application::run() {
 		}
 	}
 
-	m_PPRender = new Shader();
-	m_PPRender->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
-	m_PPRender->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
-	m_PPRender->linkShader();
+	m_PPShader = new Shader();
+	m_PPShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+	m_PPShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
+	m_PPShader->linkShader();
+
+	m_BasicShader = new Shader();
+	m_BasicShader->createSimpleShader(true);
 
 	m_FullScreenQuad = new Mesh();
 	m_FullScreenQuad->createPlane(false);
 
 	//set up default clear color
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 
 	//todo Add text that will say loading here
 
@@ -175,7 +178,7 @@ void Application::run() {
 
 
 			//Start Game Render
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 			//set default framebuffer to be the Game framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbGameFrame);
 
@@ -193,7 +196,7 @@ void Application::run() {
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
 
 			//set up shader
-			Shader::use(m_PPRender);
+			Shader::use(m_PPShader);
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
 
@@ -221,6 +224,7 @@ void Application::run() {
 			m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
 			m_FullScreenQuad->draw();
 
+
 			glPopDebugGroup();
 
 			glPopDebugGroup();
@@ -243,7 +247,8 @@ void Application::run() {
 	delete m_FbCombinedFrame;
 
 	delete m_FullScreenQuad;
-	delete m_PPRender;
+	delete m_PPShader;
+	delete m_BasicShader;
 
 	//remove root transform
 	delete m_RootTransform;
