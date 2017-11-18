@@ -90,8 +90,8 @@ void Application::run() {
 
 	//gen frame buffers
 	{
-		const unsigned int NumOfFames = 3;
-		Framebuffer** frame[NumOfFames] = {&m_FbGameFrame,&m_FbUIFrame,&m_FbCombinedFrame };
+		const unsigned int NumOfFames = 4;
+		Framebuffer** frame[NumOfFames] = {&m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
 		for (int i = 0; i < NumOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
 			(*frame[i])->setSize(m_AppWindow->getFramebufferWidth()*3, m_AppWindow->getFramebufferHeight()*3);
@@ -105,9 +105,10 @@ void Application::run() {
 	m_PPRender->linkShader();
 
 	m_FullScreenQuad = new Mesh();
-	m_FullScreenQuad->createPlane();
+	m_FullScreenQuad->createPlane(false);
 
 	//set up default clear color
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//todo Add text that will say loading here
 
@@ -141,31 +142,22 @@ void Application::run() {
 
 		//call virtual functions
 		{
-			//update to game camera
-			m_MainCamera = m_GameCamera;
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, (std::string("Frame Render: ") + std::to_string(TimeHandler::getCurrentFrameNumber())).c_str());
 
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Update");
 
+			//update the game logic
 			update();
 
-			glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
-
-			Framebuffer::setDefaultFramebuffer(m_FbGameFrame);
-			//clear framebuffer?
-			//set up new empty framebuffer
-
-			draw();
-
-			//draw framebuffer
-
-			//draw ui not on the frame buffer
-
+			glPopDebugGroup();
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "UI Render");
 
 			//Start UI render
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			//
+			//set default framebuffer to be the UI framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbUIFrame);
 
-			//set up gl property's 
+			//set up OpenGL for transparent text
 			glEnable(GL_BLEND);
 			glDisable(GL_DEPTH_TEST);
 			//update to ui camera
@@ -174,35 +166,66 @@ void Application::run() {
 			//draw the ui
 			drawUi();
 
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-			//reset gl property's 
-			Shader::use(m_PPRender);
-			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
-			
+			//disable OpenGL
+			glEnable(GL_DEPTH_TEST);
 			glDisable(GL_BLEND);
 
+			glPopDebugGroup();
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "Game Render");
+
+
+			//Start Game Render
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			//set default framebuffer to be the Game framebuffer
+			Framebuffer::setDefaultFramebuffer(m_FbGameFrame);
+
+			//update to game camera
+			m_MainCamera = m_GameCamera;
+
+			//draw the game
+			draw();
+
+			//Start CombinedFrame render
+			//disable depth testing
+			glDisable(GL_DEPTH_TEST);
+
+			glPopDebugGroup();
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
+
+			//set up shader
+			Shader::use(m_PPRender);
+			//set up combined frame framebuffer
+			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
+
+			Framebuffer::framebufferBlit(m_FbGameFrame, m_FbGameFrameCopy);
+
+
+			//draw the game frame 
 			m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture());
 			m_FullScreenQuad->draw();
 
+			//enable blending so the UI doesnt overwrite the game frame
 			glEnable(GL_BLEND);
 
+			//draw the UI frame
 			m_FullScreenQuad->setTexture(m_FbUIFrame->getTexture());
 			m_FullScreenQuad->draw();
 
-			Framebuffer::setDefaultFramebuffer(nullptr);
-
+			//disable blending
 			glDisable(GL_BLEND);
 
+			//set up framebuffer to draw to the backbuffer/screen
+			Framebuffer::setDefaultFramebuffer(nullptr);
+
+			//and draw the combined frame to the final framebuffer
 			m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
 			m_FullScreenQuad->draw();
 
-			glEnable(GL_DEPTH_TEST);
+			glPopDebugGroup();
+
+			glPopDebugGroup();
 
 		}
-
-		//draw framebuffer
 
 		glfwSwapBuffers(m_AppWindow->getWindow());
 	}
@@ -215,6 +238,7 @@ void Application::run() {
 	delete m_UiCamera;
 
 	delete m_FbGameFrame;
+	delete m_FbGameFrameCopy;
 	delete m_FbUIFrame;
 	delete m_FbCombinedFrame;
 

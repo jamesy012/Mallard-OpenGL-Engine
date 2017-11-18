@@ -41,7 +41,7 @@ void TestApp::startUp() {
 	m_Shader->createSimpleShader(true);
 
 	m_Mesh = new Mesh();
-	m_Mesh->createPlane();
+	m_Mesh->createPlane(true);
 	m_Mesh->setTexture(m_Texture);
 
 	m_Font = new Font();
@@ -55,8 +55,6 @@ void TestApp::startUp() {
 
 
 	//todo, move to Font
-
-
 	m_TextShader = new Shader();
 	Font::generateShaderCode(m_TextShader);
 	m_TextShader->linkShader();
@@ -64,7 +62,6 @@ void TestApp::startUp() {
 
 	//set up camera
 	m_GameCamera->m_Transform.setPosition(glm::vec3(0, 0, 20));
-
 
 	//FRAME BUFFER TEST
 	m_FbTest = new Framebuffer();
@@ -77,7 +74,7 @@ void TestApp::startUp() {
 	//m_FbTest->genFramebuffer();
 
 	m_FbPlane = new Mesh();
-	m_FbPlane->createPlane();
+	m_FbPlane->createPlane(false);
 	m_FbPlane->setTexture(m_FbTest->getTexture());
 
 	m_FbCamera = new Camera();
@@ -188,7 +185,7 @@ void TestApp::draw() {
 	//model.setScale(glm::vec3(5, 5, 5));
 	model.setPosition(glm::vec3(0, 0, -100));
 	model.setScale(50.0f);
-	model.setRotation(glm::vec3(90, 0, 0));
+	model.setRotation(glm::vec3(-90, 0, 0));
 	uniformModel->setData(&model);
 	Shader::applyUniform(uniformModel);
 
@@ -258,6 +255,7 @@ void TestApp::drawUi() {
 }
 
 void TestApp::runFramebufferTest() {
+	/*
 	Shader::use(m_Shader);
 	Framebuffer::use(m_FbTest);
 
@@ -284,12 +282,12 @@ void TestApp::runFramebufferTest() {
 	//draw models
 	m_Model->draw();
 	m_Mesh->draw();
-
+	*/
 	//render the framebuffer to a new one which only has the blur data
 	Framebuffer::use(m_FbTestBlured);
 	Shader::use(m_PostprocessingBlur);
 	//set it to the other framebuffers texture
-	m_FbPlane->setTexture(m_FbTest->getTexture());
+	m_FbPlane->setTexture(m_FbGameFrameCopy->getTexture());
 	m_FbPlane->draw();
 
 	Framebuffer::use(nullptr);

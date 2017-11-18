@@ -31,7 +31,7 @@ public:
 
 	//creates a flat plane facing up for this mesh
 	//if there is already a mesh here then it will overwrite the old mesh
-	void createPlane();
+	void createPlane(bool a_FlipYUV);
 
 	// Inherited via IRenderable
 	virtual void draw() override;

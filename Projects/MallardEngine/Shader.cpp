@@ -332,7 +332,9 @@ bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shad
 //gets information from OpenGL about the uniforms
 //it also creates the memory for each data type
 void Shader::getShaderUniforms() {
-	m_CommonUniforms.m_ProjectionViewMatrix = m_CommonUniforms.m_ModelMatrix = m_CommonUniforms.m_Color = m_CommonUniforms.m_Time = nullptr;
+	//reset m_CommonUniforms
+	m_CommonUniforms = CommonUniforms();
+	
 	GLint count;
 
 	GLint size; // size of the variable
@@ -416,6 +418,8 @@ void Shader::getShaderUniforms() {
 			m_CommonUniforms.m_Color = uniformData;
 		} else if (strcmp(name, "time") == 0) {
 			m_CommonUniforms.m_Time = uniformData;
+		} else if (strcmp(name, "normalRot") == 0) {
+			m_CommonUniforms.m_NormalRotMatrix = uniformData;
 		}
 
 		//copy defaults from the shader

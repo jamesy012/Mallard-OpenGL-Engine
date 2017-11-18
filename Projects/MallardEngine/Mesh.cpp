@@ -84,12 +84,12 @@ void Mesh::createBox() {
 	bind();
 }
 
-void Mesh::createPlane() {
+void Mesh::createPlane(bool a_FlipYUV) {
 	glm::vec4 vertPos[] = {
 		glm::vec4(-1,  0, -1, 1),
-		glm::vec4( 1,  0, -1, 1),
+		glm::vec4(1,  0, -1, 1),
 		glm::vec4(-1,  0,  1, 1),
-		glm::vec4( 1,  0,  1, 1),
+		glm::vec4(1,  0,  1, 1),
 	};
 	glm::vec4 normals[]{
 		glm::vec4(0, 1, 0, 0),
@@ -110,7 +110,12 @@ void Mesh::createPlane() {
 	for (unsigned int i = 0; i < indexSize; i += 3) {
 		MeshVertex vert;
 		vert.position = vertPos[indexData[i] - 1];
-		vert.texCoord = texCoords[indexData[i + 1] - 1];
+		glm::vec2 uv = texCoords[indexData[i + 1] - 1];
+		if (a_FlipYUV) {
+			vert.texCoord = glm::vec2(uv.x, 1 - uv.y);
+		} else {
+			vert.texCoord = uv;
+		}
 		vert.normal = normals[indexData[i + 2] - 1];
 
 		m_Vertices.push_back(vert);

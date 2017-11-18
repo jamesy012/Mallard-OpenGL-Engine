@@ -45,8 +45,10 @@ protected:
 
 	//
 	Framebuffer* m_FbGameFrame;
+	Framebuffer* m_FbGameFrameCopy;
 	Framebuffer* m_FbUIFrame;
 	Framebuffer* m_FbCombinedFrame;
+
 private:
 	void setCallbacksForWindow(Window* a_Window);
 	static void windowResize(int a_Width, int a_Height);

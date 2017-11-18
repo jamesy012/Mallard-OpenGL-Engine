@@ -88,7 +88,11 @@ void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer 
 
 	glBlitFramebuffer(0, 0, a_From->m_Width, a_From->m_Height, 0, 0, a_To->m_Width, a_To->m_Height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFramebuffer->m_Fbo);
+	if (m_CurrentFramebuffer == nullptr) {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	} else {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFramebuffer->m_Fbo);
+	}
 }
 
 void Framebuffer::genFramebuffer() {
@@ -148,7 +152,7 @@ void Framebuffer::genFramebuffer() {
 
 void Framebuffer::createRenderTarget() {
 	addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA, 16);
-	addBuffer(FramebufferBufferTypes::RENDERBUFFER, FramebufferBufferFormats::DEPTH, 24);
+	addBuffer(FramebufferBufferTypes::RENDERBUFFER, FramebufferBufferFormats::DEPTH, 16);
 	genFramebuffer();
 }
 

@@ -82,6 +82,10 @@ public:
 		//this is a mat4, in the Vertex Shader
 		//it is used to set the position/rotation and scale of the current model
 		ShaderUniformData* m_ModelMatrix = nullptr;
+		//direct reference to the Model matrix
+		//this is a mat4, in the Vertex Shader
+		//it is used to set the position/rotation and scale of the current model
+		ShaderUniformData* m_NormalRotMatrix = nullptr;
 		//direct reference to the rgba color of the object
 		//this is a vec4, in the Fragment Shader
 		//it is used to modify the color of the object

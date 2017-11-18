@@ -243,3 +243,4 @@ paket-files/
 _WorkingDir/*.dll
 Builds/
 IntermediateDir/
+*.cfg
