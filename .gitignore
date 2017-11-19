@@ -244,3 +244,5 @@ _WorkingDir/*.dll
 Builds/
 IntermediateDir/
 *.cfg
+_WorkingDir/TestProject*.exe
+_WorkingDir/*.rar

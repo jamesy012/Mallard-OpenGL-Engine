@@ -205,12 +205,15 @@ void Shader::linkShader() {
 		}
 	}
 	if (!linked) {
+		printf("Shader %u has failed to link!\n", m_Program);
 		return;
 	}
 	m_Linked = true;
 
 	//load all uniforms attached to the program
 	getShaderUniforms();
+
+	printf("Shader %u has been successfully linked!\n", m_Program);
 }
 
 unsigned int Shader::getProgram() const {
@@ -283,7 +286,7 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 				glUniform1i(loc, *(int*)a_Data->m_Data);
 				break;
 			default:
-				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %u, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
+				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %i, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
 				break;
 		}
 	}
@@ -320,7 +323,7 @@ bool Shader::checkGlErrorProgram(const int a_ErrorType, const unsigned int a_Pro
 	if (!success) {
 		GLchar infoLog[512];
 		glGetProgramInfoLog(a_Program, 512, NULL, infoLog);
-		printf("ERROR::SHADER::_%i_::%s\n%s\n", a_Program, a_ErrorMessage, infoLog);
+		printf("ERROR::SHADER::_%u_::%s\n%s\n", a_Program, a_ErrorMessage, infoLog);
 	}
 	return !success;
 }
@@ -333,7 +336,7 @@ bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shad
 	if (!success) {
 		GLchar infoLog[512];
 		glGetShaderInfoLog(a_Shader, 512, NULL, infoLog);
-		printf("ERROR::SHADER::_%i_::%s\n%s\n", a_Shader, a_ErrorMessage, infoLog);
+		printf("ERROR::SHADER::_%u_::%s\n%s\n", a_Shader, a_ErrorMessage, infoLog);
 	}
 	return !success;
 }

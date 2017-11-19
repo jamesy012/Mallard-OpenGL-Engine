@@ -118,6 +118,13 @@
     <Link>
       <AdditionalDependencies>opengl32.lib;glew32.lib;MallardEngine_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying current exe to working DIr
+Robocopy "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
+exit/B %errlev%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -129,6 +136,13 @@
     <Link>
       <AdditionalDependencies>opengl32.lib;glew32.lib;MallardEngine_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying current exe to working DIr
+Robocopy "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
+exit/B %errlev%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -144,6 +158,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>opengl32.lib;glew32.lib;MallardEngine_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying current exe to working DIr
+Robocopy "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
+exit/B %errlev%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -159,6 +180,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>opengl32.lib;glew32.lib;MallardEngine_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying current exe to working DIr
+Robocopy "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
+exit/B %errlev%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

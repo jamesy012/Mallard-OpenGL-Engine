@@ -140,7 +140,7 @@ void Framebuffer::genFramebuffer() {
 	//simple error checker
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
-		printf("Framebuffer Error ID: %i\n", status);
+		printf("Framebuffer Error ID: %u\n", status);
 	}
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -175,8 +175,10 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 			//basic texture filters
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			GLfloat borderColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
 			//unbind texture
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -212,6 +214,8 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 
 			break;
 		}
+		default:
+			return;
 	}
 	component->m_Type = a_Type;
 	component->m_Format = a_Format;

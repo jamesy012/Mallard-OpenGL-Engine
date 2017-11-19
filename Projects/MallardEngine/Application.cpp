@@ -11,12 +11,13 @@
 #include "Input.h"
 #include "ResourceManager.h"
 #include "Transform.h"
+#include "Window.h"
 
 #include "Framebuffer.h"
-#include "Window.h"
 
 #include "Mesh.h"
 #include "Shader.h"
+
 
 
 /* assimp include files. These three are usually needed. */
@@ -24,6 +25,7 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
 
 static Application* m_Application = nullptr;
 
@@ -104,6 +106,11 @@ void Application::run() {
 	m_PPShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
 	m_PPShader->linkShader();
 
+	m_PPBcsShader = new Shader();
+	m_PPBcsShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+	m_PPBcsShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPUber.frag");
+	m_PPBcsShader->linkShader();
+
 	m_BasicShader = new Shader();
 	m_BasicShader->createSimpleShader(true);
 
@@ -146,6 +153,10 @@ void Application::run() {
 		//call virtual functions
 		{
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, (std::string("Frame Render: ") + std::to_string(TimeHandler::getCurrentFrameNumber())).c_str());
+
+			if (Input::wasKeyPressed(GLFW_KEY_F)) {
+				m_PPBcsShader->reloadShaders();
+			}
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Update");
 
@@ -195,17 +206,17 @@ void Application::run() {
 			glPopDebugGroup();
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
 
-			//set up shader
-			Shader::use(m_PPShader);
+
+			Shader::use(m_PPBcsShader);
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
-
-			Framebuffer::framebufferBlit(m_FbGameFrame, m_FbGameFrameCopy);
-
 
 			//draw the game frame 
 			m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture());
 			m_FullScreenQuad->draw();
+
+			//set up shader
+			Shader::use(m_PPShader);
 
 			//enable blending so the UI doesnt overwrite the game frame
 			glEnable(GL_BLEND);
@@ -223,6 +234,9 @@ void Application::run() {
 			//and draw the combined frame to the final framebuffer
 			m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
 			m_FullScreenQuad->draw();
+
+			//finaly copy framebuffers for next frame
+			Framebuffer::framebufferBlit(m_FbGameFrame, m_FbGameFrameCopy);
 
 
 			glPopDebugGroup();
@@ -248,6 +262,7 @@ void Application::run() {
 
 	delete m_FullScreenQuad;
 	delete m_PPShader;
+	delete m_PPBcsShader;
 	delete m_BasicShader;
 
 	//remove root transform

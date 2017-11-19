@@ -51,6 +51,8 @@ protected:
 
 	Mesh* m_FullScreenQuad;
 	Shader* m_PPShader;
+	//brightness, contrast, saturation shader
+	Shader* m_PPBcsShader;
 	Shader* m_BasicShader;
 private:
 	void setCallbacksForWindow(Window* a_Window);

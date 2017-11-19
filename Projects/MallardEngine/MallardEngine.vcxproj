@@ -114,6 +114,8 @@
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
     <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>CppCoreCheckConstRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
@@ -121,6 +123,8 @@
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
     <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>CppCoreCheckConstRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
@@ -128,6 +132,8 @@
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
     <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>CppCoreCheckConstRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
@@ -135,6 +141,8 @@
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
     <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\stb\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\GLFW\libary\$(platform)\;$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>CppCoreCheckConstRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -142,14 +150,19 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <PostBuildEvent>
-      <Command>echo copying mallardEngine dll to workingDir
-copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying mallardEngine dll to workingDir
+robocopy  "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
 echo copying assimp dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+robocopy "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "assimp-vc140-mt.dll"
 echo copying glew dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
+robocopy "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)" "$(LocalDebuggerWorkingDirectory)" "glew32.dll"
+exit/B %errlev%
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
@@ -164,14 +177,19 @@ xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.d
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <PostBuildEvent>
-      <Command>echo copying mallardEngine dll to workingDir
-copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying mallardEngine dll to workingDir
+robocopy  "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
 echo copying assimp dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+robocopy "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "assimp-vc140-mt.dll"
 echo copying glew dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
+robocopy "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)" "$(LocalDebuggerWorkingDirectory)" "glew32.dll"
+exit/B %errlev%
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
@@ -188,6 +206,7 @@ xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.d
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -195,12 +214,16 @@ xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.d
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>echo copying mallardEngine dll to workingDir
-copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying mallardEngine dll to workingDir
+robocopy  "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
 echo copying assimp dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+robocopy "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "assimp-vc140-mt.dll"
 echo copying glew dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
+robocopy "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)" "$(LocalDebuggerWorkingDirectory)" "glew32.dll"
+exit/B %errlev%
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
@@ -214,6 +237,7 @@ xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.d
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -221,12 +245,16 @@ xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.d
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>echo copying mallardEngine dll to workingDir
-copy /y "$(OutDir)$(TargetFileName)" "$(LocalDebuggerWorkingDirectory)\$(TargetFileName)"
+      <Command>@echo off
+set/A errlev="%ERRORLEVEL% &amp; 24"
+echo copying mallardEngine dll to workingDir
+robocopy  "$(SolutionDir)Builds\$(ProjectName)\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "$(TargetFileName)"
 echo copying assimp dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)\assimp-vc140-mt.dll" "$(LocalDebuggerWorkingDirectory)\assimp-vc140-mt.dll"
+robocopy "$(SolutionDir)Dependencies\assimp\libary\$(Configuration)" "$(LocalDebuggerWorkingDirectory)" "assimp-vc140-mt.dll"
 echo copying glew dll to working dir
-xcopy /d "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)\glew32.dll" "$(LocalDebuggerWorkingDirectory)\glew32.dll"</Command>
+robocopy "$(SolutionDir)Dependencies\glew-2.0.0\bin\Release\$(platform)" "$(LocalDebuggerWorkingDirectory)" "glew32.dll"
+exit/B %errlev%
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copys the dll from build location into the working dir so other files can use it</Message>
