@@ -174,3 +174,9 @@ void Model::draw() {
 		m_Meshs[i]->draw();
 	}
 }
+
+void Model::drawInstance(unsigned int a_Amount) {
+	for (size_t i = 0; i < m_Meshs.size(); i++) {
+		m_Meshs[i]->drawInstance(a_Amount);
+	}
+}

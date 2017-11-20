@@ -28,6 +28,7 @@ public:
 
 	// Inherited via IRenderable
 	virtual void draw() override;
+	virtual void drawInstance(unsigned int a_Amount) override;
 
 	//returns the string being used
 	std::string getText() {

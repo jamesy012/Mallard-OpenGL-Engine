@@ -22,16 +22,14 @@ public:
 	virtual void drawUi() override;
 
 private:
-	void drawModels();
+	void updateModel();
 
 	//TODO: Move to another class!
 	glm::vec4 frustumPlanes[6];
 	int m_LastFrustumUpdate = -1;
 	void getFrustumPlanes(const glm::mat4& a_Transform);
 	bool checkFustumPlanes(const glm::vec3 a_Position);
-	//this is a pointer because it was causing memory leaks to show up
-	std::vector<bool>* m_DidModelPass;
-	bool m_FirstModelFustumCheck = true;
+	bool m_FirstModelUpdate = true;
 
 	Model* m_Model;
 	Mesh* m_GroundPlane;
@@ -58,5 +56,7 @@ private:
 
 	int m_AmountRendering = 0;
 	int m_NumberOfFrustumChecks = 0;
+
+	unsigned int m_InstanceArrayBuffer = 0;
 };
 

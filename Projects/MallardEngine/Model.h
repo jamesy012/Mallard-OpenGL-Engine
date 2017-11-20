@@ -17,9 +17,13 @@ public:
 	~Model();
 
 	virtual void draw() override;
+	virtual void drawInstance(unsigned int a_Amount) override;
 
 	///IResource
 	virtual unsigned int getResourceType() const override;
+
+	//TODO: Move this back to private, temp change for instance rendering
+	std::vector<Mesh*> m_Meshs;
 private:
 	///IResource
 	virtual bool resourceLoad() override;
@@ -33,7 +37,6 @@ private:
 
 
 	///data
-	std::vector<Mesh*> m_Meshs;
 	std::vector<Texture*> m_Textures;
 
 	const aiScene* m_Scene = nullptr;

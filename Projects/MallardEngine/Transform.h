@@ -172,6 +172,6 @@ private:
 	//a flag to check
 	bool m_IsRootTransform = false;
 
-	unsigned int m_LastUpdateFrame = 0;
+	unsigned int m_LastUpdateFrame = -1;
 };
 

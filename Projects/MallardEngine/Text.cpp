@@ -104,3 +104,7 @@ void Text::draw() {
 	}
 
 }
+
+void Text::drawInstance(unsigned int a_Amount) {
+	_ASSERT_EXPR(false, L"Text has no Instanced Draw");
+}

@@ -65,7 +65,7 @@ glm::mat4 Camera::getProjectionViewMatrix() {
 void Camera::updateView() {
 	//check to see if the transforms last update was different to the last time the camera updated it's view matrix
 	//or the transform/parent is dirty
-	if (m_Transform.getLastTransformUpdate() != m_LastViewMatrixUpdateFrame || m_Transform.isParentDirty()) {
+	if (m_Transform.getLastTransformUpdate() != m_LastViewMatrixUpdateFrame || m_LastViewMatrixUpdateFrame == 0 || m_Transform.isParentDirty()) {
 		//sets the view matrix to the inverse of the transforms matrix
 		m_ViewMatrix = glm::inverse(m_Transform.getGlobalMatrix());
 

@@ -52,6 +52,9 @@ private:
 	//amount of data we have
 	//vec4 example: 4
 	unsigned int m_DataCount;
+	//contains how many elements in an array this item has
+	//will be 1 if it's not in an array
+	unsigned int m_ArraySize;
 	//a flag to check if this uniform is dirty
 	//when dirty, it means this data has been modified and has not been used since
 	bool m_IsDirty = false;

@@ -35,6 +35,7 @@ public:
 
 	// Inherited via IRenderable
 	virtual void draw() override;
+	virtual void drawInstance(unsigned int a_Amount) override;
 
 	void applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices);
 	void loadFromMesh(aiMesh* a_Mesh);
@@ -46,6 +47,9 @@ public:
 	//temporary fix 
 	//this stores the index of which texture this is using in it's model
 	int m_TextureIndex = 0;
+
+	//TODO: Move this back to private, temp change for instance rendering
+	unsigned int m_Vao;
 private:
 	std::vector<MeshVerticesType> m_Vertices;
 	std::vector<MeshIndicesType> m_Indices;
@@ -54,6 +58,6 @@ private:
 	//test Texture
 	Texture* m_Texture = nullptr;
 
-	unsigned int m_Vao, m_Vbo, m_Ebo;
+	unsigned int m_Vbo, m_Ebo;
 };
 

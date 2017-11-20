@@ -7,6 +7,7 @@ in vec2 vTexCoord;
 out vec4 fragColor;
 
 uniform vec3 lightDir;
+uniform vec4 color = vec4(1);
 
 uniform sampler2D shadowMap;
 uniform sampler2D TexDiffuse1;
@@ -25,7 +26,7 @@ void main() {
     //d = vShadowCoord.z - bias;
     //d= texture(shadowMap, vShadowCoord.xy).r;
     //fragColor = vec4(d,d,d,1);
-    fragColor = texture(TexDiffuse1, vTexCoord) * d;
+    fragColor = texture(TexDiffuse1, vTexCoord) * color * d;
     
     //d = dot(normalize(vNormal.xyz),lightDir)*1.5;
     //d = vShadowCoord.z;

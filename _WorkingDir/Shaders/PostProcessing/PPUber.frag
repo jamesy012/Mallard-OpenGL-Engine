@@ -8,11 +8,11 @@ out vec4 fragColor;
 uniform sampler2D TexDiffuse1;
 
 
-uniform float brightness = 1.3f;
+uniform float brightness = 1.0f;
 uniform float contrast = 0.05f;
 uniform float saturation = 2.65f;
-uniform vec3 luminanceWeights = vec3(0.5126f,0.5152f,0.2722f);
-uniform vec3 gamma = vec3(1.0f);
+uniform vec3 luminanceWeights = vec3(0.2126f,0.5152f,0.1722f);
+uniform vec3 gamma = vec3(0.87f);
 
 vec3 vHSV = vec3(180,0.5,10);
 
@@ -55,7 +55,7 @@ vec4 gaussianBlur(vec4 a_Input){
     vec3 col = vec3(0.0);
     for(int i = 0; i < 9; i++)
     {
-    vec3 color = vec3(texture(TexDiffuse1, vTexCoord.st + offsets[i]));
+    vec3 color = vec3(texture(TexDiffuse1, vTexCoord + offsets[i]));
     col += color * kernel[i];
     }
     return vec4(col, 1.0);
@@ -65,8 +65,8 @@ void main() {
     fragColor = texture(TexDiffuse1, vTexCoord);
     
     //saturation
-    //float luminance = dot(fragColor.rgb, luminanceWeights);
-    //fragColor = mix(vec4(luminance), fragColor, saturation);
+    float luminance = dot(fragColor.rgb, luminanceWeights);
+    fragColor = mix(vec4(luminance), fragColor, saturation);
     
     //fragColor = gaussianBlur(fragColor);
     
@@ -77,7 +77,7 @@ void main() {
     fragColor.rgb = pow(fragColor.rgb, vec3(1.0f / gamma));
     
     //brightness
-    //fragColor.rgb *= brightness;
+    fragColor.rgb *= brightness;
     
     // average brightness of this frame
     //vec3 Color = texture2D( TexDiffuse1, vec2(0.5, 0.5) ).rgb;

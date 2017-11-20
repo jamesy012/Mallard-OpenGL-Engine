@@ -131,6 +131,9 @@ void Application::run() {
 
 	glEnable(GL_DEPTH_TEST);
 
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_FRONT);
+
 	//glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -207,7 +210,11 @@ void Application::run() {
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
 
 
-			Shader::use(m_PPBcsShader);
+			if (Input::isKeyDown(GLFW_KEY_G)) {
+				Shader::use(m_PPShader);
+			} else {
+				Shader::use(m_PPBcsShader);
+			}
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
 

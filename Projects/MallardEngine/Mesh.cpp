@@ -86,10 +86,10 @@ void Mesh::createBox() {
 
 void Mesh::createPlane(bool a_FlipYUV) {
 	glm::vec4 vertPos[] = {
-		glm::vec4(-1,  0, -1, 1),
-		glm::vec4(1,  0, -1, 1),
-		glm::vec4(-1,  0,  1, 1),
-		glm::vec4(1,  0,  1, 1),
+		glm::vec4(-1,  0, 1, 1),
+		glm::vec4(1,  0, 1, 1),
+		glm::vec4(-1,  0,  -1, 1),
+		glm::vec4(1,  0,  -1, 1),
 	};
 	glm::vec4 normals[]{
 		glm::vec4(0, 1, 0, 0),
@@ -138,6 +138,27 @@ void Mesh::draw() {
 
 	glBindVertexArray(m_Vao);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	//unbind texture
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Mesh::drawInstance(unsigned int a_Amount) {
+	unsigned int loc = 0;
+	if (m_Texture != nullptr) {
+		//todo move this out of mesh
+		int slot = 0;
+		m_Texture->bindTexture(slot);
+
+		//TexDiffuse1 name in shader
+		loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "TexDiffuse1");
+		glUniform1i(loc, slot);
+	}
+
+	glBindVertexArray(m_Vao);
+	glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, a_Amount);
 	glBindVertexArray(0);
 
 	//unbind texture

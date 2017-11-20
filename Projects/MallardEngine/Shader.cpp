@@ -268,22 +268,24 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 		a_Data->m_IsDirty = false;
 		//gets uniform location
 		int loc = a_Data->m_UniformLocation;
+		//how many elements in the array is this
+		int amount = a_Data->m_ArraySize;
 		//switch case to find which glUniform... call to make
 		switch (a_Data->m_Type) {
 			case ShaderUniformTypes::MAT4:
-				glUniformMatrix4fv(loc, 1, GL_FALSE, (float*) a_Data->m_Data);
+				glUniformMatrix4fv(loc, amount, GL_FALSE, (float*) a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::VEC4:
-				glUniform4fv(loc, 1, (float*) a_Data->m_Data);
+				glUniform4fv(loc, amount, (float*) a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::VEC3:
-				glUniform3fv(loc, 1, (float*) a_Data->m_Data);
+				glUniform3fv(loc, amount, (float*) a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::FLOAT:
-				glUniform1fv(loc, 1, (float*) a_Data->m_Data);
+				glUniform1fv(loc, amount, (float*) a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::SAMPLER2D:
-				glUniform1i(loc, *(int*)a_Data->m_Data);
+				glUniform1iv(loc, amount, (int*)a_Data->m_Data);
 				break;
 			default:
 				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %i, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
@@ -413,6 +415,7 @@ void Shader::getShaderUniforms() {
 		//gets uniform location (Appears to be the same as i)
 		uniformData->m_UniformLocation = glGetUniformLocation(m_Program, name);
 		uniformData-> m_Name= name;
+		uniformData->m_ArraySize = size;
 
 		//add the uniform data to the full list
 		m_UniformData[(int) uniformData->m_Type].push_back(uniformData);
