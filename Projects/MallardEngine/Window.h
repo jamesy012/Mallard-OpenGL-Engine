@@ -16,6 +16,7 @@ public:
 	//temporary function pointer for window sizes
 	typedef void (*WindowResizeFn) (int a_Width, int a_Height);
 	WindowResizeFn m_WindowResizeCallback;
+	WindowResizeFn m_WindowResizeFramebufferCallback;
 
 	void destroyWindow();
 

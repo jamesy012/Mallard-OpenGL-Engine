@@ -12,13 +12,14 @@
 #include "ResourceManager.h"
 #include "Transform.h"
 #include "Window.h"
+#include "Logging.h"
 
 #include "Framebuffer.h"
 
 #include "Mesh.h"
 #include "Shader.h"
 
-
+#include "Skybox.h"
 
 /* assimp include files. These three are usually needed. */
 //these are needed for the logging system
@@ -67,6 +68,7 @@ void Application::run() {
 	m_AppWindow->makeContextCurrent();//make context so we can render to it
 
 	m_AppWindow->m_WindowResizeCallback = windowResize;
+	m_AppWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
 
 	//set up callbacks for window
 	setCallbacksForWindow(m_AppWindow);
@@ -79,24 +81,28 @@ void Application::run() {
 		return;
 	}
 
+	/** SET UP PROGRAM FOR STARTUP */
+
 	//set up scene root transform
 	m_RootTransform = new Transform("Root Transform");
 	Transform::setRootTransform(m_RootTransform);
+
+	Logging::newFrame();
 
 	//set up cameras
 	m_GameCamera = new Camera();
 	m_GameCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 	m_UiCamera = new Camera();
-	m_UiCamera->setOrthographic(0.0f, (float)m_AppWindow->getFramebufferWidth(), 0.0f, (float)m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+	m_UiCamera->setOrthographic(0.0f, (float) m_AppWindow->getFramebufferWidth(), 0.0f, (float) m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
 
 	//gen frame buffers
 	{
 		const unsigned int NumOfFames = 4;
-		Framebuffer** frame[NumOfFames] = {&m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
+		Framebuffer** frame[NumOfFames] = { &m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
 		for (int i = 0; i < NumOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
-			(*frame[i])->setSize(m_AppWindow->getFramebufferWidth()*3, m_AppWindow->getFramebufferHeight()*3);
+			(*frame[i])->setSize(m_AppWindow->getFramebufferWidth(), m_AppWindow->getFramebufferHeight());
 			(*frame[i])->createRenderTarget();
 		}
 	}
@@ -117,6 +123,10 @@ void Application::run() {
 	m_FullScreenQuad = new Mesh();
 	m_FullScreenQuad->createPlane(false);
 
+	m_GameSkybox = new Skybox();
+
+	/** SET UP PROGRAM FOR STARTUP LOADING SCREEN */
+
 	//set up default clear color
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 
@@ -129,13 +139,22 @@ void Application::run() {
 	//program startup/load models
 	startUp();
 
+	/** SET UP PROGRAM FOR RENDERING */
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_FRONT);
+	glCullFace(GL_BACK);
 
 	//glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	if (!m_GameSkybox->hasBeenGenerated()) {
+		m_GameSkybox->genSkybox("Textures\\Skybox\\HornstullsStrand2\\");
+	}
+	if (!m_GameSkybox->hasCameraAssigned()) {
+		m_GameSkybox->assignCamera(m_GameCamera);
+	}
+	Logging::newFrame();
 
 	//game loop
 	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
@@ -168,33 +187,40 @@ void Application::run() {
 
 			glPopDebugGroup();
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "UI Render");
-
 			//Start UI render
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			//set default framebuffer to be the UI framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbUIFrame);
+			Framebuffer::clearCurrentBuffer();
 
 			//set up OpenGL for transparent text
-			glEnable(GL_BLEND);
-			glDisable(GL_DEPTH_TEST);
+			//glEnable(GL_BLEND);
+			//glDisable(GL_DEPTH_TEST);
 			//update to ui camera
 			m_MainCamera = m_UiCamera;
 
 			//draw the ui
 			drawUi();
-
-			//disable OpenGL
+			
+			//end UI Draw
+			glPopDebugGroup();
+			//we want to include vertices drawn during the main draw
+			Logging::objectRenderedAllowAdditions(true);
+			//newFrame call is here because:
+			//When done before the UI draw, it removes the data that was gathered from the normal draw
+			Logging::newFrame();
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "Game Render");
 			glEnable(GL_DEPTH_TEST);
 			glDisable(GL_BLEND);
-
-			glPopDebugGroup();
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "Game Render");
-
 
 			//Start Game Render
 			glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 			//set default framebuffer to be the Game framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbGameFrame);
+			Framebuffer::clearCurrentBuffer();
+
+			//render skybox
+			m_GameSkybox->draw();
 
 			//update to game camera
 			m_MainCamera = m_GameCamera;
@@ -208,7 +234,8 @@ void Application::run() {
 
 			glPopDebugGroup();
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
-
+			//we dont want to include these quad draws in the vertex counts
+			Logging::objectRenderedAllowAdditions(false);
 
 			if (Input::isKeyDown(GLFW_KEY_G)) {
 				Shader::use(m_PPShader);
@@ -217,6 +244,7 @@ void Application::run() {
 			}
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
+			Framebuffer::clearCurrentBuffer();
 
 			//draw the game frame 
 			m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture());
@@ -237,6 +265,7 @@ void Application::run() {
 
 			//set up framebuffer to draw to the backbuffer/screen
 			Framebuffer::setDefaultFramebuffer(nullptr);
+			Framebuffer::clearCurrentBuffer();
 
 			//and draw the combined frame to the final framebuffer
 			m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
@@ -261,6 +290,8 @@ void Application::run() {
 
 	delete m_GameCamera;
 	delete m_UiCamera;
+
+	delete m_GameSkybox;
 
 	delete m_FbGameFrame;
 	delete m_FbGameFrameCopy;
@@ -289,10 +320,19 @@ void Application::setCallbacksForWindow(Window * a_Window) {
 }
 
 void Application::windowResize(int a_Width, int a_Height) {
-	if (!m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
-		return;
+
+}
+
+void Application::windowFramebufferResize(int a_Width, int a_Height) {
+	if (m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
+		m_Application->m_FbCombinedFrame->setSize(a_Width, a_Height);
+		m_Application->m_FbGameFrame->setSize(a_Width, a_Height);
+		m_Application->m_FbGameFrameCopy->setSize(a_Width, a_Height);
+		m_Application->m_FbUIFrame->setSize(a_Width, a_Height);
 	}
-	m_Application->m_UiCamera->setOrthographic(0.0f, (float)m_Application->m_AppWindow->getFramebufferWidth(), 0.0f, (float)m_Application->m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+	if (m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
+		m_Application->m_UiCamera->setOrthographic(0.0f, (float) a_Width, 0.0f, (float) a_Height, -1000.0f, 1000.0f);
+	}
 }
 
 void Application::checkHandles() {

@@ -44,8 +44,12 @@ Framebuffer::~Framebuffer() {
 }
 
 void Framebuffer::setSize(const unsigned int a_Width, const unsigned int a_Height) {
-	m_Width = a_Width;
-	m_Height = a_Height;
+	if (m_Fbo != 0) {
+		resizeFramebuffer(a_Width, a_Height);
+	} else {
+		m_Width = a_Width;
+		m_Height = a_Height;
+	}
 }
 
 void Framebuffer::use(Framebuffer * a_Framebuffer) {
@@ -58,8 +62,6 @@ void Framebuffer::use(Framebuffer * a_Framebuffer) {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			Window* window = Window::getMainWindow();
 			glViewport(0, 0, window->getFramebufferWidth(), window->getFramebufferHeight());
-			//glClearColor(0.75f, 0.0f, 0.75f, 1.0f);
-			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			return;
 		} else {
 			//else render to the default framebuffer
@@ -69,7 +71,9 @@ void Framebuffer::use(Framebuffer * a_Framebuffer) {
 	m_CurrentFramebuffer = a_Framebuffer;
 	glBindFramebuffer(GL_FRAMEBUFFER, a_Framebuffer->m_Fbo);
 	glViewport(0, 0, a_Framebuffer->m_Width, a_Framebuffer->m_Height);
-	//glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+}
+
+void Framebuffer::clearCurrentBuffer() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -92,6 +96,33 @@ void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	} else {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFramebuffer->m_Fbo);
+	}
+}
+
+void Framebuffer::resizeFramebuffer(unsigned int a_Width, unsigned int a_Height) {
+	m_Width = a_Width;
+	m_Height = a_Height;
+	for (int i = 0; i < m_AttachedComponents.size(); i++) {
+		Component* component = m_AttachedComponents[i];
+		unsigned int glFormat = getGLFormatSize(component->m_Format, component->m_FormatSize);
+		switch (component->m_Type) {
+			case FramebufferBufferTypes::TEXTURE:
+				{
+					FramebufferTexture* ft = (FramebufferTexture*)component;
+					glBindTexture(GL_TEXTURE_2D, ft->m_TextureID);
+					glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, ft->m_BaseGLFormat, GL_FLOAT, 0);
+					glBindTexture(GL_TEXTURE_2D, 0);
+				}
+				break;
+			case FramebufferBufferTypes::RENDERBUFFER:
+				{
+					FramebufferRenderbuffer* fr = (FramebufferRenderbuffer*) component;
+					glBindRenderbuffer(GL_RENDERBUFFER, fr->m_RenderbufferID);
+					glRenderbufferStorage(GL_RENDERBUFFER, glFormat, m_Width, m_Height);
+					glBindRenderbuffer(GL_RENDERBUFFER, 0);
+				}
+				break;
+		}
 	}
 }
 
@@ -190,6 +221,7 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 			component = new FramebufferTexture();
 			((FramebufferTexture*)component)->m_TextureID = textureID;
 			((FramebufferTexture*)component)->m_TextureObject = textureObject;
+			((FramebufferTexture*)component)->m_BaseGLFormat = baseGLFormat;
 
 			m_Textures.push_back(textureObject);
 			break;
@@ -219,6 +251,7 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 	}
 	component->m_Type = a_Type;
 	component->m_Format = a_Format;
+	component->m_FormatSize = a_FormatSize;
 
 	//add component to vectors
 	switch (a_Format) {

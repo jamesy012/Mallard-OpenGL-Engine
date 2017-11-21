@@ -22,15 +22,22 @@
 
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Logging.h"
 
 void TestApp::startUp() {
+	Logging::quickTimePush("StartUp");
+	Logging::quickTimePush("FileLoading");
 	m_Model = new Model();
 	m_Model->load("Models/Nanosuit/nanosuit.obj");
+	//m_Model->load("Models/stanford/Dragon.obj");
 	//m_Model->load("Models/ModelTest/ModelTest.fbx");
 	//m_Model->load("Models/ModelTest/ModelTest.obj");
 
 	m_Font = new Font();
 	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
+	//m_Font->loadFont("c:/windows/fonts/wingding.ttf", 48);
+
+	Logging::quickTimePop(true);
 
 	m_TestText = new Text(m_Font);
 	m_TestText->generateText("Shadow Test\nMove: WASDQE, Rotate: Arrow keys, Other: ZXCVB, Culling: N");
@@ -76,6 +83,7 @@ void TestApp::startUp() {
 	m_FirstModelUpdate = true;
 	glGenBuffers(1, &m_InstanceArrayBuffer);
 	updateModel();
+	Logging::quickTimePop(true);
 }
 
 void TestApp::shutDown() {
@@ -133,9 +141,11 @@ void TestApp::update() {
 		if (m_AmountPerSide < 0) {
 			m_AmountPerSide = 0;
 		}
+		updateModel();
 	}
 	if (Input::isKeyRepeated(KEY_X)) {
 		m_AmountPerSide++;
+		updateModel();
 	}
 
 	if (Input::isKeyDown(KEY_C)) {
@@ -143,16 +153,19 @@ void TestApp::update() {
 		if (m_Spacing < 1) {
 			m_Spacing = 1;
 		}
+		updateModel();
 	}
 	if (Input::isKeyDown(KEY_V)) {
 		m_Spacing += 5 * TimeHandler::getDeltaTime();
 		if (m_Spacing > 40) {
 			m_Spacing = 40;
 		}
+		updateModel();
 	}
 
 	if (Input::wasKeyPressed(KEY_N)) {
 		m_UseCulling = !m_UseCulling;
+		updateModel();
 	}
 
 
@@ -187,15 +200,15 @@ void TestApp::update() {
 
 	if (m_UseCulling) {
 		if (m_GameCamera->m_Transform.getLastTransformUpdate() != m_LastFrustumUpdate) {
-			m_LastFrustumUpdate = m_GameCamera->m_Transform.getLastTransformUpdate();
 			getFrustumPlanes(m_GameCamera->getProjectionViewMatrix());
+			m_LastFrustumUpdate = m_GameCamera->m_Transform.getLastTransformUpdate();
+			updateModel();
 		}
-		m_NumberOfFrustumChecks = 0;
-		//m_AmountRendering = 0;
+
 	}
 
 	//if (TimeHandler::getCurrentFrameNumber() % 2 == 0) {
-	updateModel();
+	//updateModel();
 	//}
 }
 
@@ -204,6 +217,8 @@ void TestApp::draw() {
 	Transform model;
 	{
 		Framebuffer::use(m_DirectionalLightFb);
+		Framebuffer::clearCurrentBuffer();
+
 		Shader::use(m_ShadowGenerationShader);
 
 		ShaderUniformData* lightMatrix = m_ShadowGenerationShader->m_CommonUniforms.m_ProjectionViewMatrix;
@@ -267,7 +282,7 @@ void TestApp::draw() {
 
 		model.setPosition(m_GameCamera->m_Transform.getGlobalPosition() * glm::vec3(1,0,1));
 
-		model.setScale(glm::vec3(100, 1, 100));
+		model.setScale(200);
 		model.setRotation(glm::vec3(0, 0, 0));
 		glm::mat4 modelMat = model.getGlobalMatrix();
 		glm::mat4 normalMat = glm::transpose(glm::inverse(modelMat));
@@ -300,7 +315,7 @@ void TestApp::draw() {
 		model = m_MainCamera->m_Transform;
 		model.translate(glm::vec3(-15, 0, -20), false);
 		model.rotate(glm::vec3(90, 0, 0));
-		model.setScale(5);
+		model.setScale(3);
 
 		cameraPvm->setData(&m_GameCamera->getProjectionViewMatrix());
 		Shader::applyUniform(cameraPvm);
@@ -386,9 +401,24 @@ void TestApp::drawUi() {
 		quickText += std::to_string(m_NumberOfFrustumChecks);
 		m_Font->drawText(quickText.c_str());
 	}
+
+	{
+		model.translate(glm::vec3(0, m_Font->getLineOffset(1), 0));
+
+		uniformModel->setData(&model);
+		Shader::applyUniform(uniformModel);
+
+		//testing the quick and not as efficient text rendering
+		quickText = "Info: Vertices Rendered: ";
+		quickText += std::to_string(Logging::getNumVerticesRendered());
+		m_Font->drawText(quickText.c_str());
+	}
 }
 
 void TestApp::updateModel() {
+	printf("Model Update %i\n", TimeHandler::getCurrentFrameNumber());
+	Logging::quickTimePush("UpdateMode", true);
+	Logging::quickTimePush("UpdateMode::StartUp", true);
 	Transform model;
 	float offset = m_Spacing*((m_AmountPerSide - 1) / 2.0f);
 
@@ -400,9 +430,12 @@ void TestApp::updateModel() {
 
 	int renderingBefore = m_AmountRendering;
 	m_AmountRendering = 0;
+	m_NumberOfFrustumChecks = 0;
+
 	bool* renderingArray = new bool[m_AmountPerSide*m_AmountPerSide];
 
-
+	Logging::quickTimePop(true);
+	Logging::quickTimePush("UpdateMode::CullingCheck", true);
 	if (m_UseCulling) {
 		int i = -1;
 		for (int x = 0; x < m_AmountPerSide; x++) {
@@ -412,7 +445,7 @@ void TestApp::updateModel() {
 				model.setPosition(glm::vec3(-offset + m_Spacing * x, 0, offset + -m_Spacing * z));
 
 				if (m_UseCulling) {
-					glm::vec3 pos = model.getLocalPosition() + glm::vec3(m_Spacing / 2, 0, -m_Spacing / 2);
+					glm::vec3 pos = model.getLocalPosition();
 
 					bool result = checkFustumPlanes(pos) || checkFustumPlanes(pos + glm::vec3(0, 20, 0));
 					renderingArray[i] = result;
@@ -433,6 +466,9 @@ void TestApp::updateModel() {
 		return;
 	}
 
+	Logging::quickTimePop(true);
+	Logging::quickTimePush("UpdateMode::GenModelMarices", true);
+
 	glm::mat4* modelMatrices = new glm::mat4[m_AmountRendering];
 	int arrayIndex = 0;
 
@@ -446,14 +482,16 @@ void TestApp::updateModel() {
 			}
 
 			model.setPosition(glm::vec3(-offset + m_Spacing * x, 0, offset + -m_Spacing * z));
-			model.setRotation(glm::vec3(0, sin(TimeHandler::getCurrentTime()*0.25f + i) * 180 + 30 * i, 0));
+			model.setRotation(glm::vec3(0, sin(17.25f * i) * 180 + 30 * i, 0));
 
 
-			modelMat = model.getGlobalMatrix();
+			modelMat = model.getLocalMatrix();
 			modelMatrices[arrayIndex++] = modelMat;
 
 		}
 	}
+	Logging::quickTimePop(true);
+	Logging::quickTimePush("UpdateMode::BufferSetting", true);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceArrayBuffer);
 	glBufferData(GL_ARRAY_BUFFER, (m_AmountRendering) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
@@ -482,9 +520,14 @@ void TestApp::updateModel() {
 		}
 	}
 
+	Logging::quickTimePop(true);
+	Logging::quickTimePush("UpdateMode::End", true);
 
 	delete renderingArray;
 	delete modelMatrices;
+
+	Logging::quickTimePop(true);
+	Logging::quickTimePop(true);
 }
 
 void TestApp::getFrustumPlanes(const glm::mat4 & a_Transform) {

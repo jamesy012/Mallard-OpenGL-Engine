@@ -34,6 +34,9 @@ public:
 
 	static void use(Framebuffer* a_Framebuffer);
 
+	//TODO, allow choice between which bits
+	static void clearCurrentBuffer();
+
 	//Sets the default Framebuffer.
 	//The default frame buffer is used
 	static void setDefaultFramebuffer(Framebuffer* a_Framebuffer);
@@ -43,6 +46,9 @@ public:
 	//copys the texture from a_From to a_To
 	//Keeps the same binded framebuffer as before
 	static void framebufferBlit(const Framebuffer* a_From, const Framebuffer* a_To);
+
+	//resizes this framebuffer and it's component to the new size
+	void resizeFramebuffer(unsigned int a_Width, unsigned int a_Height);
 
 	//does the final linkage for this Framebuffer
 	//will add everything from addBuffer to the Framebuffer
@@ -96,12 +102,14 @@ private:
 		//type of this component
 		FramebufferBufferTypes m_Type;
 		FramebufferBufferFormats m_Format;
+		unsigned int m_FormatSize = 0;
 	};
 
 	struct FramebufferTexture : Component {
 		//id for referencing the texture on opengl
 		unsigned int m_TextureID = 0;
 		Texture* m_TextureObject = nullptr;
+		unsigned int m_BaseGLFormat = 0;
 	};
 	struct FramebufferRenderbuffer : Component {
 		//id for referencing this component in opengl

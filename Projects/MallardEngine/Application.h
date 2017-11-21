@@ -9,6 +9,7 @@ class Transform;
 class Framebuffer;
 class Mesh;
 class Shader;
+class Skybox;
 
 class DLL_BUILD Application {
 public:
@@ -31,6 +32,7 @@ protected:
 	struct Flags {
 		bool m_CloseOnEscape = true;
 		bool m_UpdateUICameraToScreenSize = true;
+		bool m_AllowInternalFramebufferResizes = true;
 	} m_Flags;
 
 	Window* m_AppWindow = nullptr;
@@ -49,6 +51,8 @@ protected:
 	Framebuffer* m_FbUIFrame;
 	Framebuffer* m_FbCombinedFrame;
 
+	Skybox* m_GameSkybox = nullptr;
+
 	Mesh* m_FullScreenQuad;
 	Shader* m_PPShader;
 	//brightness, contrast, saturation shader
@@ -57,6 +61,7 @@ protected:
 private:
 	void setCallbacksForWindow(Window* a_Window);
 	static void windowResize(int a_Width, int a_Height);
+	static void windowFramebufferResize(int a_Width, int a_Height);
 
 	void checkHandles();
 

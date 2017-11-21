@@ -5,6 +5,7 @@
 
 #include "Texture.h"
 #include "Shader.h"
+#include "Logging.h"
 
 Mesh::Mesh() {
 	m_Vao = m_Vbo = m_Ebo = 0;
@@ -143,6 +144,8 @@ void Mesh::draw() {
 	//unbind texture
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	Logging::objectRendered(m_Indices.size());
 }
 
 void Mesh::drawInstance(unsigned int a_Amount) {
@@ -164,6 +167,8 @@ void Mesh::drawInstance(unsigned int a_Amount) {
 	//unbind texture
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	Logging::objectRendered(m_Indices.size() * a_Amount);
 }
 
 void Mesh::applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices) {

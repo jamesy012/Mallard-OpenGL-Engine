@@ -19,12 +19,12 @@ uniform mat4 lightMatrix;
 uniform float INSTANCED = 0;
 
 void main() {
-mat4 useableModel;
-if(INSTANCED >= 0.5){
-useableModel = layoutModel;
-}else{
-useableModel = model;
-}
+    mat4 useableModel;
+    if(INSTANCED >= 0.5){
+        useableModel = layoutModel;
+    }else{
+        useableModel = model;
+    }
 
     gl_Position = projectionViewMatrix * useableModel * position;
     vNormal = normalRot * normal;
