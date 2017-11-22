@@ -149,7 +149,7 @@ void Application::run() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (!m_GameSkybox->hasBeenGenerated()) {
-		m_GameSkybox->genSkybox("Textures\\Skybox\\HornstullsStrand2\\");
+		m_GameSkybox->genSkybox("Textures\\Skybox\\Vindelalven\\");
 	}
 	if (!m_GameSkybox->hasCameraAssigned()) {
 		m_GameSkybox->assignCamera(m_GameCamera);
@@ -236,6 +236,10 @@ void Application::run() {
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
 			//we dont want to include these quad draws in the vertex counts
 			Logging::objectRenderedAllowAdditions(false);
+
+			if (Input::wasKeyPressed(GLFW_KEY_U)) {
+				m_FbGameFrame->resizeFramebuffer(256, 256);
+			}
 
 			if (Input::isKeyDown(GLFW_KEY_G)) {
 				Shader::use(m_PPShader);

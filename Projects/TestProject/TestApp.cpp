@@ -67,18 +67,18 @@ void TestApp::startUp() {
 	m_ShadowDrawShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders\\Shadows\\DrawShadow.frag");
 	m_ShadowDrawShader->linkShader();
 
-	m_DirectionalLightFb = new Framebuffer();
-	m_DirectionalLightFb->setSize(1024, 1024);
-	m_DirectionalLightFb->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
-	m_DirectionalLightFb->genFramebuffer();
-
 	m_LightDir = glm::normalize(glm::vec3(1.0f, 2.5f, 1.0f));
-
-	glm::mat4 lightProjection = glm::ortho<float>(-40, 40, -40, 40, -100, 100);
 	glm::mat4 lightView = glm::lookAt(m_LightDir, glm::vec3(0), glm::vec3(0, 1, 0));
+		glm::mat4 lightProjection = glm::ortho<float>(-40, 40, -40, 40, -100, 100);
 
-	m_LightMatrix = lightProjection * lightView;
+	for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+		m_LightMatrix[i] = lightProjection * lightView;
 
+		m_DirectionalLightFb[i] = new Framebuffer();
+		m_DirectionalLightFb[i]->setSize(1024, 1024);
+		m_DirectionalLightFb[i]->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
+		m_DirectionalLightFb[i]->genFramebuffer();
+	}
 
 	m_FirstModelUpdate = true;
 	glGenBuffers(1, &m_InstanceArrayBuffer);
@@ -190,12 +190,16 @@ void TestApp::update() {
 	float time = TimeHandler::getCurrentTime() * 0.4f;
 	m_LightDir = glm::normalize(glm::vec3(sin(time), 2.5f, cos(time)));
 
-	glm::mat4 lightProjection = glm::ortho<float>(-m_CurrentOrthoSize, m_CurrentOrthoSize,
-												  -m_CurrentOrthoSize, m_CurrentOrthoSize,
-												  -100, 100);
 	glm::mat4 lightView = glm::lookAt(m_LightDir, glm::vec3(0), glm::vec3(0, 1, 0));
-
-	m_LightMatrix = lightProjection * lightView;
+	lightView = glm::translate(lightView, m_GameCamera->m_Transform.getGlobalPosition() * -glm::vec3(1,0,1));
+	
+	for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+		float orthoSize = m_CurrentOrthoSize*((i * 2) + 1);
+		glm::mat4 lightProjection = glm::ortho<float>(-orthoSize, orthoSize,
+													  -orthoSize, orthoSize,
+													  -100, 100);
+		m_LightMatrix[i] = lightProjection * lightView;
+	}
 
 
 	if (m_UseCulling) {
@@ -216,19 +220,18 @@ void TestApp::draw() {
 
 	Transform model;
 	{
-		Framebuffer::use(m_DirectionalLightFb);
-		Framebuffer::clearCurrentBuffer();
+			Shader::use(m_ShadowGenerationShader);
+			ShaderUniformData* lightMatrix = m_ShadowGenerationShader->m_CommonUniforms.m_ProjectionViewMatrix;
+		for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+			Framebuffer::use(m_DirectionalLightFb[i]);
+			Framebuffer::clearCurrentBuffer();
+			
+			lightMatrix->setData(&m_LightMatrix[i]);
+			Shader::applyUniform(lightMatrix);
 
-		Shader::use(m_ShadowGenerationShader);
-
-		ShaderUniformData* lightMatrix = m_ShadowGenerationShader->m_CommonUniforms.m_ProjectionViewMatrix;
-
-		lightMatrix->setData(&m_LightMatrix);
-
-		Shader::applyUniform(lightMatrix);
-
-		//drawModels();
-		m_Model->drawInstance(m_AmountRendering);
+			//drawModels();
+			m_Model->drawInstance(m_AmountRendering);
+		}
 	}
 	Framebuffer::use(nullptr);
 	{
@@ -251,7 +254,6 @@ void TestApp::draw() {
 			0.5f, 0.5f, 0.5f, 1.0f
 		);
 
-		glm::mat4 offsetLightMatrix = textureSpaceOffset * m_LightMatrix;
 
 		if (cameraPvm != nullptr) {
 			cameraPvm->setData(&m_GameCamera->getProjectionViewMatrix());
@@ -262,20 +264,34 @@ void TestApp::draw() {
 			Shader::applyUniform(lightDir);
 		}
 		if (lightMatrix != nullptr) {
-			lightMatrix->setData(&offsetLightMatrix);
-			Shader::applyUniform(lightMatrix);
+			//lightMatrix->setData(&offsetLightMatrix);
+			//Shader::applyUniform(lightMatrix);
 		}
 
-		if (shadowMapTex != nullptr) {
-			m_DirectionalLightFb->getTexture()->bindAndApplyTexture(3, shadowMapTex);
+		for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+			int slot = 3 + i;
+			m_DirectionalLightFb[i]->getTexture()->bindTexture(slot);
+
+			std::string shadowMapUniName = "shadowMap[" + std::to_string(i) + "]";
+			std::string lightMatrixUniName = "lightMatrix[" + std::to_string(i) + "]";
+
+			int loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), shadowMapUniName.c_str());
+			glUniform1i(loc, slot);
+			glm::mat4 offsetLightMatrix = textureSpaceOffset * m_LightMatrix[i];
+
+			loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), lightMatrixUniName.c_str());
+			glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(offsetLightMatrix));
+
 		}
 
 		useInstanced->setData(&instancedOnOff[0]);
 		Shader::applyUniform(useInstanced);
 
-		glm::vec4 white = glm::vec4(1);
-		colorUniform->setData(glm::value_ptr(white));
-		Shader::applyUniform(colorUniform);
+		if (colorUniform != nullptr) {
+			glm::vec4 white = glm::vec4(1);
+			colorUniform->setData(glm::value_ptr(white));
+			Shader::applyUniform(colorUniform);
+		}
 
 		//drawModels();
 		m_Model->drawInstance(m_AmountRendering);
@@ -295,13 +311,20 @@ void TestApp::draw() {
 			Shader::applyUniform(modelNormalRotMatrix);
 		}
 
-		glm::vec4 green = glm::vec4(0.25f,1.0f,0.25f,1.0f);
-		colorUniform->setData(glm::value_ptr(green));
-		Shader::applyUniform(colorUniform);
+		if (colorUniform != nullptr) {
+			glm::vec4 green = glm::vec4(0.25f, 1.0f, 0.25f, 1.0f);
+			colorUniform->setData(glm::value_ptr(green));
+			Shader::applyUniform(colorUniform);
+		}
 
 		useInstanced->setData(&instancedOnOff[1]);
 		Shader::applyUniform(useInstanced);
 		m_GroundPlane->draw();
+
+		for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+			glActiveTexture(GL_TEXTURE0 + 3+i);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
 	}
 
 	{
@@ -322,7 +345,15 @@ void TestApp::draw() {
 		modelMatrix->setData(&model);
 		Shader::applyUniform(modelMatrix);
 
-		m_FullScreenQuad->setTexture(m_DirectionalLightFb->getTexture());
+		static int value = 0;
+		if (Input::wasKeyPressed(KEY_1)) {
+			value++;
+			if (value >= NUM_OF_SHADOW_CASCADES) {
+				value = 0;
+			}
+		}
+
+		m_FullScreenQuad->setTexture(m_DirectionalLightFb[value]->getTexture());
 		m_FullScreenQuad->draw();
 
 		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
@@ -418,7 +449,7 @@ void TestApp::drawUi() {
 void TestApp::updateModel() {
 	printf("Model Update %i\n", TimeHandler::getCurrentFrameNumber());
 	Logging::quickTimePush("UpdateMode", true);
-	Logging::quickTimePush("UpdateMode::StartUp", true);
+	Logging::quickTimePush("UpdateMode::StartUp", false);
 	Transform model;
 	float offset = m_Spacing*((m_AmountPerSide - 1) / 2.0f);
 
@@ -434,8 +465,8 @@ void TestApp::updateModel() {
 
 	bool* renderingArray = new bool[m_AmountPerSide*m_AmountPerSide];
 
-	Logging::quickTimePop(true);
-	Logging::quickTimePush("UpdateMode::CullingCheck", true);
+	Logging::quickTimePop(false);
+	Logging::quickTimePush("UpdateMode::CullingCheck", false);
 	if (m_UseCulling) {
 		int i = -1;
 		for (int x = 0; x < m_AmountPerSide; x++) {
@@ -463,11 +494,13 @@ void TestApp::updateModel() {
 	}
 	if (m_AmountRendering == 0) {
 		delete renderingArray;
+		Logging::quickTimePop(false);
+		Logging::quickTimePop(true);
 		return;
 	}
 
-	Logging::quickTimePop(true);
-	Logging::quickTimePush("UpdateMode::GenModelMarices", true);
+	Logging::quickTimePop(false);
+	Logging::quickTimePush("UpdateMode::GenModelMarices", false);
 
 	glm::mat4* modelMatrices = new glm::mat4[m_AmountRendering];
 	int arrayIndex = 0;
@@ -490,8 +523,8 @@ void TestApp::updateModel() {
 
 		}
 	}
-	Logging::quickTimePop(true);
-	Logging::quickTimePush("UpdateMode::BufferSetting", true);
+	Logging::quickTimePop(false);
+	Logging::quickTimePush("UpdateMode::BufferSetting", false);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceArrayBuffer);
 	glBufferData(GL_ARRAY_BUFFER, (m_AmountRendering) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
@@ -520,13 +553,13 @@ void TestApp::updateModel() {
 		}
 	}
 
-	Logging::quickTimePop(true);
-	Logging::quickTimePush("UpdateMode::End", true);
+	Logging::quickTimePop(false);
+	Logging::quickTimePush("UpdateMode::End", false);
 
 	delete renderingArray;
 	delete modelMatrices;
 
-	Logging::quickTimePop(true);
+	Logging::quickTimePop(false);
 	Logging::quickTimePop(true);
 }
 

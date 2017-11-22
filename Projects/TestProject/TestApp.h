@@ -31,6 +31,8 @@ private:
 	bool checkFustumPlanes(const glm::vec3 a_Position);
 	bool m_FirstModelUpdate = true;
 
+	static const unsigned int NUM_OF_SHADOW_CASCADES = 3;
+
 	Model* m_Model;
 	Mesh* m_GroundPlane;
 
@@ -40,13 +42,13 @@ private:
 
 	Texture* m_1x1WhiteTexture;
 
-	Framebuffer* m_DirectionalLightFb;
+	Framebuffer* m_DirectionalLightFb[NUM_OF_SHADOW_CASCADES];
 
 	Shader* m_ShadowGenerationShader;
 	Shader* m_ShadowDrawShader;
 
 	glm::vec3 m_LightDir;
-	glm::mat4 m_LightMatrix;
+	glm::mat4 m_LightMatrix[NUM_OF_SHADOW_CASCADES];
 	float m_CurrentOrthoSize = 40;
 
 	float m_Spacing = 10;
