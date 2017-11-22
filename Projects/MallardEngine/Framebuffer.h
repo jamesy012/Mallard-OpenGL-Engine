@@ -35,7 +35,7 @@ public:
 	static void use(Framebuffer* a_Framebuffer);
 
 	//TODO, allow choice between which bits
-	static void clearCurrentBuffer();
+	static void clearCurrentBuffer(bool a_ColorBit = true, bool a_DepthBit = true);
 
 	//Sets the default Framebuffer.
 	//The default frame buffer is used

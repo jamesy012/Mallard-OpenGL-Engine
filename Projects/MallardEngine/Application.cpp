@@ -98,12 +98,17 @@ void Application::run() {
 
 	//gen frame buffers
 	{
-		const unsigned int NumOfFames = 4;
-		Framebuffer** frame[NumOfFames] = { &m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
-		for (int i = 0; i < NumOfFames; i++) {
+		const unsigned int numOfFames = 4;
+		Framebuffer** frame[numOfFames] = { &m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
+		for (int i = 0; i < numOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
 			(*frame[i])->setSize(m_AppWindow->getFramebufferWidth(), m_AppWindow->getFramebufferHeight());
-			(*frame[i])->createRenderTarget();
+			if (frame[i] == &m_FbUIFrame) {
+				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
+				(*frame[i])->genFramebuffer();
+			} else {
+				(*frame[i])->createRenderTarget();
+			}
 		}
 	}
 
@@ -191,7 +196,7 @@ void Application::run() {
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			//set default framebuffer to be the UI framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbUIFrame);
-			Framebuffer::clearCurrentBuffer();
+			Framebuffer::clearCurrentBuffer(true,false);
 
 			//set up OpenGL for transparent text
 			//glEnable(GL_BLEND);
@@ -272,8 +277,9 @@ void Application::run() {
 			Framebuffer::clearCurrentBuffer();
 
 			//and draw the combined frame to the final framebuffer
-			m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
-			m_FullScreenQuad->draw();
+			//m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
+			//m_FullScreenQuad->draw();
+			Framebuffer::framebufferBlit(m_FbCombinedFrame, nullptr);
 
 			//finaly copy framebuffers for next frame
 			Framebuffer::framebufferBlit(m_FbGameFrame, m_FbGameFrameCopy);

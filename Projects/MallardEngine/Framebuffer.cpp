@@ -73,8 +73,15 @@ void Framebuffer::use(Framebuffer * a_Framebuffer) {
 	glViewport(0, 0, a_Framebuffer->m_Width, a_Framebuffer->m_Height);
 }
 
-void Framebuffer::clearCurrentBuffer() {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void Framebuffer::clearCurrentBuffer(bool a_ColorBit, bool a_DepthBit) {
+	int clearBit = 0;
+	if (a_DepthBit) {
+		clearBit |= GL_DEPTH_BUFFER_BIT;
+	}
+	if (a_ColorBit) {
+		clearBit |= GL_COLOR_BUFFER_BIT;
+	}
+	glClear(clearBit);
 }
 
 void Framebuffer::setDefaultFramebuffer(Framebuffer * a_Framebuffer) {
@@ -87,10 +94,16 @@ Framebuffer * Framebuffer::getCurrentFramebuffer() {
 }
 
 void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer * a_To) {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, a_From->m_Fbo);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, a_To->m_Fbo);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, a_From->m_Fbo);
+	if (a_To == nullptr) {
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	glBlitFramebuffer(0, 0, a_From->m_Width, a_From->m_Height, 0, 0, a_To->m_Width, a_To->m_Height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, a_From->m_Width, a_From->m_Height, 0, 0, Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	} else {
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, a_To->m_Fbo);
+
+		glBlitFramebuffer(0, 0, a_From->m_Width, a_From->m_Height, 0, 0, a_To->m_Width, a_To->m_Height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	}
 
 	if (m_CurrentFramebuffer == nullptr) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

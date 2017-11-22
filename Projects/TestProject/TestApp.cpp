@@ -27,11 +27,48 @@
 void TestApp::startUp() {
 	Logging::quickTimePush("StartUp");
 	Logging::quickTimePush("FileLoading");
-	m_Model = new Model();
-	m_Model->load("Models/Nanosuit/nanosuit.obj");
+
+	//m_Model = new Model();
+	//m_Model->load("Models/Nanosuit/nanosuit.obj");
 	//m_Model->load("Models/stanford/Dragon.obj");
 	//m_Model->load("Models/ModelTest/ModelTest.fbx");
 	//m_Model->load("Models/ModelTest/ModelTest.obj");
+
+
+
+	Model** models[4] = { &m_Model,&m_ModelShadow[0],&m_ModelShadow[1],&m_ModelShadow[2]};
+	unsigned int* arrayBuffers[4] = { &m_InstanceArrayBuffer,
+		&m_InstanceArrayBufferShadow[0],
+		&m_InstanceArrayBufferShadow[1],
+		&m_InstanceArrayBufferShadow[2] };
+	glGenBuffers(1+NUM_OF_SHADOW_CASCADES, arrayBuffers[0]);
+	for (int i = 0; i < 1 + NUM_OF_SHADOW_CASCADES; i++) {
+		(*models[i]) = new Model();
+		(*models[i])->load("Models/Nanosuit/nanosuit.obj");
+		glBindBuffer(GL_ARRAY_BUFFER, *arrayBuffers[i]);
+		for (int q = 0; q < (*models[i])->m_Meshs.size(); q++) {
+			unsigned int VAO = (*models[i])->m_Meshs[q]->m_Vao;
+			glBindVertexArray(VAO);
+			// set attribute pointers for matrix (4 times vec4)
+			glEnableVertexAttribArray(3);
+			glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) 0);
+			glEnableVertexAttribArray(4);
+			glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (sizeof(glm::vec4)));
+			glEnableVertexAttribArray(5);
+			glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (2 * sizeof(glm::vec4)));
+			glEnableVertexAttribArray(6);
+			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (3 * sizeof(glm::vec4)));
+
+			glVertexAttribDivisor(3, 1);
+			glVertexAttribDivisor(4, 1);
+			glVertexAttribDivisor(5, 1);
+			glVertexAttribDivisor(6, 1);
+
+			glBindVertexArray(0);
+		}
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 
 	m_Font = new Font();
 	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
@@ -69,25 +106,31 @@ void TestApp::startUp() {
 
 	m_LightDir = glm::normalize(glm::vec3(1.0f, 2.5f, 1.0f));
 	glm::mat4 lightView = glm::lookAt(m_LightDir, glm::vec3(0), glm::vec3(0, 1, 0));
-		glm::mat4 lightProjection = glm::ortho<float>(-40, 40, -40, 40, -100, 100);
+	glm::mat4 lightProjection = glm::ortho<float>(-40, 40, -40, 40, -100, 100);
 
 	for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
 		m_LightMatrix[i] = lightProjection * lightView;
 
 		m_DirectionalLightFb[i] = new Framebuffer();
-		m_DirectionalLightFb[i]->setSize(1024, 1024);
+		if (i == 0) {
+			m_DirectionalLightFb[i]->setSize(1024 * 2, 1024 * 2);
+		} else {
+			m_DirectionalLightFb[i]->setSize(1024, 1024);
+		}
 		m_DirectionalLightFb[i]->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
 		m_DirectionalLightFb[i]->genFramebuffer();
 	}
 
 	m_FirstModelUpdate = true;
-	glGenBuffers(1, &m_InstanceArrayBuffer);
 	updateModel();
 	Logging::quickTimePop(true);
 }
 
 void TestApp::shutDown() {
 	m_Model->unload();
+	for (int i = 0; i < 3; i++) {
+		m_ModelShadow[i]->unload();
+	}
 	m_1x1WhiteTexture->unload();
 
 	delete m_Font;
@@ -99,7 +142,14 @@ void TestApp::shutDown() {
 	delete m_ShadowGenerationShader;
 	delete m_ShadowDrawShader;
 
-	delete m_DirectionalLightFb;
+	for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+		delete m_DirectionalLightFb[i];
+	}
+
+	glDeleteBuffers(NUM_OF_SHADOW_CASCADES, &m_InstanceArrayBufferShadow[0]);
+	glDeleteBuffers(1, &m_InstanceArrayBuffer);
+
+	delete m_RenderingArray;
 }
 
 void TestApp::update() {
@@ -191,10 +241,10 @@ void TestApp::update() {
 	m_LightDir = glm::normalize(glm::vec3(sin(time), 2.5f, cos(time)));
 
 	glm::mat4 lightView = glm::lookAt(m_LightDir, glm::vec3(0), glm::vec3(0, 1, 0));
-	lightView = glm::translate(lightView, m_GameCamera->m_Transform.getGlobalPosition() * -glm::vec3(1,0,1));
-	
+	lightView = glm::translate(lightView, m_GameCamera->m_Transform.getGlobalPosition() * -glm::vec3(1, 0, 1));
+
 	for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
-		float orthoSize = m_CurrentOrthoSize*((i * 2) + 1);
+		float orthoSize = m_CurrentOrthoSize*(i + 1);
 		glm::mat4 lightProjection = glm::ortho<float>(-orthoSize, orthoSize,
 													  -orthoSize, orthoSize,
 													  -100, 100);
@@ -204,7 +254,7 @@ void TestApp::update() {
 
 	if (m_UseCulling) {
 		if (m_GameCamera->m_Transform.getLastTransformUpdate() != m_LastFrustumUpdate) {
-			getFrustumPlanes(m_GameCamera->getProjectionViewMatrix());
+			getFrustumPlanes(m_GameCamera->getProjectionViewMatrix(), m_FrustumPlanes);
 			m_LastFrustumUpdate = m_GameCamera->m_Transform.getLastTransformUpdate();
 			updateModel();
 		}
@@ -220,17 +270,17 @@ void TestApp::draw() {
 
 	Transform model;
 	{
-			Shader::use(m_ShadowGenerationShader);
-			ShaderUniformData* lightMatrix = m_ShadowGenerationShader->m_CommonUniforms.m_ProjectionViewMatrix;
+		Shader::use(m_ShadowGenerationShader);
+		ShaderUniformData* lightMatrix = m_ShadowGenerationShader->m_CommonUniforms.m_ProjectionViewMatrix;
 		for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
 			Framebuffer::use(m_DirectionalLightFb[i]);
 			Framebuffer::clearCurrentBuffer();
-			
+
 			lightMatrix->setData(&m_LightMatrix[i]);
 			Shader::applyUniform(lightMatrix);
 
 			//drawModels();
-			m_Model->drawInstance(m_AmountRendering);
+			m_ModelShadow[i]->drawInstance(m_NumberOfObjectsToRenderShadow[i]);
 		}
 	}
 	Framebuffer::use(nullptr);
@@ -296,7 +346,7 @@ void TestApp::draw() {
 		//drawModels();
 		m_Model->drawInstance(m_AmountRendering);
 
-		model.setPosition(m_GameCamera->m_Transform.getGlobalPosition() * glm::vec3(1,0,1));
+		model.setPosition(m_GameCamera->m_Transform.getGlobalPosition() * glm::vec3(1, 0, 1));
 
 		model.setScale(200);
 		model.setRotation(glm::vec3(0, 0, 0));
@@ -322,7 +372,7 @@ void TestApp::draw() {
 		m_GroundPlane->draw();
 
 		for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
-			glActiveTexture(GL_TEXTURE0 + 3+i);
+			glActiveTexture(GL_TEXTURE0 + 3 + i);
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	}
@@ -463,7 +513,10 @@ void TestApp::updateModel() {
 	m_AmountRendering = 0;
 	m_NumberOfFrustumChecks = 0;
 
-	bool* renderingArray = new bool[m_AmountPerSide*m_AmountPerSide];
+	if (m_RenderingArray != nullptr) {
+		delete m_RenderingArray;
+	}
+	m_RenderingArray = new bool[m_AmountPerSide*m_AmountPerSide];
 
 	Logging::quickTimePop(false);
 	Logging::quickTimePush("UpdateMode::CullingCheck", false);
@@ -478,8 +531,8 @@ void TestApp::updateModel() {
 				if (m_UseCulling) {
 					glm::vec3 pos = model.getLocalPosition();
 
-					bool result = checkFustumPlanes(pos) || checkFustumPlanes(pos + glm::vec3(0, 20, 0));
-					renderingArray[i] = result;
+					bool result = checkFustumPlanes(pos, m_FrustumPlanes) || checkFustumPlanes(pos + glm::vec3(0, 20, 0), m_FrustumPlanes);
+					m_RenderingArray[i] = result;
 
 					if (!result) {
 						continue;
@@ -493,7 +546,6 @@ void TestApp::updateModel() {
 		m_AmountRendering = m_AmountPerSide*m_AmountPerSide;
 	}
 	if (m_AmountRendering == 0) {
-		delete renderingArray;
 		Logging::quickTimePop(false);
 		Logging::quickTimePop(true);
 		return;
@@ -510,7 +562,7 @@ void TestApp::updateModel() {
 		for (int z = 0; z < m_AmountPerSide; z++) {
 			i++;
 
-			if (!renderingArray[i] && m_UseCulling) {
+			if (!m_RenderingArray[i] && m_UseCulling) {
 				continue;
 			}
 
@@ -529,50 +581,107 @@ void TestApp::updateModel() {
 	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceArrayBuffer);
 	glBufferData(GL_ARRAY_BUFFER, (m_AmountRendering) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
 
-	if (m_FirstModelUpdate) {
-		m_FirstModelUpdate = false;
-		for (int i = 0; i < m_Model->m_Meshs.size(); i++) {
-			unsigned int VAO = m_Model->m_Meshs[i]->m_Vao;
-			glBindVertexArray(VAO);
-			// set attribute pointers for matrix (4 times vec4)
-			glEnableVertexAttribArray(3);
-			glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) 0);
-			glEnableVertexAttribArray(4);
-			glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (sizeof(glm::vec4)));
-			glEnableVertexAttribArray(5);
-			glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (2 * sizeof(glm::vec4)));
-			glEnableVertexAttribArray(6);
-			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (3 * sizeof(glm::vec4)));
-
-			glVertexAttribDivisor(3, 1);
-			glVertexAttribDivisor(4, 1);
-			glVertexAttribDivisor(5, 1);
-			glVertexAttribDivisor(6, 1);
-
-			glBindVertexArray(0);
-		}
-	}
-
 	Logging::quickTimePop(false);
 	Logging::quickTimePush("UpdateMode::End", false);
 
-	delete renderingArray;
 	delete modelMatrices;
 
 	Logging::quickTimePop(false);
 	Logging::quickTimePop(true);
+
+	for (int i = 0; i < NUM_OF_SHADOW_CASCADES; i++) {
+		updateShadowModel(i);
+	}
 }
 
-void TestApp::getFrustumPlanes(const glm::mat4 & a_Transform) {
+void TestApp::updateShadowModel(unsigned int a_ShadowCascade) {
+	glm::vec4 frustumPlanes[6];
+	getFrustumPlanes(m_LightMatrix[a_ShadowCascade], frustumPlanes);
+
+	Transform model;
+	float offset = m_Spacing*((m_AmountPerSide - 1) / 2.0f);
+
+	glm::mat4 modelMat;
+	//glm::mat4 normalMat;
+
+	int numToRender = 0;
+
+	bool* renderingArray = new bool[m_AmountPerSide*m_AmountPerSide]{ false };
+
+	if (m_UseCulling) {
+		int i = -1;
+		for (int x = 0; x < m_AmountPerSide; x++) {
+			for (int z = 0; z < m_AmountPerSide; z++) {
+				i++;
+
+				if (!m_RenderingArray[i]) {
+					continue;
+				}
+
+				model.setPosition(glm::vec3(-offset + m_Spacing * x, 0, offset + -m_Spacing * z));
+
+				glm::vec3 pos = model.getLocalPosition();
+
+				bool result = checkFustumPlanes(pos + glm::vec3(0, 10, 0), frustumPlanes);
+				renderingArray[i] = result;
+
+				if (!result) {
+					continue;
+				}
+
+				numToRender++;
+
+			}
+		}
+	} else {
+		numToRender = m_AmountPerSide*m_AmountPerSide;
+	}
+	if (numToRender == 0) {
+		delete renderingArray;
+		return;
+	}
+
+	glm::mat4* modelMatrices = new glm::mat4[numToRender];
+	int arrayIndex = 0;
+
+	int i = -1;
+	for (int x = 0; x < m_AmountPerSide; x++) {
+		for (int z = 0; z < m_AmountPerSide; z++) {
+			i++;
+
+			if ((!renderingArray[i]) && m_UseCulling) {
+				continue;
+			}
+
+			model.setPosition(glm::vec3(-offset + m_Spacing * x, 0, offset + -m_Spacing * z));
+			model.setRotation(glm::vec3(0, sin(17.25f * i) * 180 + 30 * i, 0));
+
+
+			modelMat = model.getLocalMatrix();
+			modelMatrices[arrayIndex++] = modelMat;
+
+		}
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceArrayBufferShadow[a_ShadowCascade]);
+	glBufferData(GL_ARRAY_BUFFER, (numToRender) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+	delete renderingArray;
+	delete modelMatrices;
+
+	m_NumberOfObjectsToRenderShadow[a_ShadowCascade] = numToRender;
+}
+
+void TestApp::getFrustumPlanes(const glm::mat4 & a_Transform, glm::vec4* a_Frustums) {
 	for (int i = 0; i < 6; i += 2) {
 		int index = i / 2;
-		frustumPlanes[i] = glm::vec4(
+		a_Frustums[i] = glm::vec4(
 			a_Transform[0][3] - a_Transform[0][index],
 			a_Transform[1][3] - a_Transform[1][index],
 			a_Transform[2][3] - a_Transform[2][index],
 			a_Transform[3][3] - a_Transform[3][index]
 		);
-		frustumPlanes[i + 1] = glm::vec4(
+		a_Frustums[i + 1] = glm::vec4(
 			a_Transform[0][3] + a_Transform[0][index],
 			a_Transform[1][3] + a_Transform[1][index],
 			a_Transform[2][3] + a_Transform[2][index],
@@ -582,15 +691,15 @@ void TestApp::getFrustumPlanes(const glm::mat4 & a_Transform) {
 
 	//normalize planes
 	for (int i = 0; i < 6; i++) {
-		float d = glm::length(glm::vec3(frustumPlanes[i]));
-		frustumPlanes[i] /= d;
+		float d = glm::length(glm::vec3(a_Frustums[i]));
+		a_Frustums[i] /= d;
 	}
 }
 
-bool TestApp::checkFustumPlanes(const glm::vec3 a_Position) {
+bool TestApp::checkFustumPlanes(const glm::vec3 a_Position, glm::vec4* a_Frustums) {
 	m_NumberOfFrustumChecks++;
 	for (int i = 0; i < 6; i++) {
-		float d = glm::dot(glm::vec3(frustumPlanes[i]), a_Position) + frustumPlanes[i].w;
+		float d = glm::dot(glm::vec3(a_Frustums[i]), a_Position) + a_Frustums[i].w;
 
 		if (d <= -2) {
 			return false;

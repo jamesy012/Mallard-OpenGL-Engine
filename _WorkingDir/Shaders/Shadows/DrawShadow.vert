@@ -30,7 +30,9 @@ void main() {
     gl_Position = projectionViewMatrix * useableModel * position;
     vNormal = normalRot * normal;    
     vTexCoord = texCoods;
-	EyeVertexZ = gl_Position.z/50;
+    
+    //divided by the size of the shadow maps, this seems spot on
+	EyeVertexZ = gl_Position.z/40;
 	
 	vShadowCoord[0] = lightMatrix[0] * useableModel * position;
 	vShadowCoord[1] = lightMatrix[1] * useableModel * position;

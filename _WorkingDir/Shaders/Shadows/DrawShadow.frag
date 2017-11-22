@@ -17,7 +17,7 @@ uniform sampler2D TexDiffuse1;
 uniform float bias = 0.0035f;
 
 void main() {
-	int farTest = int(2*clamp(EyeVertexZ+0.2f,0,1));
+	int farTest = int(2*clamp(EyeVertexZ,0,1));
 	//farTest = 0;
     float d;
     d = max(0,dot(normalize(vNormal.xyz),lightDir))*2.5;
@@ -44,6 +44,7 @@ void main() {
 	//fragColor = vec4(EyeVertexZ);
 	//
     //
+    //if(gl_FragCoord.x > 900 && gl_FragCoord.x < 1000){
 	//if(farTest == 0){
 	//	fragColor = vec4(1,0,0,1);
 	//}
@@ -56,4 +57,5 @@ void main() {
 	//if(farTest == 3){
 	//	fragColor = vec4(1,0,1,1);
 	//}
+    //}
 }
