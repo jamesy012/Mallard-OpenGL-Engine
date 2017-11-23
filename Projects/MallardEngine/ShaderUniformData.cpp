@@ -5,6 +5,7 @@
 #include <glm\glm.hpp>
 
 #include "Transform.h"
+#include "Camera.h"
 
 //copys data with a simple memcpy using the data size * how much data
 //modify's data so it will make the uniform dirty(different from the value on the gpu)
@@ -79,6 +80,13 @@ void ShaderUniformData::setData(Transform * a_Data) {
 	if (m_Type == ShaderUniformTypes::MAT4) {
 		//gets global matrix mat4 then uses value_ptr to get the start of the data
 		setData(glm::value_ptr(a_Data->getGlobalMatrix()));
+	}
+}
+
+void ShaderUniformData::setData(Camera * a_Data) {
+	if (m_Type == ShaderUniformTypes::MAT4) {
+		//gets global matrix mat4 then uses value_ptr to get the start of the data
+		setData(glm::value_ptr(a_Data->getProjectionViewMatrix()));
 	}
 }
 

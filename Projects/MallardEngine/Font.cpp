@@ -129,13 +129,15 @@ Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_Off
 	return gd;
 }
 
-void Font::drawText(const char * a_Text) const {
+float Font::drawText(const char * a_Text) const {
 	//create text with a reference to this font
 	Text text(this);
 	//gen mesh using a_Text
 	text.generateText(a_Text);
 	//render it
 	text.draw();
+
+	return text.getLineOffset();
 }
 
 void Font::generateShaderCode(Shader * a_ShaderRef) {

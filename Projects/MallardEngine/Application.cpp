@@ -13,12 +13,10 @@
 #include "Transform.h"
 #include "Window.h"
 #include "Logging.h"
-
 #include "Framebuffer.h"
-
 #include "Mesh.h"
 #include "Shader.h"
-
+#include "Font.h"
 #include "Skybox.h"
 
 /* assimp include files. These three are usually needed. */
@@ -35,9 +33,9 @@ Application::Application() {
 
 
 Application::~Application() {
-	if (m_AppWindow != nullptr) {
-		delete m_AppWindow;
-		m_AppWindow = nullptr;
+	if (m_ApplicationWindow != nullptr) {
+		delete m_ApplicationWindow;
+		m_ApplicationWindow = nullptr;
 	}
 }
 
@@ -63,15 +61,15 @@ void Application::run() {
 	aiAttachLogStream(&stream);
 
 	//create window for app
-	m_AppWindow = new Window();
-	m_AppWindow->createWindow(640, 480, "Window");
-	m_AppWindow->makeContextCurrent();//make context so we can render to it
+	m_ApplicationWindow = new Window();
+	m_ApplicationWindow->createWindow(640, 480, "Window");
+	m_ApplicationWindow->makeContextCurrent();//make context so we can render to it
 
-	m_AppWindow->m_WindowResizeCallback = windowResize;
-	m_AppWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
+	m_ApplicationWindow->m_WindowResizeCallback = windowResize;
+	m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
 
 	//set up callbacks for window
-	setCallbacksForWindow(m_AppWindow);
+	setCallbacksForWindow(m_ApplicationWindow);
 
 
 	//start glew (opengl)
@@ -90,10 +88,10 @@ void Application::run() {
 	Logging::newFrame();
 
 	//set up cameras
-	m_GameCamera = new Camera();
-	m_GameCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-	m_UiCamera = new Camera();
-	m_UiCamera->setOrthographic(0.0f, (float) m_AppWindow->getFramebufferWidth(), 0.0f, (float) m_AppWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+	m_CameraGame = new Camera();
+	m_CameraGame->setPerspective(60.0f, m_ApplicationWindow->getFramebufferWidth() / (float)m_ApplicationWindow->getFramebufferHeight(), 0.1f, 1000.0f);
+	m_CameraUi = new Camera();
+	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
 
 	//gen frame buffers
@@ -102,44 +100,72 @@ void Application::run() {
 		Framebuffer** frame[numOfFames] = { &m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
 		for (int i = 0; i < numOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
-			(*frame[i])->setSize(m_AppWindow->getFramebufferWidth(), m_AppWindow->getFramebufferHeight());
+			(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
 			if (frame[i] == &m_FbUIFrame) {
 				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
 				(*frame[i])->genFramebuffer();
-			} else {
+			}
+			else {
 				(*frame[i])->createRenderTarget();
 			}
 		}
 	}
 
-	m_PPShader = new Shader();
-	m_PPShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
-	m_PPShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
-	m_PPShader->linkShader();
+	m_ShaderPPBasic = new Shader();
+	m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+	m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
+	m_ShaderPPBasic->linkShader();
 
-	m_PPBcsShader = new Shader();
-	m_PPBcsShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
-	m_PPBcsShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPUber.frag");
-	m_PPBcsShader->linkShader();
+	m_ShaderPPBcs = new Shader();
+	m_ShaderPPBcs->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+	m_ShaderPPBcs->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPUber.frag");
+	m_ShaderPPBcs->linkShader();
 
-	m_BasicShader = new Shader();
-	m_BasicShader->createSimpleShader(true);
+	m_ShaderBasic = new Shader();
+	m_ShaderBasic->createSimpleShader(true);
 
 	m_FullScreenQuad = new Mesh();
 	m_FullScreenQuad->createPlane(false);
 
-	m_GameSkybox = new Skybox();
+	m_SkyboxGame = new Skybox();
+
+	m_Font = new Font();
+	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
+
+	m_ShaderText = new Shader();
+	Font::generateShaderCode(m_ShaderText);
+	m_ShaderText->linkShader();
 
 	/** SET UP PROGRAM FOR STARTUP LOADING SCREEN */
 
 	//set up default clear color
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//todo Add text that will say loading here
+	//show loading text before we run startup
+	{
+		glEnable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		Shader::use(m_ShaderText);
 
-	//have the window show something while we load the game
-	glClear(GL_COLOR_BUFFER_BIT);
-	glfwSwapBuffers(m_AppWindow->getWindow());
+		ShaderUniformData* uniformPVM = m_ShaderText->m_CommonUniforms.m_ProjectionViewMatrix;
+		ShaderUniformData* uniformModel = m_ShaderText->m_CommonUniforms.m_ModelMatrix;
+
+		uniformPVM->setData(&m_CameraUi->getProjectionViewMatrix());
+		Shader::applyUniform(uniformPVM);
+
+		Transform model;
+		model.setPosition(glm::vec3(0, 100, 0));
+
+		uniformModel->setData(&model);
+		Shader::applyUniform(uniformModel);
+
+		m_Font->drawText("Loading");
+
+		//have the window show something while we load the game
+		glfwSwapBuffers(m_ApplicationWindow->getWindow());
+	}
+
 
 	//program startup/load models
 	startUp();
@@ -153,16 +179,17 @@ void Application::run() {
 	//glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	if (!m_GameSkybox->hasBeenGenerated()) {
-		m_GameSkybox->genSkybox("Textures\\Skybox\\Vindelalven\\");
+	if (!m_SkyboxGame->hasBeenGenerated()) {
+		m_SkyboxGame->genSkybox("Textures\\Skybox\\Vindelalven\\");
 	}
-	if (!m_GameSkybox->hasCameraAssigned()) {
-		m_GameSkybox->assignCamera(m_GameCamera);
+	if (!m_SkyboxGame->hasCameraAssigned()) {
+		m_SkyboxGame->assignCamera(m_CameraGame);
 	}
+
 	Logging::newFrame();
 
 	//game loop
-	while (!glfwWindowShouldClose(m_AppWindow->getWindow()) && !m_Quit) {
+	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
 		// Clear the colorbuffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//update time
@@ -182,7 +209,7 @@ void Application::run() {
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, (std::string("Frame Render: ") + std::to_string(TimeHandler::getCurrentFrameNumber())).c_str());
 
 			if (Input::wasKeyPressed(GLFW_KEY_F)) {
-				m_PPBcsShader->reloadShaders();
+				m_ShaderPPBcs->reloadShaders();
 			}
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Update");
@@ -196,17 +223,17 @@ void Application::run() {
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			//set default framebuffer to be the UI framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbUIFrame);
-			Framebuffer::clearCurrentBuffer(true,false);
+			Framebuffer::clearCurrentBuffer(true, false);
 
 			//set up OpenGL for transparent text
 			//glEnable(GL_BLEND);
 			//glDisable(GL_DEPTH_TEST);
 			//update to ui camera
-			m_MainCamera = m_UiCamera;
+			m_CameraMain = m_CameraUi;
 
 			//draw the ui
 			drawUi();
-			
+
 			//end UI Draw
 			glPopDebugGroup();
 			//we want to include vertices drawn during the main draw
@@ -225,10 +252,10 @@ void Application::run() {
 			Framebuffer::clearCurrentBuffer();
 
 			//render skybox
-			m_GameSkybox->draw();
+			m_SkyboxGame->draw();
 
 			//update to game camera
-			m_MainCamera = m_GameCamera;
+			m_CameraMain = m_CameraGame;
 
 			//draw the game
 			draw();
@@ -247,9 +274,10 @@ void Application::run() {
 			}
 
 			if (Input::isKeyDown(GLFW_KEY_G)) {
-				Shader::use(m_PPShader);
-			} else {
-				Shader::use(m_PPBcsShader);
+				Shader::use(m_ShaderPPBasic);
+			}
+			else {
+				Shader::use(m_ShaderPPBcs);
 			}
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
@@ -260,7 +288,7 @@ void Application::run() {
 			m_FullScreenQuad->draw();
 
 			//set up shader
-			Shader::use(m_PPShader);
+			Shader::use(m_ShaderPPBasic);
 
 			//enable blending so the UI doesnt overwrite the game frame
 			glEnable(GL_BLEND);
@@ -291,17 +319,17 @@ void Application::run() {
 
 		}
 
-		glfwSwapBuffers(m_AppWindow->getWindow());
+		glfwSwapBuffers(m_ApplicationWindow->getWindow());
 	}
 
 	shutDown();
 
 	//clean up
 
-	delete m_GameCamera;
-	delete m_UiCamera;
+	delete m_CameraGame;
+	delete m_CameraUi;
 
-	delete m_GameSkybox;
+	delete m_SkyboxGame;
 
 	delete m_FbGameFrame;
 	delete m_FbGameFrameCopy;
@@ -309,9 +337,12 @@ void Application::run() {
 	delete m_FbCombinedFrame;
 
 	delete m_FullScreenQuad;
-	delete m_PPShader;
-	delete m_PPBcsShader;
-	delete m_BasicShader;
+	delete m_ShaderPPBasic;
+	delete m_ShaderPPBcs;
+	delete m_ShaderBasic;
+
+	delete m_ShaderText;
+	delete m_Font;
 
 	//remove root transform
 	delete m_RootTransform;
@@ -341,7 +372,10 @@ void Application::windowFramebufferResize(int a_Width, int a_Height) {
 		m_Application->m_FbUIFrame->setSize(a_Width, a_Height);
 	}
 	if (m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
-		m_Application->m_UiCamera->setOrthographic(0.0f, (float) a_Width, 0.0f, (float) a_Height, -1000.0f, 1000.0f);
+		m_Application->m_CameraUi->setOrthographic(0.0f, (float)a_Width, 0.0f, (float)a_Height, -1000.0f, 1000.0f);
+	}
+	if (m_Application->m_Flags.m_UpdateGameCameraToScreenSize) {
+		m_Application->m_CameraGame->setPerspective(60.0f, a_Width / (float)a_Height, 0.1f, 1000.0f);
 	}
 }
 

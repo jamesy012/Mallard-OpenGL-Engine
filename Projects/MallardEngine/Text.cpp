@@ -48,6 +48,8 @@ void Text::generateText(const std::string a_Text) {
 	vertices.resize(a_Text.size() * 4);
 	indexes.resize(a_Text.size() * 6);
 
+	m_NumberOfLines = 1;
+
 	//store character offsets
 	float offsetX = 0, offsetY = 0;
 	//loop through each character
@@ -58,8 +60,13 @@ void Text::generateText(const std::string a_Text) {
 		unsigned char letter = a_Text[i];
 		//check if the letter is a new line
 		if (letter == '\n') {
+			m_NumberOfLines++;
 			offsetY += m_LinkedFont->getLineOffset(1);
 			offsetX = 0;
+			continue;
+		}
+		//todo allow tab characters
+		if (letter == '\t') {
 			continue;
 		}
 
@@ -102,9 +109,12 @@ void Text::draw() {
 	if (m_TextMesh != nullptr) {
 		m_TextMesh->draw();
 	}
-
 }
 
 void Text::drawInstance(unsigned int a_Amount) {
 	_ASSERT_EXPR(false, L"Text has no Instanced Draw");
+}
+
+float Text::getLineOffset() const {
+	return m_LinkedFont->getLineOffset(m_NumberOfLines);
 }

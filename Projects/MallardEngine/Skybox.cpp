@@ -59,7 +59,7 @@ void Skybox::assignCamera(Camera * a_AssignedCamera) {
 }
 
 void Skybox::draw() {
-	if (m_Camera->m_Transform.getLastTransformUpdate() != m_LastCameraUpdate || m_LastCameraUpdate == -1) {
+	if (m_Camera->m_Transform.getLastTransformUpdate() != m_LastCameraUpdate || m_Camera->m_Transform.isParentDirty() || m_LastCameraUpdate == -1 || m_Camera->isDirty()) {
 		Transform cameraTransform = m_Camera->m_Transform;
 		cameraTransform.setPosition(glm::vec3(0,0,0));
 		glm::mat4 viewMatrix = glm::inverse(cameraTransform.getGlobalMatrix());

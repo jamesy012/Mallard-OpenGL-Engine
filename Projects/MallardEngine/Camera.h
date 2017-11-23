@@ -33,6 +33,10 @@ public:
 	glm::mat4 getViewMatrix();
 	glm::mat4 getProjectionMatrix();
 	glm::mat4 getProjectionViewMatrix();
+
+	bool isDirty() const {
+		return m_IsDirty;
+	}
 private:
 	//uses the Transform to update the ViewMatrix
 	void updateView();

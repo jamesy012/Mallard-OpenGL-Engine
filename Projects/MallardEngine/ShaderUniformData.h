@@ -13,7 +13,7 @@
 #include <glm/fwd.hpp>
 
 class Transform;
-
+class Camera;
 
 //the different kind of types a shader can be
 //at the moment, this is missing a lot of types
@@ -98,6 +98,11 @@ public:
 	//it uses the transforms getGlobalMatrix
 	//does checks to see if the uniform is a mat4, it it's not then this wont do anything
 	void setData(Transform* a_Data);
+
+	//allowing easy setting for the Camera data type
+	//it uses the cameras getProjectionViewMatrix()
+	//does checks to see if the uniform is a mat4, it it's not then this wont do anything
+	void setData(Camera* a_Data);
 
 	///Getting Data
 

@@ -35,6 +35,15 @@ public:
 		return m_Text;
 	}
 
+	//returns number of new lines in this text
+	//will be 0 if text has not been generated
+	//will be 1 or above after generation
+	int getNumberOfLines() const {
+		return m_NumberOfLines;
+	}
+
+	float getLineOffset() const;
+
 private:
 	//copy of the text that was loaded into this object
 	std::string m_Text;
@@ -45,5 +54,6 @@ private:
 	//the font which is linked to this text object
 	const Font* m_LinkedFont = nullptr;
 
+	unsigned int m_NumberOfLines = 0;
 };
 

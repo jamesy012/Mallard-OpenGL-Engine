@@ -57,7 +57,8 @@ public:
 	//simple and easy way to render some text
 	//it uses whatever shader is currently in use
 	//and creates a new text object to generate and render the text
-	void drawText(const char* a_Text) const;
+	//returns the line offset * number of lines
+	float drawText(const char* a_Text) const;
 
 	//will apply a basic text rendering shader to the Vertex and Fragment Shaders
 	//does not link the shader, or check if the shader has already been linked
@@ -79,6 +80,11 @@ public:
 	//if no font has been loaded it will return nullptr
 	Texture* getFontTexture() const {
 		return m_Texture;
+	}
+
+	//has this font been loaded
+	bool hasLoaded() const {
+		return m_Texture != nullptr;
 	}
 private:
 	std::vector<unsigned char> loadFile(const char* a_FilePath);
