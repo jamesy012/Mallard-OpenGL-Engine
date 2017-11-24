@@ -3,13 +3,7 @@
 #include "Application.h"
 
 class Model;
-class Mesh;
-class Shader;
-class Texture;
-class Font;
 class Text;
-class Framebuffer;
-class Transform;
 
 class TestApp :
 	public Application {
@@ -26,7 +20,5 @@ private:
 	Model* m_Model;
 
 	Text* m_TestText;
-
-	Texture* m_1x1WhiteTexture;
 };
 

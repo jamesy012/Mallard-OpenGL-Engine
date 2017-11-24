@@ -15,12 +15,14 @@ Model::Model() {
 
 
 Model::~Model() {
-	for (size_t i = 0; i < m_Meshs.size(); i++) {
-		delete m_Meshs[i];
-	}
-	for (size_t i = 0; i < m_Textures.size(); i++) {
-		if (m_Textures[i] != nullptr) {
-			m_Textures[i]->unload();
+	if (m_Resource_IsMain) {
+		for (size_t i = 0; i < m_Meshs.size(); i++) {
+			delete m_Meshs[i];
+		}
+		for (size_t i = 0; i < m_Textures.size(); i++) {
+			if (m_Textures[i] != nullptr) {
+				m_Textures[i]->unload();
+			}
 		}
 	}
 	m_Meshs.clear();
@@ -59,6 +61,8 @@ void Model::loadNode(aiNode * a_Node) {
 		//apply texture to mesh
 		myMesh->setTexture(m_Textures[mesh->mMaterialIndex]);
 		myMesh->m_TextureIndex = mesh->mMaterialIndex;
+
+		myMesh->bind();
 	}
 
 	//go through children
@@ -117,7 +121,7 @@ IResource* Model::resourceCreate() {
 
 bool Model::resourceLoad() {
 	Assimp::Importer importer;
-	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals);
+	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_Triangulate);
 	
 	if (m_Scene == nullptr || m_Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || m_Scene->mRootNode == nullptr) {
 		//model failed to load
@@ -150,15 +154,17 @@ void Model::resourceCopy(IResource * a_Resource) {
 		if (model->m_Textures[i] == nullptr) {
 			m_Textures[i] = nullptr;
 		} else {//else load normally
-			m_Textures[i] = new Texture();
-			m_Textures[i]->load(model->m_Textures[i]);
+			//m_Textures[i] = new Texture();
+			//m_Textures[i]->load(model->m_Textures[i]);
+			m_Textures[i] = model->m_Textures[i];
 		}
 	}
 
 	//copy mesh
 	for (size_t i = 0; i < model->m_Meshs.size(); i++) {
-		m_Meshs[i] = new Mesh(*model->m_Meshs[i]);
-		m_Meshs[i]->setTexture(m_Textures[model->m_Meshs[i]->m_TextureIndex]);
+		//m_Meshs[i] = new Mesh(*model->m_Meshs[i]);
+		//m_Meshs[i]->setTexture(m_Textures[model->m_Meshs[i]->m_TextureIndex]);
+		m_Meshs[i] = model->m_Meshs[i];
 	}
 
 	//todo: write a real copy

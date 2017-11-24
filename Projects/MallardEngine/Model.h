@@ -35,7 +35,6 @@ private:
 	void loadNode(aiNode* a_Node);
 	void loadTextures();
 
-
 	///data
 	std::vector<Texture*> m_Textures;
 

@@ -12,23 +12,20 @@
 #include "Input.h"
 #include "Keys.h"
 
-#include "Texture.h"
 #include "Model.h"
-#include "Mesh.h"
 #include "Shader.h"
 
 #include "Font.h"
 #include "Text.h"
 
 #include "Camera.h"
-#include "Framebuffer.h"
 #include "Logging.h"
 
 void TestApp::startUp() {
 
 	m_TestText = new Text(m_Font);
-	m_TestText->generateText(R"(Side Shooter
-		Move: WASDQE)");
+	m_TestText->generateText(R"(TEST APP
+		Move: WASDQE, Arrow keys)");
 
 	m_Model = new Model();
 	m_Model->load("Models/Nanosuit/nanosuit.obj");
@@ -36,7 +33,6 @@ void TestApp::startUp() {
 
 void TestApp::shutDown() {
 	m_Model->unload();
-	//m_1x1WhiteTexture->unload();
 
 	delete m_TestText;
 }

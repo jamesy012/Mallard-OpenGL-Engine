@@ -15,7 +15,6 @@ enum ResourceTypes {
 
 class DLL_BUILD IResource {
 	friend ResourceManager;
-
 public:
 	//sets up basic information for this IResource
 	IResource() {
@@ -33,14 +32,14 @@ public:
 	//handled by ResourceManager
 	void load(const char* a_FileName) {
 		m_Resource_FileName = a_FileName;
-		m_Resource_IsMain = ResourceManager::loadResource(this);
+		ResourceManager::loadResource(this);
 	}
 
 	//will use that resources file name to load
 	//handled by ResourceManager
 	void load(IResource* a_Resource) {
 		m_Resource_FileName = a_Resource->m_Resource_FileName;
-		m_Resource_IsMain = ResourceManager::loadResource(this);
+		ResourceManager::loadResource(this);
 	}
 
 	//Call this instead of delete

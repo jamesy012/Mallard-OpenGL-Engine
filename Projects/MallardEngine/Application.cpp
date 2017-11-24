@@ -97,11 +97,11 @@ void Application::run() {
 	//gen frame buffers
 	{
 		const unsigned int numOfFames = 4;
-		Framebuffer** frame[numOfFames] = { &m_FbGameFrame, &m_FbUIFrame, &m_FbCombinedFrame, &m_FbGameFrameCopy };
+		Framebuffer** frame[numOfFames] = { &m_FbGameFrame,&m_FbGameFrameCopy, &m_FbUIFrame, &m_FbCombinedFrame };
 		for (int i = 0; i < numOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
 			(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
-			if (frame[i] == &m_FbUIFrame) {
+			if (i >= 2) {
 				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
 				(*frame[i])->genFramebuffer();
 			}
@@ -173,8 +173,8 @@ void Application::run() {
 	/** SET UP PROGRAM FOR RENDERING */
 	glEnable(GL_DEPTH_TEST);
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 
 	//glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -190,8 +190,6 @@ void Application::run() {
 
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
-		// Clear the colorbuffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//update time
 		TimeHandler::update();
 

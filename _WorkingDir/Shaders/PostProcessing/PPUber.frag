@@ -9,10 +9,10 @@ uniform sampler2D TexDiffuse1;
 
 
 uniform float brightness = 1.0f;
-uniform float contrast = 0.05f;
-uniform float saturation = 2.65f;
+uniform float contrast = -0.1f;
+uniform float saturation = 1.2f;
 uniform vec3 luminanceWeights = vec3(0.2126f,0.5152f,0.1722f);
-uniform vec3 gamma = vec3(0.87f);
+uniform vec3 gamma = vec3(1.25f);
 
 vec3 vHSV = vec3(180,0.5,10);
 

@@ -21,9 +21,24 @@
     <ClCompile Include="TestApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SideShooter\SideShooter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SideShooter\Projectile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SideShooter\SideShooter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SideShooter\Projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SideShooter\Helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

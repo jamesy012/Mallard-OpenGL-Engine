@@ -44,18 +44,22 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 }
 
 void ResourceManager::removeResource(IResource * a_Resource) {
+	//get the resource
 	ResourceReference* mainReference = getMainResource(a_Resource);
+	//if there is no main resource
 	if (mainReference == nullptr) {
 		delete a_Resource;
 		return;
 	}
 	mainReference->resourceCount--;
 
+	//delete a_Resource
 	a_Resource->resourceUnload();
 	a_Resource->m_Resource_CanDelete = true;
 	delete a_Resource;
 	a_Resource = nullptr;
 
+	//if that was the last resource then delete the main resource
 	if (mainReference->resourceCount == 0) {
 		//m_ResourceList[mainReference->resource->getResourceType()]
 		IResource* resource = mainReference->resource;
@@ -65,7 +69,6 @@ void ResourceManager::removeResource(IResource * a_Resource) {
 		resource->m_Resource_CanDelete = true;
 		delete resource;
 		mainReference->resource = nullptr;
-
 
 		
 		//remove from list

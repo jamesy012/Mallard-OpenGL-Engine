@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-#include "TestApp.h"
+#include "SideShooter\SideShooter.h"
 
 
 int main() {
 
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	Application* app = new TestApp();
+	Application* app = new SideShooter();
 
 	app->run();
 
