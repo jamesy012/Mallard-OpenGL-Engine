@@ -43,7 +43,7 @@ Shader::~Shader() {
 void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
 	//copy file path into our stored version
 	m_Shaders[(int) a_Type].m_FilePath = a_FilePath;
-	
+
 
 	std::ifstream shaderFile(a_FilePath);
 	std::stringstream fileBuffer;
@@ -73,47 +73,59 @@ void Shader::setFromText(ShaderTypes a_Type, const char * a_ShaderText) {
 //two options for the fragment shader, one that allows a diffuse texture
 //and another that just has a solid color
 void Shader::createSimpleShader(bool a_Textured) {
-	std::string vertex =
-		"#version 410													\n"
-		"layout(location = 0) in vec4 position;							\n"
-		"layout(location = 2) in vec2 texCoord;							\n"
-		"																\n"
-		"uniform mat4 projectionViewMatrix;								\n"
-		"uniform mat4 model = mat4(1);									\n"
-		"																\n"
-		"out vec2 vTexCoord;											\n"
-		"																\n"
-		"void main() {													\n"
-		"	gl_Position = projectionViewMatrix * model * position;		\n"
-		"	vTexCoord = texCoord; 										\n"
-		"}																";
+	std::string vertex = R"(
+		#version 410												
+		layout(location = 0) in vec4 position;						
+		layout(location = 2) in vec2 texCoord;						
+		layout(location = 3) in vec4 vertColor;						
+																	
+		uniform mat4 projectionViewMatrix;							
+		uniform mat4 model = mat4(1);								
+																	
+		out vec2 vTexCoord;											
+		out vec4 vVertColor;											
+																	
+		void main() {												
+			gl_Position = projectionViewMatrix * model * position;	
+			vTexCoord = texCoord; 									
+			vVertColor = vertColor; 									
+		}
+	)";
 
 	std::string fragment;
 
 	if (a_Textured) {
-		fragment = "#version 410\n"
-			" "
-			"in vec2 vTexCoord; "
-			"out vec4 fragColor; "
-			" "
-			"uniform vec4 color = vec4(1,1,1,1); "
-			"uniform sampler2D TexDiffuse1; "
-			" "
-			"void main() { "
-			"	vec4 col = texture(TexDiffuse1, vTexCoord); "
-			//"	fragColor = (col * color)*col.a; "
-			//"	fragColor = vec4(col.xyz,1); "
-			"	fragColor = col * color; "
-			"} ";
+		fragment = R"(
+			#version 410
+			 
+			in vec2 vTexCoord; 
+			in vec4 vVertColor;		
+									
+			out vec4 fragColor; 
+			 
+			uniform vec4 color = vec4(1,1,1,1); 
+			uniform sampler2D TexDiffuse1; 
+			 
+			void main() { 
+				vec4 col = texture(TexDiffuse1, vTexCoord); 
+			//	fragColor = (col * color)*col.a; 
+			//	fragColor = vec4(col.xyz,1); 
+				fragColor = col * color * vVertColor; 
+			} 
+		)";
 	} else {
-		fragment = "#version 410\n"
-			" "
-			"uniform vec4 color = vec4(1,1,1,1); "
-			"out vec4 fragColor; "
-			" "
-			"void main() { "
-			"	fragColor = color; "
-			"} ";
+		fragment = R"(
+			#version 410
+			 
+			in vec4 vVertColor;											
+
+			uniform vec4 color = vec4(1,1,1,1); 
+			out vec4 fragColor; 
+			 
+			void main() { 
+				fragColor = color * vVertColor; 
+			} 
+		)";
 	}
 
 	setFromText(ShaderTypes::TYPE_VERTEX, vertex.c_str());
@@ -137,7 +149,7 @@ void Shader::reloadShaders() {
 		}
 		//if loaded from text
 		if (sd->m_FilePath == "") {
-			setFromText((ShaderTypes)i, sd->m_LoadedFromText.c_str());
+			setFromText((ShaderTypes) i, sd->m_LoadedFromText.c_str());
 		} else {//else loaded from file
 			setFromPath((ShaderTypes) i, sd->m_FilePath.c_str());
 		}
@@ -285,7 +297,7 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 				glUniform1fv(loc, amount, (float*) a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::SAMPLER2D:
-				glUniform1iv(loc, amount, (int*)a_Data->m_Data);
+				glUniform1iv(loc, amount, (int*) a_Data->m_Data);
 				break;
 			default:
 				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %i, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
@@ -349,7 +361,7 @@ bool Shader::checkGlErrorShader(const int a_ErrorType, const unsigned int a_Shad
 void Shader::getShaderUniforms() {
 	//reset m_CommonUniforms
 	m_CommonUniforms = CommonUniforms();
-	
+
 	GLint count;
 
 	GLint size; // size of the variable
@@ -414,7 +426,7 @@ void Shader::getShaderUniforms() {
 
 		//gets uniform location (Appears to be the same as i)
 		uniformData->m_UniformLocation = glGetUniformLocation(m_Program, name);
-		uniformData-> m_Name= name;
+		uniformData->m_Name = name;
 		uniformData->m_ArraySize = size;
 
 		//add the uniform data to the full list

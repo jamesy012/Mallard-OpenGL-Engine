@@ -5,7 +5,7 @@ class Camera;
 
 class Projectile : public Object {
 public:
-	Projectile();
+	Projectile(bool a_Direction);
 	~Projectile();
 
 	void update() override;
@@ -14,5 +14,9 @@ public:
 	Camera* m_Camera;
 
 	float m_ProjectileSpeed = 100.0f;
+private:
+	//scale for the direction of the projectile
+	//wiill be -1 or 1
+	int m_DirectionScale;
 };
 

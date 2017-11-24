@@ -25,6 +25,7 @@
 
 #include "Helpers.h"
 #include "Projectile.h"
+#include "Player.h"
 
 void SideShooter::startUp() {
 
@@ -32,9 +33,7 @@ void SideShooter::startUp() {
 	m_TestText->generateText(R"(Side Shooter
 		Move: WASDQE)");	
 	
-	m_PlayerModel = new Model();
-	m_PlayerModel->load("Models/Nanosuit/nanosuit.obj");
-	m_PlayerModel->m_Transform.setPosition(glm::vec3(0, -7, 0));
+
 	//m_PlayerModel->load("Models/toilet/Toilet.obj");
 
 	m_TreeModel = new Model();
@@ -43,19 +42,12 @@ void SideShooter::startUp() {
 	m_TreeModel->m_Transform.setScale(0.05f);
 	m_TreeModel->m_Transform.setPosition(glm::vec3(0, 0, -10));
 
-	m_1x1Texture = new Texture();
-	m_1x1Texture->load1x1Texture();
-
 	m_Box = new Mesh();
 	m_Box->createBox();
 
 	m_QuadMesh = new Mesh();
 	m_QuadMesh->createPlane(true);
-	m_QuadMesh->setTexture(m_1x1Texture);
-
-	m_Player = new Object("Player");
-	m_Player->m_Renderable = m_PlayerModel;
-	m_Player->m_Transform.setPosition(glm::vec3(-45.0f, 0.0f, 0.0f));
+	//m_QuadMesh->setTexture(m_1x1Texture);
 
 	m_Standard = new Object("Standard");
 	m_Standard->m_Renderable = m_TreeModel;
@@ -69,13 +61,12 @@ void SideShooter::startUp() {
 	m_Camera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 	m_Camera->m_Transform.setPosition(glm::vec3(0, 0, 50));
 
+	m_Player = new Player();
+	m_Player->m_Camera = m_Camera;
 }
 
 void SideShooter::shutDown() {
-	m_PlayerModel->unload();
 	m_TreeModel->unload();
-
-	delete m_1x1Texture;
 
 	delete m_Box;
 	delete m_QuadMesh;
@@ -96,37 +87,16 @@ void SideShooter::shutDown() {
 }
 
 void SideShooter::update() {
-	float cameraMoveSpeed = 50.0f;
-	float screenSizeOffsets = 20.0f;
-	float playerHeight = 7.0f;
-	bool isMoving = false;
-	glm::vec3 moveAmount = m_Player->m_Transform.getLocalPosition();
-	if (Input::isKeyDown(KEY_W)) {
-		moveAmount += glm::vec3(0, cameraMoveSpeed, 0) * TimeHandler::getDeltaTime();
-		glm::vec2 screenPos = worldToScreenSpace(moveAmount + glm::vec3(0,playerHeight,0), m_Camera);
-		if (screenPos.y < Window::getMainWindow()->getWindowHeight() - screenSizeOffsets) {
-			isMoving = true;
-		}
-	}
-	if (Input::isKeyDown(KEY_S)) {
-		moveAmount += glm::vec3(0, -cameraMoveSpeed, 0) * TimeHandler::getDeltaTime();
-		glm::vec2 screenPos = worldToScreenSpace(moveAmount - glm::vec3(0, playerHeight, 0),m_Camera);
-		if (screenPos.y > screenSizeOffsets) {
-			isMoving = true;
-		}
-	}
-	if (isMoving) {
-		m_Player->m_Transform.setPosition(moveAmount);
-	}
+	m_Player->update();
 
 	if (Input::isKeyRepeated(KEY_SPACE)) {
 		//find next empty spot
 		for (unsigned int i = 0; i < NUM_OF_PROJECTILES; i++) {
 			if (m_Projectiles[i] == nullptr) {
-				m_Projectiles[i] = new Projectile();
+				m_Projectiles[i] = new Projectile(m_Player->m_FacingRight);
 				m_Projectiles[i]->m_Renderable = m_Box;
 				m_Projectiles[i]->m_Camera = m_Camera;
-				m_Projectiles[i]->m_Transform.setPosition(m_Player->m_Transform.getLocalPosition());
+				m_Projectiles[i]->m_Transform.setPosition(m_Player->m_ShootPoint.getGlobalPosition());
 				break;
 			}
 		}
@@ -176,6 +146,8 @@ void SideShooter::draw() {
 }
 
 void SideShooter::drawUi() {
+	//dont run UI atm
+	return;
 	ShaderUniformData* uniformPVM;
 	ShaderUniformData* uniformModel;
 	ShaderUniformData* uniformColor;

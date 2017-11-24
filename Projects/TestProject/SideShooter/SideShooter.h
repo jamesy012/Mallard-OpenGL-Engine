@@ -7,12 +7,11 @@ class Mesh;
 class Text;
 class Object;
 class Camera;
-class Texture;
 
 class Projectile;
+class Player;
 
-class SideShooter :
-	public Application {
+class SideShooter :	public Application {
 public:
 	// Inherited via Application
 	virtual void startUp() override;
@@ -23,16 +22,14 @@ public:
 
 private:
 
-	Model* m_PlayerModel;
 	Model* m_TreeModel;
 	Mesh* m_Box;
 	Mesh* m_QuadMesh;
 
 	Text* m_TestText;
 
-	Texture* m_1x1Texture;
 
-	Object* m_Player;
+	Player* m_Player;
 	Object* m_Standard;
 
 	Object* m_Ground;

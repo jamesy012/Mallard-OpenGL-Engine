@@ -9,9 +9,13 @@
 
 Mesh::Mesh() {
 	m_Vao = m_Vbo = m_Ebo = 0;
+
 }
 
 Mesh::~Mesh() {
+	if (m_CreatedTexture) {
+		delete m_Texture;
+	}
 	if (m_Vao != 0) {
 		glDeleteVertexArrays(1, &m_Vao);
 		glDeleteBuffers(1, &m_Vbo);
@@ -22,6 +26,8 @@ Mesh::~Mesh() {
 Mesh::Mesh(const Mesh & a_Mesh) {
 	m_Vertices = a_Mesh.m_Vertices;
 	m_Indices = a_Mesh.m_Indices;
+	m_Texture = a_Mesh.m_Texture;
+	m_CreatedTexture = false;
 	if (a_Mesh.m_Texture != nullptr) {
 		//maybe use the same texture??
 		//m_Texture = new Texture();
@@ -176,7 +182,7 @@ void Mesh::applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndi
 	m_Indices = a_Indices;
 }
 
-void Mesh::loadFromMesh(aiMesh * a_Mesh) {
+void Mesh::loadFromMesh(aiMesh * a_Mesh, aiMaterial* a_Material) {
 	if (a_Mesh->HasPositions() && a_Mesh->HasFaces()) {
 		unsigned int verticesAmount = a_Mesh->mNumVertices;
 		unsigned int indicesAmount = a_Mesh->mNumFaces;
@@ -202,6 +208,16 @@ void Mesh::loadFromMesh(aiMesh * a_Mesh) {
 			} else {
 				vert.texCoord = glm::vec2(0);
 			}
+
+			aiColor4D color(0.0f, 0.0f, 0.0f,0.0f);
+			a_Material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+
+			//if (a_Mesh->GetNumColorChannels() != 0) {
+				vert.color.r = color.r;
+				vert.color.g = color.g;
+				vert.color.b = color.b;
+				vert.color.a = color.a;
+			//}
 
 			m_Vertices[i] = vert;
 
@@ -254,9 +270,27 @@ void Mesh::bind() {
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVerticesType), (GLvoid*) offsetof(MeshVertex, texCoord));
 
+	//Vertex Colors
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(MeshVerticesType), (GLvoid*) offsetof(MeshVertex, color));
+
+
 	glBindVertexArray(0);
+
+	//simple fix to allow all meshs to have a basic texture
+	//this could also create lots of texture objects on the gpu,
+	//maybe create one 1x1 texture and keep using that instead
+	if (m_Texture == nullptr) {
+		m_Texture = new Texture();
+		m_Texture->load1x1Texture();
+		m_CreatedTexture = true;
+	}
 }
 
 void Mesh::setTexture(Texture * a_Texture) {
+	if (m_CreatedTexture) {
+		m_CreatedTexture = false;
+		delete m_Texture;
+	}
 	m_Texture = a_Texture;
 }

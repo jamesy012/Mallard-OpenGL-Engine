@@ -93,7 +93,6 @@ void Application::run() {
 	m_CameraUi = new Camera();
 	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
-
 	//gen frame buffers
 	{
 		const unsigned int numOfFames = 4;
@@ -173,8 +172,8 @@ void Application::run() {
 	/** SET UP PROGRAM FOR RENDERING */
 	glEnable(GL_DEPTH_TEST);
 
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	//glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

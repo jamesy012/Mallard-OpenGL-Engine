@@ -7,12 +7,14 @@
 #include <glm\glm.hpp>
 
 struct aiMesh;
+struct aiMaterial;
 class Texture;
 
 struct MeshVertex {
 	glm::vec4 position;
 	glm::vec4 normal;
 	glm::vec2 texCoord;
+	glm::vec4 color = glm::vec4(1,1,1,1);
 };
 
 typedef MeshVertex MeshVerticesType;
@@ -38,7 +40,7 @@ public:
 	virtual void drawInstance(unsigned int a_Amount) override;
 
 	void applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices);
-	void loadFromMesh(aiMesh* a_Mesh);
+	void loadFromMesh(aiMesh* a_Mesh, aiMaterial* a_Material);
 
 	void bind();
 
@@ -57,6 +59,8 @@ private:
 	//todo change to material
 	//test Texture
 	Texture* m_Texture = nullptr;
+	//did this class create a texture for itself?
+	bool m_CreatedTexture = false;
 
 	unsigned int m_Vbo, m_Ebo;
 };

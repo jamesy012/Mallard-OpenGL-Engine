@@ -19,10 +19,11 @@ Model::~Model() {
 		for (size_t i = 0; i < m_Meshs.size(); i++) {
 			delete m_Meshs[i];
 		}
-		for (size_t i = 0; i < m_Textures.size(); i++) {
-			if (m_Textures[i] != nullptr) {
-				m_Textures[i]->unload();
+		for (size_t i = 0; i < m_ModelMeshData.size(); i++) {
+			if (m_ModelMeshData[i]->m_Texture != nullptr) {
+				m_ModelMeshData[i]->m_Texture->unload();
 			}
+			delete m_ModelMeshData[i];
 		}
 	}
 	m_Meshs.clear();
@@ -54,12 +55,13 @@ void Model::loadNode(aiNode * a_Node) {
 		unsigned int meshIndex = a_Node->mMeshes[i];
 		aiMesh* mesh = m_Scene->mMeshes[meshIndex];
 
+
 		Mesh* myMesh = new Mesh();
-		myMesh->loadFromMesh(mesh);
+		myMesh->loadFromMesh(mesh, m_Scene->mMaterials[mesh->mMaterialIndex]);
 		m_Meshs[meshIndex] = myMesh;
 
 		//apply texture to mesh
-		myMesh->setTexture(m_Textures[mesh->mMaterialIndex]);
+		myMesh->setTexture(m_ModelMeshData[mesh->mMaterialIndex]->m_Texture);
 		myMesh->m_TextureIndex = mesh->mMaterialIndex;
 
 		myMesh->bind();
@@ -80,6 +82,9 @@ void Model::loadTextures() {
 	for (size_t i = 0; i < m_Scene->mNumMaterials; i++) {
 		aiMaterial* mat = materials[i];
 		aiString matPath;
+
+		ModelMeshData* mmd = new ModelMeshData();
+
 		//todo add materials
 		int numTex = mat->GetTextureCount(aiTextureType_DIFFUSE);
 		if (numTex >= 1) {
@@ -92,14 +97,20 @@ void Model::loadTextures() {
 										//create texture and add to vector
 				Texture* tex = new Texture();
 				tex->load(path.c_str());
-				m_Textures.push_back(tex);
+				mmd->m_Texture = tex;
 			}
 		} else {
 			//no textures were found, lets just add a empty texture
 			//since the assimp material index will still count this
-			m_Textures.push_back(nullptr);
+			Texture* tex = new Texture();
+			tex->load1x1Texture();
+			mmd->m_Texture = tex;
 		}
 
+		//aiColor3D color(0.f, 0.f, 0.f);
+		//m_Scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		//printf("%i, (%f,%f,%f) \n", i, color.r, color.g, color.b);
+		
 		//testing getting material propertys
 		//float test = 0;
 		//char* zz;
@@ -112,6 +123,8 @@ void Model::loadTextures() {
 		//	test2.a = 0;
 		//
 		//}
+
+		m_ModelMeshData.push_back(mmd);
 	}
 }
 
@@ -121,7 +134,7 @@ IResource* Model::resourceCreate() {
 
 bool Model::resourceLoad() {
 	Assimp::Importer importer;
-	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_Triangulate);
+	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 	
 	if (m_Scene == nullptr || m_Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || m_Scene->mRootNode == nullptr) {
 		//model failed to load
@@ -146,18 +159,12 @@ void Model::resourceCopy(IResource * a_Resource) {
 	Model* model = (Model*) a_Resource;
 	//set up vector sizes
 	m_Meshs.resize(model->m_Meshs.size());
-	m_Textures.resize(model->m_Textures.size());
+	m_ModelMeshData.resize(model->m_ModelMeshData.size());
 
 	//copy materials
-	for (size_t i = 0; i < model->m_Textures.size(); i++) {
-		//if texture doesn't exist
-		if (model->m_Textures[i] == nullptr) {
-			m_Textures[i] = nullptr;
-		} else {//else load normally
-			//m_Textures[i] = new Texture();
-			//m_Textures[i]->load(model->m_Textures[i]);
-			m_Textures[i] = model->m_Textures[i];
-		}
+	for (size_t i = 0; i < model->m_ModelMeshData.size(); i++) {
+		m_ModelMeshData[i] = model->m_ModelMeshData[i];
+		
 	}
 
 	//copy mesh

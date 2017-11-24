@@ -36,7 +36,11 @@ private:
 	void loadTextures();
 
 	///data
-	std::vector<Texture*> m_Textures;
+	struct ModelMeshData {
+		Texture* m_Texture;
+		glm::vec3 m_Color;
+	};
+	std::vector<ModelMeshData*> m_ModelMeshData;
 
 	const aiScene* m_Scene = nullptr;
 };
