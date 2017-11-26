@@ -39,6 +39,7 @@ void Player::update() {
 	bool isMoving = false;
 	m_Movement = glm::vec3(0);
 
+	float m_modelMovementScale = 0.2f;
 	int movement = 0;
 	movement |= (Input::isKeyDown(KEY_D) || Input::isKeyDown(KEY_RIGHT)) << 0;
 	movement |= (Input::isKeyDown(KEY_A) || Input::isKeyDown(KEY_LEFT)) << 1;
@@ -57,8 +58,9 @@ void Player::update() {
 			swapDirection();
 		}
 	} else {
-
+		m_modelMovementScale = 1;
 	}
+
 
 	if (Input::isKeyDown(KEY_W) || Input::isKeyDown(KEY_UP)) {
 		m_Movement.y += m_MovementSpeed * TimeHandler::getDeltaTime();
@@ -81,11 +83,15 @@ void Player::update() {
 		}
 	}
 
-
 	if (isMoving) {
 		m_Transform.translate(m_Movement);
 		m_Movement /= TimeHandler::getDeltaTime();
 	}
+
+	glm::vec3 modelMovementTarget;
+
+	modelMovementTarget = glm::vec3(0, sin(TimeHandler::getCurrentTime() / m_modelMovementScale)*m_modelMovementScale, 0);
+	m_PlayerModel->m_Transform.setPosition(lerp(m_PlayerModel->m_Transform.getLocalPosition(), modelMovementTarget, 0.05f));
 
 
 	objectSideWarp(&m_Transform);

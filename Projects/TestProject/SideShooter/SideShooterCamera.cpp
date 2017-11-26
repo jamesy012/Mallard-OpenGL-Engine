@@ -27,7 +27,7 @@ void SideShooterCamera::update() {
 
 	//position
 	{
-		glm::vec3 targetPos = m_Player->m_Transform.getGlobalPosition();
+		glm::vec3 targetPos = m_Player->m_Transform.getGlobalPosition() + (m_Player->m_Renderable->m_Transform.getLocalPosition()*glm::vec3(2));
 		targetPos.x += m_Player->m_DirectionFacing * m_XFacingOffset;
 		targetPos.x += movement.x * m_XFacingMovingOffset;
 		targetPos.y *= 0.3f;

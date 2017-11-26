@@ -73,7 +73,7 @@ public:
 
 	//returns a reference to the texture used by this Framebuffer
 	//will be nullptr if no framebuffer has been generated
-	Texture* getTexture() const;
+	Texture* getTexture(const unsigned int a_TextureIndex = 0) const;
 	
 	//TODO: Move this out of framebuffer OR intergrate it better
 	enum class GL_CALLS {

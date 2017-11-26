@@ -145,7 +145,7 @@ void Mesh::draw() {
 
 	glBindVertexArray(m_Vao);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 
 	//unbind texture
 	glActiveTexture(GL_TEXTURE0 + 0);

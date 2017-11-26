@@ -33,89 +33,149 @@
 #include "SideShooterContants.h"
 
 static bool objectDistSort(glm::mat4& a, glm::mat4& b) {
-	return glm::value_ptr(a)[14] < glm::value_ptr(b)[14];
+	return glm::value_ptr(a)[14] > glm::value_ptr(b)[14];
 }
 
 void SideShooter::startUp() {
-
-	m_TestText = new Text(m_Font);
-	m_TestText->generateText(R"(Side Shooter
-		Move: WASD, Shoot: Space)");		
-
-	m_TreeModel = new Model();
-	m_TreeModel->load("Models/SideShooter/lowpolytree.obj");
-	//m_TreeModel->m_Transform.setScale(0.05f);
-
-	m_UniformShader = new Shader();
-	m_UniformShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/BasicInstancing.vert");
-	m_UniformShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/BasicInstancing.frag");
-	m_UniformShader->linkShader();
-
-	m_ReflectionShader = new Shader();
-	m_ReflectionShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/Reflection.vert");
-	m_ReflectionShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/Reflection.frag");
-	m_ReflectionShader->linkShader();
-
-	m_Box = new Mesh();
-	m_Box->createBox();
-
-	m_GrassTexture = new Texture();
-	m_GrassTexture->load("Models/SideShooter/Grass.jpg");
-
-	m_QuadMesh = new Model();
-	m_QuadMesh->load("Models/SideShooter/UvScaledPlane.obj");
-	m_QuadMesh->m_Meshs[0]->setTexture(m_GrassTexture);
-
-	m_Ground = new Object("Ground Plane");
-	m_Ground->m_Renderable = m_QuadMesh;
-	m_Ground->m_Transform.setPosition(glm::vec3(0, -SSConstants::GROUND_Y, -150));
-	m_Ground->m_Transform.setScale(2);
-
-	m_Player = new Player();
-	m_Camera = new SideShooterCamera(m_Player);
-
-	m_Camera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-	m_Player->m_Camera = m_Camera;
-
-	m_ReflectionCamera = new Camera();
-	m_ReflectionCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-
-	m_ReflectionBuffer = new Framebuffer();
-	m_ReflectionBuffer->setSize(Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight());
-	m_ReflectionBuffer->createRenderTarget();	
-
-	for (int i = 0; i < NUM_OF_TREES; i++) {
-		Transform t;
-		t.setPosition(
-			glm::vec3(
-			getRandomWithinRange(-SSConstants::GAME_WIDTH,SSConstants::GAME_WIDTH),
-			-SSConstants::GROUND_Y,
-			-getRandomWithinRange(0, 300)-10));
-		t.setScale(getRandomWithinRange(2, 5));
-		float xzRot = 5.0f;
-		t.setRotation(
-			glm::vec3(
-			getRandomWithinRange(-xzRot, xzRot),
-			getRandomWithinRange(0, 360),
-			getRandomWithinRange(-xzRot, xzRot)));
-		m_UniformTrees[i] = t.getGlobalMatrix();
-		float test = glm::value_ptr(m_UniformTrees[i])[14];
+	//text
+	{
+		m_TestText = new Text(m_Font);
+		m_TestText->generateText(R"(Side Shooter
+		Move: WASD, Shoot: Space)");
 	}
-	//std::sort(std::begin(m_UniformTrees), std::end(m_UniformTrees), objectDistSort);
+	//shaders
+	{
+		m_UniformShader = new Shader();
+		m_UniformShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/BasicInstancing.vert");
+		m_UniformShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/BasicInstancing.frag");
+		m_UniformShader->linkShader();
+
+		m_ReflectionShader = new Shader();
+		m_ReflectionShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/Reflection.vert");
+		m_ReflectionShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/Reflection.frag");
+		m_ReflectionShader->linkShader();
+	}
+	//textures
+	{
+		m_GrassTexture = new Texture();
+		m_GrassTexture->load("Models/SideShooter/Grass.jpg");
+	}
+	//model/meshs
+	{
+		m_TreeModel = new Model();
+		m_TreeModel->load("Models/SideShooter/lowpolytree.obj");
+		//m_TreeModel->m_Transform.setScale(0.05f);
+
+		m_Box = new Mesh();
+		m_Box->createBox();
+
+		m_QuadMesh = new Model();
+		m_QuadMesh->load("Models/SideShooter/UvScaledPlane.obj");
+		m_QuadMesh->m_Meshs[0]->setTexture(m_GrassTexture);
+
+		m_PondMesh = new Model();
+		m_PondMesh->load("Models/SideShooter/Pond.obj");
+	}
+
+
+	//objects
+	{
+		m_Ground = new Object("Ground Plane");
+		m_Ground->m_Renderable = m_QuadMesh;
+		m_Ground->m_Transform.setPosition(glm::vec3(0, -SSConstants::GROUND_Y, -150));
+		m_Ground->m_Transform.setScale(2);
+
+		//had to create player first, then the camera to give it the reference
+		//then set the camera in the player
+		m_Player = new Player();
+		m_Camera = new SideShooterCamera(m_Player);
+
+		m_Camera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+		m_Player->m_Camera = m_Camera;
+
+		for (int i = 0; i < NUM_OF_PONDS; i++) {
+			Object* pond = new Object();
+			m_Ponds[i] = pond;
+			pond->m_Renderable = m_PondMesh;
+			pond->m_Transform.setScale(glm::vec3(m_PondSize, 1, m_PondSize));
+			pond->m_Transform.setPosition(
+				glm::vec3(
+				getRandomWithinRange(-SSConstants::GAME_WIDTH, SSConstants::GAME_WIDTH),
+				-SSConstants::GROUND_Y,
+				-getRandomWithinRange(-50, 200)));
+			float xzRot = 8.0f;
+			pond->m_Transform.setRotation(
+				glm::vec3(
+				0,
+				getRandomWithinRange(0, 360),
+				0));
+		}
+	}
+
+	//reflection
+	{
+		m_ReflectionCamera = new Camera();
+		m_ReflectionCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+
+		m_ReflectionBuffer = new Framebuffer();
+		m_ReflectionBuffer->setSize(Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight());
+		m_ReflectionBuffer->createRenderTarget();
+
+		m_PondMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture(0));
+	}
+
+
+
+	//map generation
+	{
+		//glm::vec3 pondPos = m_Pond->m_Transform.getLocalPosition();
+		for (int i = 0; i < NUM_OF_TREES; i++) {
+			Transform t;
+			glm::vec3 treePos = glm::vec3(
+				getRandomWithinRange(-SSConstants::GAME_WIDTH, SSConstants::GAME_WIDTH),
+				-SSConstants::GROUND_Y,
+				-getRandomWithinRange(0, 300) - 10);
+			bool failedPondTest = false;
+			for (int q = 0; q < NUM_OF_PONDS; q++) {
+				if (glm::distance(m_Ponds[q]->m_Transform.getLocalPosition(), treePos) < m_PondSize + 5) {
+					failedPondTest = true;
+					break;
+				}
+			}
+			if (failedPondTest) {
+				m_NumofTreesGenerated--;
+				i--;
+				continue;
+			}
+			t.setPosition(treePos);
+			t.setScale(getRandomWithinRange(2, 5));
+			float xzRot = 8.0f;
+			t.setRotation(
+				glm::vec3(
+				getRandomWithinRange(-xzRot, xzRot),
+				getRandomWithinRange(0, 360),
+				getRandomWithinRange(-xzRot, xzRot)));
+			m_UniformTrees[i] = t.getGlobalMatrix();
+		}
+		std::sort(std::begin(m_UniformTrees), std::end(m_UniformTrees), objectDistSort);
+	}
 }
 
 void SideShooter::shutDown() {
 	m_TreeModel->unload();
 	m_QuadMesh->unload();
 	m_GrassTexture->unload();
+	m_PondMesh->unload();
 
 	delete m_UniformShader;
 
 	delete m_Box;
-
 	delete m_Player;
 	delete m_Ground;
 
+	for (int i = 0; i < NUM_OF_PONDS; i++) {
+		delete m_Ponds[i];
+	}
 	delete m_TestText;
 
 	delete m_Camera;
@@ -194,25 +254,46 @@ void SideShooter::draw() {
 	}
 	glDisable(GL_CULL_FACE);
 
-	sceneRender(m_ReflectionCamera);
+	sceneRender(m_ReflectionCamera, true);
 
 	glEnable(GL_CULL_FACE);
 
 	Framebuffer::use(nullptr);
 
-	sceneRender(m_Camera);
 
-	//render plane
+	//render ground
 	{
+		Shader::use(m_ShaderBasic);
+
+		ShaderUniformData* uniformPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
+		uniformPvm->setData(m_Camera);
+		Shader::applyUniform(uniformPvm);
+
+		drawObject(m_Ground, false);
+	}
+	//render reflection pond
+	{
+		glEnable(GL_BLEND);
+
+		glDepthMask(false);
+		glDepthFunc(GL_ALWAYS);
 		Shader::use(m_ReflectionShader);
 
 		ShaderUniformData* uniformPvm = m_ReflectionShader->m_CommonUniforms.m_ProjectionViewMatrix;
 		uniformPvm->setData(m_Camera);
 		Shader::applyUniform(uniformPvm);
 
-		m_QuadMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture());
-		drawObject(m_Ground, false);
+		//m_QuadMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture());
+		for (int i = 0; i < NUM_OF_PONDS; i++) {
+			drawObject(m_Ponds[i], false);
+		}
+		glDepthFunc(GL_LESS);
+		glDepthMask(true);
+		glDisable(GL_BLEND);
 	}
+
+	sceneRender(m_Camera, false);
+
 }
 
 void SideShooter::drawUi() {
@@ -318,7 +399,7 @@ void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull) {
 
 }
 
-void SideShooter::sceneRender(Camera * a_Camera) {
+void SideShooter::sceneRender(Camera * a_Camera, bool a_CloseOnly) {
 	{
 		Shader::use(m_UniformShader);
 
@@ -327,7 +408,12 @@ void SideShooter::sceneRender(Camera * a_Camera) {
 		Shader::applyUniform(uniformPvm);
 		Logging::quickGpuDebugGroupPush("TREE RENDER1");
 
-		drawObjectInstanced(m_TreeModel, &m_UniformTrees[0], NUM_OF_TREES);
+		if (a_CloseOnly) {
+			int maxAmount = std::min(128u, m_NumofTreesGenerated);
+			drawObjectInstanced(m_TreeModel, &m_UniformTrees[0], maxAmount);
+		} else {
+			drawObjectInstanced(m_TreeModel, &m_UniformTrees[0], m_NumofTreesGenerated);
+		}
 
 		Logging::quickGpuDebugGroupPop();
 	}
@@ -368,5 +454,9 @@ void SideShooter::sceneRender(Camera * a_Camera) {
 				drawObject(m_Projectiles[i]);
 			}
 		}
+
+		uniformColor->setData(&colors[0]);
+		Shader::applyUniform(uniformColor);
+
 	}
 }

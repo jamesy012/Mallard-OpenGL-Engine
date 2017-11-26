@@ -30,11 +30,12 @@ private:
 	void drawObjectInstanced(IRenderable* a_Renderable, glm::mat4* a_Array, int a_ArraySize);
 	void drawObject(IRenderable* a_Renderable, bool a_Cull = true);
 
-	void sceneRender(Camera* a_Camera);
+	void sceneRender(Camera* a_Camera, bool a_CloseOnly);
 
 	Model* m_TreeModel;
 	Mesh* m_Box;
 	Model* m_QuadMesh;
+	Model* m_PondMesh;
 	Texture* m_GrassTexture;
 
 	Shader* m_UniformShader;
@@ -45,6 +46,10 @@ private:
 
 	Object* m_Ground;
 
+	static const unsigned int NUM_OF_PONDS = 5;
+	Object* m_Ponds[NUM_OF_PONDS];
+	const float m_PondSize = 50.0f;
+
 	SideShooterCamera* m_Camera;
 
 	Framebuffer* m_ReflectionBuffer;
@@ -54,7 +59,8 @@ private:
 	static const unsigned int NUM_OF_PROJECTILES = 50;
 	Projectile* m_Projectiles[NUM_OF_PROJECTILES] = { nullptr };
 
-	static const unsigned int NUM_OF_TREES = 512;
+	static const unsigned int NUM_OF_TREES = 200;
+	unsigned int m_NumofTreesGenerated = NUM_OF_TREES;
 	glm::mat4 m_UniformTrees[NUM_OF_TREES];
 };
 

@@ -214,7 +214,7 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 			glBindTexture(GL_TEXTURE_2D, textureID);
 
 			//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
-			glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, baseGLFormat, GL_FLOAT, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, baseGLFormat, GL_UNSIGNED_BYTE, 0);
 
 			//basic texture filters
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -305,11 +305,11 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 
 }
 
-Texture * Framebuffer::getTexture() const {
-	if (m_Textures.size() == 0) {
+Texture * Framebuffer::getTexture(const unsigned int a_TextureIndex) const {
+	if (m_Textures.size() <= a_TextureIndex) {
 		return nullptr;
 	}
-	return m_Textures[0];
+	return m_Textures[a_TextureIndex];
 }
 
 unsigned int Framebuffer::getGLCallFromEnum(GL_CALLS a_Call) {
