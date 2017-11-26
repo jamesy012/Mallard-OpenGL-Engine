@@ -1,10 +1,14 @@
 #include "Logging.h"
 
+#include <GL\glew.h>
+
 #include <chrono>
 #include <stack>
 
 static bool m_AllowRenderedVerticesAdditions = true;
 static unsigned int m_NumOfRenderedVertices = 0;
+
+static int m_GpuDebugGroups = 0;
 
 typedef std::chrono::steady_clock ChronoTimeType;
 typedef std::chrono::time_point<ChronoTimeType> ChronoTime;
@@ -69,8 +73,17 @@ void Logging::quickTimePop(bool a_DisplayToConsole) {
 	if (a_DisplayToConsole) {
 		std::chrono::duration<float> duration = endTime - timer->m_Start;
 
-		printf("DebugTimerPop:\tName: %s, Time: (%f)ms\n", timer->m_Desc.c_str(), duration.count() * 1000);
+		printf("DebugTimerPop: (%i)\tName: %s, Time: (%f)ms\n", m_QuickTimeStack.size() , timer->m_Desc.c_str(), duration.count() * 1000);
 	}
 
 	delete timer;
+}
+
+void Logging::quickGpuDebugGroupPush(std::string a_Text) {
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, m_GpuDebugGroups++, -1, a_Text.c_str());
+}
+
+void Logging::quickGpuDebugGroupPop() {
+	glPopDebugGroup();
+	m_GpuDebugGroups--;
 }

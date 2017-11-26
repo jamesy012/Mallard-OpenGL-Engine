@@ -27,6 +27,8 @@ public:
 	Camera();
 	~Camera();
 
+	Camera& operator=(const Camera& a_Copy); // copy assignment
+
 	void setPerspective(const float a_Fov, const float a_Aspect, const float a_Near, const float a_Far);
 	void setOrthographic(const float a_Left, const float a_Right, const float a_Bottom, const float a_Top, const float a_Near, const float a_Far);
 

@@ -187,10 +187,21 @@ void Application::run() {
 		m_SkyboxGame->assignCamera(m_CameraGame);
 	}
 
+	//turns on vsync for 60 fps
+	//note without this call Logging::quickTimePush and Logging::quickTimePop appear to get the wrong value,
+	//by including the time the program waits for the vsync
+	//the interval can be any other number, it just needs this call
+	glfwSwapInterval(1);
+
 	Logging::newFrame();
 
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
+		m_DebugRunTimers = (TimeHandler::getCurrentFrameNumber() % 60 * 2) == 0;
+		if (m_DebugRunTimers) {
+			printf("Frame %i timing debugs\n", TimeHandler::getCurrentFrameNumber());
+			Logging::quickTimePush("Pre Frame");
+		}
 		//update time
 		TimeHandler::update();
 
@@ -203,21 +214,34 @@ void Application::run() {
 		//check application flags
 		checkHandles();
 
+		if (m_DebugRunTimers) {
+			Logging::quickTimePop(true);
+			Logging::quickTimePush("Frame");
+		}
+
 		//call virtual functions
 		{
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, (std::string("Frame Render: ") + std::to_string(TimeHandler::getCurrentFrameNumber())).c_str());
+			if (m_DebugRunTimers) {
+				Logging::quickTimePush("Update");
+			}
+			Logging::quickGpuDebugGroupPush("Frame Render: " + std::to_string(TimeHandler::getCurrentFrameNumber()));
 
 			if (Input::wasKeyPressed(GLFW_KEY_F)) {
 				m_ShaderPPBcs->reloadShaders();
 			}
 
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Update");
+			Logging::quickGpuDebugGroupPush("Update");
 
 			//update the game logic
 			update();
 
-			glPopDebugGroup();
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "UI Render");
+			Logging::quickGpuDebugGroupPop();
+			if (m_DebugRunTimers) {
+				Logging::quickTimePop(true);
+				Logging::quickTimePush("Draw");
+				Logging::quickTimePush("Draw UI");
+			}
+			Logging::quickGpuDebugGroupPush("UI Render");
 			//Start UI render
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			//set default framebuffer to be the UI framebuffer
@@ -234,13 +258,17 @@ void Application::run() {
 			drawUi();
 
 			//end UI Draw
-			glPopDebugGroup();
+			Logging::quickGpuDebugGroupPop();
+			if (m_DebugRunTimers) {
+				Logging::quickTimePop(true);
+				Logging::quickTimePush("Draw Game");
+			}
 			//we want to include vertices drawn during the main draw
 			Logging::objectRenderedAllowAdditions(true);
 			//newFrame call is here because:
 			//When done before the UI draw, it removes the data that was gathered from the normal draw
 			Logging::newFrame();
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "Game Render");
+			Logging::quickGpuDebugGroupPush("Game Render");
 			glEnable(GL_DEPTH_TEST);
 			glDisable(GL_BLEND);
 
@@ -263,8 +291,12 @@ void Application::run() {
 			//disable depth testing
 			glDisable(GL_DEPTH_TEST);
 
-			glPopDebugGroup();
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "Final framebuffer Renders");
+			Logging::quickGpuDebugGroupPop();
+			if (m_DebugRunTimers) {
+				Logging::quickTimePop(true);
+				Logging::quickTimePush("Frame Combine");
+			}
+			Logging::quickGpuDebugGroupPush("Final framebuffer Renders");
 			//we dont want to include these quad draws in the vertex counts
 			Logging::objectRenderedAllowAdditions(false);
 
@@ -312,13 +344,21 @@ void Application::run() {
 			Framebuffer::framebufferBlit(m_FbGameFrame, m_FbGameFrameCopy);
 
 
-			glPopDebugGroup();
-
-			glPopDebugGroup();
+			Logging::quickGpuDebugGroupPop();
+			if (m_DebugRunTimers) {
+				Logging::quickTimePop(true);
+				Logging::quickTimePop(true);
+			}
+			Logging::quickGpuDebugGroupPop();
 
 		}
 
+		if (m_DebugRunTimers) {
+			Logging::quickTimePop(true);
+		}
+
 		glfwSwapBuffers(m_ApplicationWindow->getWindow());
+
 	}
 
 	shutDown();

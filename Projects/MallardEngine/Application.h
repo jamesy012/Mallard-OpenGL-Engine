@@ -32,6 +32,9 @@ protected:
 	//application related stuff
 	bool m_Quit = false;
 
+	//bool to store if application is printing out it's timer this frame
+	bool m_DebugRunTimers = false;
+
 	//flags/handles
 	struct Flags {
 		bool m_CloseOnEscape = true;

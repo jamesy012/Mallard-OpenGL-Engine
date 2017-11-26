@@ -36,6 +36,7 @@ public:
 
 	// Inherited via IRenderable
 	virtual void draw() override;
+	void draw(Camera& a_Camera);
 	virtual void drawInstance(unsigned int a_Amount) override;
 
 private:

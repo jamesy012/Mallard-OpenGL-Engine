@@ -20,5 +20,8 @@ public:
 	static void quickTimePush(std::string a_Name, bool a_DisplayToConsole = false);
 	//pops last time from stack and calulates the time it took between the last push
 	static void quickTimePop(bool a_DisplayToConsole);
+
+	static void quickGpuDebugGroupPush(std::string a_Text);
+	static void quickGpuDebugGroupPop();
 };
 

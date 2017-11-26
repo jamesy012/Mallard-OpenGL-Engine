@@ -61,15 +61,19 @@ void Skybox::assignCamera(Camera * a_AssignedCamera) {
 void Skybox::draw() {
 	if (m_Camera->m_Transform.getLastTransformUpdate() != m_LastCameraUpdate || m_Camera->m_Transform.isParentDirty() || m_LastCameraUpdate == -1 || m_Camera->isDirty()) {
 		Transform cameraTransform = m_Camera->m_Transform;
-		cameraTransform.setPosition(glm::vec3(0,0,0));
 		glm::mat4 viewMatrix = glm::inverse(cameraTransform.getGlobalMatrix());
 		m_CameraPV = m_Camera->getProjectionMatrix() * viewMatrix;
 		m_LastCameraUpdate = m_Camera->m_Transform.getLastTransformUpdate();
 
 		cameraTransform.setRotation(glm::quat());
 		cameraTransform.setScale(50);
+		cameraTransform.setPosition(glm::vec3(0, 0, 0));
+
 		m_CameraPV *= cameraTransform.getLocalMatrix();
 
+		//just to update the dirty state
+		m_Camera->getViewMatrix();
+		m_LastCameraUpdate = m_Camera->m_Transform.m_LastUpdateFrame;
 	}
 
 	glDisable(GL_DEPTH_TEST);
@@ -78,7 +82,8 @@ void Skybox::draw() {
 
 	ShaderUniformData* shaderPV = m_SkyboxShader->m_CommonUniforms.m_ProjectionViewMatrix;
 	shaderPV->setData(&m_CameraPV);
-	Shader::applyUniform(shaderPV);
+
+	Shader::checkUniformChanges();
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureID);
@@ -90,6 +95,25 @@ void Skybox::draw() {
 
 	glEnable(GL_DEPTH_TEST);
 
+}
+
+void Skybox::draw(Camera& a_Camera) {
+	Camera* referencedCam = m_Camera;
+	unsigned int lastCamUpdate = m_LastCameraUpdate;
+	m_LastCameraUpdate = -1;
+	m_Camera = &a_Camera;
+
+	ShaderUniformData* shaderPV = m_SkyboxShader->getUniform(ShaderUniformTypes::VEC3,"scale");
+	glm::vec3 scales[2] = { glm::vec3(1),glm::vec3(1,-1,1) };
+	shaderPV->setData(&scales[1]);
+
+	draw();
+
+	shaderPV->setData(&scales[0]);
+
+
+	m_LastCameraUpdate = lastCamUpdate;
+	m_Camera = referencedCam;
 }
 
 void Skybox::drawInstance(unsigned int a_Amount) {
@@ -170,9 +194,10 @@ void Skybox::genShader() {
 		#version 410
 		in vec3 texCoords;
 		uniform samplerCube cubeTexture;
+		uniform vec3 scale = vec3(1);
 		out vec4 fragColor;
 		void main() {
-			 fragColor = texture(cubeTexture, texCoords);
+			 fragColor = texture(cubeTexture, texCoords * scale);
 		}
 		)";
 	m_SkyboxShader = new Shader();

@@ -11,6 +11,17 @@ Camera::Camera() : Object("BaseCamera") {
 Camera::~Camera() {
 }
 
+Camera & Camera::operator=(const Camera & a_Copy) {
+	m_Data = a_Copy.m_Data;
+	m_ProjectionMatrix = a_Copy.m_ProjectionMatrix;
+	m_Transform.setPosition(a_Copy.m_Transform.getLocalPosition());
+	m_Transform.setRotation(a_Copy.m_Transform.getLocalRotation());
+	m_Transform.setScale(a_Copy.m_Transform.getLocalScale());
+	m_IsDirty = true;
+	m_LastViewMatrixUpdateFrame = -1;
+	return *this;
+}
+
 void Camera::setPerspective(const float a_Fov, const float a_Aspect, const float a_Near, const float a_Far) {
 	m_Data.m_Perspective.m_Fov = glm::radians(a_Fov);
 	m_Data.m_Perspective.m_Aspect = a_Aspect;

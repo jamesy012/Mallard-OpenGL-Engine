@@ -125,6 +125,7 @@ public:
 	DLL_BUILD static Transform* findTransform(const char* a_TransformName);
 
 	//returns the last time in frame count this transform was updated
+	//todo: remove this infavour of just m_LastUpdateFrame
 	DLL_BUILD unsigned int getLastTransformUpdate() {
 		return m_LastUpdateFrame;
 	}
@@ -138,6 +139,8 @@ public:
 	//a flag to turn off certain transforms from showing in the hierarchy
 	bool m_ShowInHierarchy = true;
 
+	//what frame did we last update this transforms matrixes
+	unsigned int m_LastUpdateFrame = -1;
 protected:
 	//local position of transform
 	glm::vec3 m_Position;
@@ -171,7 +174,5 @@ private:
 
 	//a flag to check
 	bool m_IsRootTransform = false;
-
-	unsigned int m_LastUpdateFrame = -1;
 };
 

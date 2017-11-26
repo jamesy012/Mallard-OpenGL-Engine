@@ -55,7 +55,7 @@ static void objectSideWarp(Transform* a_Trasform) {
 
 static float getRandomWithinRange(float a_Min, float a_Max) {
 	//random 0-1
-	float random = rand() % 1000 / 1000.0f;
+	float random = (rand() % 10000) / 10000.0f;
 	float range = a_Max - a_Min;
 	return a_Min + (range*random);
 }
