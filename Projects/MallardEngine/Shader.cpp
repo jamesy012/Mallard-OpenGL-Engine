@@ -7,7 +7,9 @@
 #include <sstream> //std::stringstream
 #include <string> //std::string
 
+//for auto assigning uniforms for shaders
 #include "TimeHandler.h"
+#include "Window.h"
 
 static const Shader* m_LastUsed = nullptr;
 
@@ -247,6 +249,15 @@ void Shader::use(const Shader* a_Shader) {
 		a_Shader->m_CommonUniforms.m_Time->setData(&time);
 		a_Shader->applyUniform(a_Shader->m_CommonUniforms.m_Time);
 	}
+
+	//assign the resolution 
+	//(could make this a common uniform between all shaders and only change when window it resized)
+	if (a_Shader->m_CommonUniforms.m_Resolution != nullptr) {
+		Window* mainWin = Window::getMainWindow();
+		float resulution[2] = { (float)mainWin->getFramebufferWidth(), (float)mainWin->getFramebufferHeight() };
+		a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);
+		a_Shader->applyUniform(a_Shader->m_CommonUniforms.m_Resolution);
+	}
 }
 
 const Shader * Shader::getCurrentShader() {
@@ -275,6 +286,16 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 		return;
 	}
 
+#ifdef _DEBUG
+	//checking to see if this Uniform belongs to the current shader
+	if (a_Data->m_ParentShader != m_LastUsed) {
+		printf("ERROR WITH SHADER, SETTING UNIFORM DATA %i, IT IS NOT PART OF THE CURRENT SHADER. Name: %s\n",
+			   a_Data->m_Type, a_Data->m_Name.c_str());
+		return;
+	}
+#endif // DEBUG
+
+
 	//check to see if the data has been modified
 	if (a_Data->m_IsDirty) {
 		a_Data->m_IsDirty = false;
@@ -293,6 +314,9 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 			case ShaderUniformTypes::VEC3:
 				glUniform3fv(loc, amount, (float*) a_Data->m_Data);
 				break;
+			case ShaderUniformTypes::VEC2:
+				glUniform2fv(loc, amount, (float*) a_Data->m_Data);
+				break;
 			case ShaderUniformTypes::FLOAT:
 				glUniform1fv(loc, amount, (float*) a_Data->m_Data);
 				break;
@@ -302,6 +326,22 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 			default:
 				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %i, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
 				break;
+		}
+	}
+}
+
+void Shader::checkUniformChanges() {
+	if (m_LastUsed == nullptr) {
+		return;
+	}
+	//go through shader types
+	for (int i = 0; i < SHADER_UNIFORMS_TYPES_SIZE; i++) {
+		//go through vector for that type
+		for (size_t q = 0; q < m_LastUsed->m_UniformData[i].size(); q++) {
+			//get shader uniform
+			ShaderUniformData* uData = m_LastUsed->m_UniformData[i][q];
+			//apply uniform does the dirty check
+			applyUniform(uData);
 		}
 	}
 }
@@ -404,6 +444,12 @@ void Shader::getShaderUniforms() {
 				uniformData->m_Data = new float[3]{ 0 };
 				uniformData->m_Type = ShaderUniformTypes::VEC3;
 				break;
+			case GL_FLOAT_VEC2:
+				uniformData->m_DataSize = sizeof(float);
+				uniformData->m_DataCount = 2;
+				uniformData->m_Data = new float[2]{ 0 };
+				uniformData->m_Type = ShaderUniformTypes::VEC2;
+				break;
 			case GL_FLOAT:
 				uniformData->m_DataSize = sizeof(float);
 				uniformData->m_DataCount = 1;
@@ -448,6 +494,8 @@ void Shader::getShaderUniforms() {
 			m_CommonUniforms.m_Time = uniformData;
 		} else if (strcmp(name, "normalRot") == 0) {
 			m_CommonUniforms.m_NormalRotMatrix = uniformData;
+		} else if (strcmp(name, "resolution") == 0) {
+			m_CommonUniforms.m_Resolution = uniformData;
 		}
 
 		//copy defaults from the shader
@@ -455,6 +503,7 @@ void Shader::getShaderUniforms() {
 			case ShaderUniformTypes::MAT4:
 			case ShaderUniformTypes::VEC4:
 			case ShaderUniformTypes::VEC3:
+			case ShaderUniformTypes::VEC2:
 			case ShaderUniformTypes::FLOAT:
 				glGetUniformfv(m_Program, uniformData->m_UniformLocation, (GLfloat*) uniformData->m_Data);
 				break;

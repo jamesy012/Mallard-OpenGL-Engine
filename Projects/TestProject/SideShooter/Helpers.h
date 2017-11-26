@@ -1,9 +1,14 @@
 #pragma once
 
+#include <cmath>
+
 #include <glm\glm.hpp>
+
 #include "Camera.h"
 #include "Window.h"
-#include <cmath>
+#include "Transform.h"
+
+#include "SideShooterContants.h"
 
 static glm::vec2 worldToScreenSpace(glm::vec3 a_Position, Camera* a_Camera) {
 	glm::vec4 point = a_Camera->getProjectionMatrix() * (a_Camera->getViewMatrix() * glm::vec4(a_Position, 1));
@@ -36,4 +41,26 @@ static int howFarOffScreen(glm::vec3 a_Position, Camera* a_Camera) {
 	min = (int)std::fmin(min, mainW->getWindowWidth()-pos.x);
 	min = (int)std::fmin(min, mainW->getWindowHeight()-pos.y);
 	return min;
+}
+
+static void objectSideWarp(Transform* a_Trasform) {
+	if (a_Trasform->getGlobalPosition().x > SSConstants::GAME_WIDTH) {
+		a_Trasform->translate(glm::vec3(SSConstants::GAME_WIDTH * -2, 0, 0));
+	}
+
+	if (a_Trasform->getGlobalPosition().x < -SSConstants::GAME_WIDTH) {
+		a_Trasform->translate(glm::vec3(SSConstants::GAME_WIDTH * 2, 0, 0));
+	}
+}
+
+static float getRandomWithinRange(float a_Min, float a_Max) {
+	//random 0-1
+	float random = rand() % 1000 / 1000.0f;
+	float range = a_Max - a_Min;
+	return a_Min + (range*random);
+}
+
+template <class T>
+static T lerp(T a, T b, float a_Time) {
+	return a + a_Time * (b - a);
 }

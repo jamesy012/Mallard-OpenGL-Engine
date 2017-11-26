@@ -115,7 +115,7 @@ void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer 
 void Framebuffer::resizeFramebuffer(unsigned int a_Width, unsigned int a_Height) {
 	m_Width = a_Width;
 	m_Height = a_Height;
-	for (int i = 0; i < m_AttachedComponents.size(); i++) {
+	for (unsigned int i = 0; i < m_AttachedComponents.size(); i++) {
 		Component* component = m_AttachedComponents[i];
 		unsigned int glFormat = getGLFormatSize(component->m_Format, component->m_FormatSize);
 		switch (component->m_Type) {

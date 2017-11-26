@@ -21,58 +21,70 @@
 #include "Mesh.h"
 #include "Transform.h"
 #include "Object.h"
-#include "Camera.h"
 
 #include "Helpers.h"
 #include "Projectile.h"
 #include "Player.h"
+#include "SideShooterCamera.h"
+#include "SideShooterContants.h"
 
 void SideShooter::startUp() {
 
 	m_TestText = new Text(m_Font);
 	m_TestText->generateText(R"(Side Shooter
-		Move: WASDQE)");	
-	
-
-	//m_PlayerModel->load("Models/toilet/Toilet.obj");
+		Move: WASD, Shoot: Space)");		
 
 	m_TreeModel = new Model();
-	//m_Model->load("Models/Nanosuit/nanosuit.obj");
-	m_TreeModel->load("Models/test/lowpolytree.obj");
-	m_TreeModel->m_Transform.setScale(0.05f);
-	m_TreeModel->m_Transform.setPosition(glm::vec3(0, 0, -10));
+	m_TreeModel->load("Models/SideShooter/lowpolytree.obj");
+	//m_TreeModel->m_Transform.setScale(0.05f);
 
 	m_Box = new Mesh();
 	m_Box->createBox();
 
-	m_QuadMesh = new Mesh();
-	m_QuadMesh->createPlane(true);
-	//m_QuadMesh->setTexture(m_1x1Texture);
+	m_GrassTexture = new Texture();
+	m_GrassTexture->load("Models/SideShooter/Grass.jpg");
 
-	m_Standard = new Object("Standard");
-	m_Standard->m_Renderable = m_TreeModel;
+	m_QuadMesh = new Model();
+	m_QuadMesh->load("Models/SideShooter/UvScaledPlane.obj");
+	m_QuadMesh->m_Meshs[0]->setTexture(m_GrassTexture);
 
 	m_Ground = new Object("Ground Plane");
 	m_Ground->m_Renderable = m_QuadMesh;
-	m_Ground->m_Transform.setPosition(glm::vec3(0, -27, 0));
-	m_Ground->m_Transform.setScale(400);
-
-	m_Camera = new Camera();
-	m_Camera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-	m_Camera->m_Transform.setPosition(glm::vec3(0, 0, 50));
+	m_Ground->m_Transform.setPosition(glm::vec3(0, -SSConstants::GROUND_Y, -150));
+	m_Ground->m_Transform.setScale(2);
 
 	m_Player = new Player();
+	m_Camera = new SideShooterCamera(m_Player);
+
+	m_Camera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 	m_Player->m_Camera = m_Camera;
+
+	for (int i = 0; i < NUM_OF_TREES; i++) {
+		m_Trees[i] = new Object("TREE!");
+		m_Trees[i]->m_Renderable = m_TreeModel;
+		m_Trees[i]->m_Transform.setPosition(
+			glm::vec3(
+			getRandomWithinRange(-SSConstants::GAME_WIDTH,SSConstants::GAME_WIDTH),
+			-SSConstants::GROUND_Y,
+			-getRandomWithinRange(0, 300)-10));
+		m_Trees[i]->m_Transform.setScale(getRandomWithinRange(2, 5));
+		float xzRot = 5.0f;
+		m_Trees[i]->m_Transform.setRotation(
+			glm::vec3(
+			getRandomWithinRange(-xzRot, xzRot),
+			getRandomWithinRange(0, 360),
+			getRandomWithinRange(-xzRot, xzRot)));
+	}
 }
 
 void SideShooter::shutDown() {
 	m_TreeModel->unload();
+	m_QuadMesh->unload();
+	m_GrassTexture->unload();
 
 	delete m_Box;
-	delete m_QuadMesh;
 
 	delete m_Player;
-	delete m_Standard;
 	delete m_Ground;
 
 	delete m_TestText;
@@ -84,6 +96,10 @@ void SideShooter::shutDown() {
 			delete m_Projectiles[i];
 		}
 	}
+
+	for (int i = 0; i < NUM_OF_TREES; i++) {
+		delete m_Trees[i];
+	}
 }
 
 void SideShooter::update() {
@@ -93,7 +109,7 @@ void SideShooter::update() {
 		//find next empty spot
 		for (unsigned int i = 0; i < NUM_OF_PROJECTILES; i++) {
 			if (m_Projectiles[i] == nullptr) {
-				m_Projectiles[i] = new Projectile(m_Player->m_FacingRight);
+				m_Projectiles[i] = new Projectile(m_Player->m_DirectionFacing > 0);
 				m_Projectiles[i]->m_Renderable = m_Box;
 				m_Projectiles[i]->m_Camera = m_Camera;
 				m_Projectiles[i]->m_Transform.setPosition(m_Player->m_ShootPoint.getGlobalPosition());
@@ -112,7 +128,10 @@ void SideShooter::update() {
 		}
 	}
 
-	m_CameraGame->m_Transform.rotate(glm::vec3(0, -10, 0) * TimeHandler::getDeltaTime());
+	m_Camera->update();
+
+	float scale = ((m_Player->m_Movement.x * 1.25f) / m_Player->m_MovementSpeed) * -1;
+	m_CameraGame->m_Transform.rotate(glm::vec3(0, scale, 0) * TimeHandler::getDeltaTime());
 }
 
 void SideShooter::draw() {
@@ -126,20 +145,24 @@ void SideShooter::draw() {
 	glm::vec4 colors[3] = { glm::vec4(1,1,1,1), glm::vec4(0,0,1,1), glm::vec4(0.25f,0.25f,0.25f,1) };
 
 	m_Player->draw();
-	m_Standard->draw();
+
+	for (int i = 0; i < NUM_OF_TREES; i++) {
+		drawObject(m_Trees[i]);
+	}
 
 	uniformColor->setData(&colors[1]);
 	Shader::applyUniform(uniformColor);
 
 	for (unsigned int i = 0; i < NUM_OF_PROJECTILES; i++) {
 		if (m_Projectiles[i] != nullptr) {
-			m_Projectiles[i]->draw();
+			//m_Projectiles[i]->draw();
+			drawObject(m_Projectiles[i]);
 		}
 	}
 
 	uniformColor->setData(&colors[2]);
 	Shader::applyUniform(uniformColor);
-	m_Ground->draw();
+	drawObject(m_Ground, false);
 
 	uniformColor->setData(&colors[0]);
 	Shader::applyUniform(uniformColor);
@@ -147,7 +170,7 @@ void SideShooter::draw() {
 
 void SideShooter::drawUi() {
 	//dont run UI atm
-	return;
+	//return;
 	ShaderUniformData* uniformPVM;
 	ShaderUniformData* uniformModel;
 	ShaderUniformData* uniformColor;
@@ -199,4 +222,25 @@ void SideShooter::drawUi() {
 		float offset = m_Font->drawText(quickText.c_str());
 		model.translate(glm::vec3(0, offset, 0));
 	}
+}
+
+void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull) {
+
+	glm::vec3 startingPos = a_Renderable->m_Transform.getGlobalPosition();
+
+	for (int i = -1; i < 2; i++) {
+		glm::vec3 newPos = startingPos + glm::vec3(SSConstants::GAME_WIDTH * 2 * i, 0, 0);
+
+		if(a_Cull) {
+			float dist = abs(newPos.x - m_Player->m_Transform.getLocalPosition().x) + newPos.z;
+			if (dist > SSConstants::CLOSE_RENDER) {
+				continue;
+			}
+		}
+
+		a_Renderable->m_Transform.setPosition(newPos);
+		a_Renderable->draw();
+	}
+	a_Renderable->m_Transform.setPosition(startingPos);
+
 }

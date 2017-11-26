@@ -6,6 +6,7 @@
 
 #include <glm\glm.hpp>
 #include <glm\ext.hpp>
+#include <time.h>
 
 #include "TimeHandler.h"
 #include "Input.h"
@@ -40,6 +41,7 @@ Application::~Application() {
 }
 
 void Application::run() {
+	srand((unsigned int)time(NULL));
 
 	m_Application = this;
 
@@ -276,6 +278,7 @@ void Application::run() {
 			else {
 				Shader::use(m_ShaderPPBcs);
 			}
+			Shader::checkUniformChanges();
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
 			Framebuffer::clearCurrentBuffer();
@@ -286,6 +289,7 @@ void Application::run() {
 
 			//set up shader
 			Shader::use(m_ShaderPPBasic);
+			Shader::checkUniformChanges();
 
 			//enable blending so the UI doesnt overwrite the game frame
 			glEnable(GL_BLEND);
@@ -302,8 +306,6 @@ void Application::run() {
 			Framebuffer::clearCurrentBuffer();
 
 			//and draw the combined frame to the final framebuffer
-			//m_FullScreenQuad->setTexture(m_FbCombinedFrame->getTexture());
-			//m_FullScreenQuad->draw();
 			Framebuffer::framebufferBlit(m_FbCombinedFrame, nullptr);
 
 			//finaly copy framebuffers for next frame
@@ -362,6 +364,9 @@ void Application::windowResize(int a_Width, int a_Height) {
 }
 
 void Application::windowFramebufferResize(int a_Width, int a_Height) {
+	if (a_Width == 0 || a_Height == 0) {
+		return;
+	}
 	if (m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
 		m_Application->m_FbCombinedFrame->setSize(a_Width, a_Height);
 		m_Application->m_FbGameFrame->setSize(a_Width, a_Height);

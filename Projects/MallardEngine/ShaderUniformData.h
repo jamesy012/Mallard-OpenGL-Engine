@@ -19,8 +19,9 @@ class Camera;
 //at the moment, this is missing a lot of types
 enum class ShaderUniformTypes {
 	MAT4,
-	VEC3,
 	VEC4,
+	VEC3,
+	VEC2,
 	FLOAT,
 	INT,
 	BOOL,

@@ -98,10 +98,10 @@ void Text::generateText(const std::string a_Text) {
 	//finally apply and bind that data
 	m_TextMesh->applyData(vertices, indexes);
 
-	m_TextMesh->bind();
-
 	//also tell the mesh which texture to use
 	m_TextMesh->setTexture(m_LinkedFont->getFontTexture());
+
+	m_TextMesh->bind();
 }
 
 void Text::draw() {

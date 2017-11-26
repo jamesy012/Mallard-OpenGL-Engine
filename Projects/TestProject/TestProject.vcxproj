@@ -24,6 +24,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SideShooter\SideShooterCamera.cpp" />
     <ClCompile Include="SideShooter\Player.cpp" />
     <ClCompile Include="SideShooter\Projectile.cpp" />
     <ClCompile Include="SideShooter\SideShooter.cpp" />
@@ -31,10 +32,12 @@
     <ClCompile Include="TestApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SideShooter\SideShooterCamera.h" />
     <ClInclude Include="SideShooter\Player.h" />
     <ClInclude Include="SideShooter\Helpers.h" />
     <ClInclude Include="SideShooter\Projectile.h" />
     <ClInclude Include="SideShooter\SideShooter.h" />
+    <ClInclude Include="SideShooter\SideShooterContants.h" />
     <ClInclude Include="TestApp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

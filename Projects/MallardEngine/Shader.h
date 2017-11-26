@@ -69,6 +69,10 @@ public:
 	//if a_Data is nullptr, this function wont do anything
 	static void applyUniform(ShaderUniformData* a_Data);
 
+	//checks all the current shaders uniform to see if any have changed
+	//and applys the if they have
+	static void checkUniformChanges();
+
 	///PUBLIC DATA
 
 	//list of common uniforms for easy and quick access to them
@@ -92,6 +96,8 @@ public:
 		ShaderUniformData* m_Color = nullptr;
 		//Time of the program since the start
 		ShaderUniformData* m_Time = nullptr;
+		//Resulution of the main window
+		ShaderUniformData* m_Resolution = nullptr;
 	} m_CommonUniforms;
 
 private:
