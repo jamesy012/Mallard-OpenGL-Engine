@@ -74,6 +74,15 @@ public:
 	//returns a reference to the texture used by this Framebuffer
 	//will be nullptr if no framebuffer has been generated
 	Texture* getTexture(const unsigned int a_TextureIndex = 0) const;
+
+	//returns the width of this framebuffer
+	unsigned int getFramebufferWidth() const {
+		return m_Width;
+	}
+	//returns the height of this framebuffer
+	unsigned int getFramebufferHeight() const {
+		return m_Height;
+	}
 	
 	//TODO: Move this out of framebuffer OR intergrate it better
 	enum class GL_CALLS {

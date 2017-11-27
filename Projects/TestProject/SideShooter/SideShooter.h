@@ -28,7 +28,7 @@ public:
 
 private:
 	void drawObjectInstanced(IRenderable* a_Renderable, glm::mat4* a_Array, int a_ArraySize);
-	void drawObject(IRenderable* a_Renderable, bool a_Cull = true);
+	void drawObject(IRenderable* a_Renderable, bool a_Cull = true, float a_CullOffset  = 0);
 
 	void sceneRender(Camera* a_Camera, bool a_CloseOnly);
 
@@ -53,13 +53,15 @@ private:
 	SideShooterCamera* m_Camera;
 
 	Framebuffer* m_ReflectionBuffer;
+	Framebuffer* m_ReflectionScaledBuffer;
 	Camera* m_ReflectionCamera;
 	Shader* m_ReflectionShader;
+	Shader* m_BlurShader;
 
 	static const unsigned int NUM_OF_PROJECTILES = 50;
 	Projectile* m_Projectiles[NUM_OF_PROJECTILES] = { nullptr };
 
-	static const unsigned int NUM_OF_TREES = 200;
+	static const unsigned int NUM_OF_TREES = 250;
 	unsigned int m_NumofTreesGenerated = NUM_OF_TREES;
 	glm::mat4 m_UniformTrees[NUM_OF_TREES];
 };

@@ -54,6 +54,11 @@ void SideShooter::startUp() {
 		m_ReflectionShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/Reflection.vert");
 		m_ReflectionShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/Reflection.frag");
 		m_ReflectionShader->linkShader();
+
+		m_BlurShader = new Shader();
+		m_BlurShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+		m_BlurShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/GaussianBlur.frag");
+		m_BlurShader->linkShader();
 	}
 	//textures
 	{
@@ -83,7 +88,7 @@ void SideShooter::startUp() {
 		m_Ground = new Object("Ground Plane");
 		m_Ground->m_Renderable = m_QuadMesh;
 		m_Ground->m_Transform.setPosition(glm::vec3(0, -SSConstants::GROUND_Y, -150));
-		m_Ground->m_Transform.setScale(2);
+		m_Ground->m_Transform.setScale(SSConstants::GAME_WIDTH/100.0f);
 
 		//had to create player first, then the camera to give it the reference
 		//then set the camera in the player
@@ -101,7 +106,7 @@ void SideShooter::startUp() {
 			pond->m_Transform.setPosition(
 				glm::vec3(
 				getRandomWithinRange(-SSConstants::GAME_WIDTH, SSConstants::GAME_WIDTH),
-				-SSConstants::GROUND_Y,
+				-SSConstants::GROUND_Y+0.5f,
 				-getRandomWithinRange(-50, 200)));
 			float xzRot = 8.0f;
 			pond->m_Transform.setRotation(
@@ -118,8 +123,14 @@ void SideShooter::startUp() {
 		m_ReflectionCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 
 		m_ReflectionBuffer = new Framebuffer();
-		m_ReflectionBuffer->setSize(Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight());
+		m_ReflectionBuffer->setSize(1024, 1024);
 		m_ReflectionBuffer->createRenderTarget();
+
+		m_ReflectionScaledBuffer = new Framebuffer();
+		//m_ReflectionScaledBuffer->setSize(256, 256);
+		m_ReflectionScaledBuffer->setSize(512, 512);
+		m_ReflectionScaledBuffer->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA, 16);
+		m_ReflectionScaledBuffer->genFramebuffer();
 
 		m_PondMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture(0));
 	}
@@ -137,7 +148,7 @@ void SideShooter::startUp() {
 				-getRandomWithinRange(0, 300) - 10);
 			bool failedPondTest = false;
 			for (int q = 0; q < NUM_OF_PONDS; q++) {
-				if (glm::distance(m_Ponds[q]->m_Transform.getLocalPosition(), treePos) < m_PondSize + 5) {
+				if (glm::distance(m_Ponds[q]->m_Transform.getLocalPosition(), treePos) < m_PondSize + 10) {
 					failedPondTest = true;
 					break;
 				}
@@ -183,6 +194,8 @@ void SideShooter::shutDown() {
 	delete m_ReflectionBuffer;
 	delete m_ReflectionCamera;
 	delete m_ReflectionShader;
+	delete m_ReflectionScaledBuffer;
+	delete m_BlurShader;
 
 	for (unsigned int i = 0; i < NUM_OF_PROJECTILES; i++) {
 		if (m_Projectiles[i] != nullptr) {
@@ -193,6 +206,9 @@ void SideShooter::shutDown() {
 
 void SideShooter::update() {
 	if (Input::wasKeyPressed(KEY_Q)) {
+		m_BlurShader->reloadShaders();
+	}	
+	if (Input::wasKeyPressed(KEY_E)) {
 		m_ReflectionShader->reloadShaders();
 	}
 
@@ -240,6 +256,9 @@ void SideShooter::update() {
 }
 
 void SideShooter::draw() {
+	if (m_DebugRunTimers) {
+		Logging::quickTimePush("Reflection Render");
+	}
 	Framebuffer::use(m_ReflectionBuffer);
 	Framebuffer::clearCurrentBuffer();
 
@@ -258,10 +277,55 @@ void SideShooter::draw() {
 
 	glEnable(GL_CULL_FACE);
 
+	if (m_DebugRunTimers) {
+		Logging::quickTimePop(true);
+		Logging::quickTimePush("Blur Render");
+	}
+	{
+		Framebuffer::use(m_ReflectionScaledBuffer);
+		Framebuffer::clearCurrentBuffer(true, false);
+		Shader::use(m_BlurShader);
+		ShaderUniformData* radiusUniform = m_BlurShader->getUniform(ShaderUniformTypes::FLOAT, "radius");
+		ShaderUniformData* dirUniform = m_BlurShader->getUniform(ShaderUniformTypes::VEC2, "dir");
+
+		glm::vec2 dir[2] = { glm::vec2(1,0),glm::vec2(0,1) };
+		float radius[2] = { .3,.45 };
+		dirUniform->setData(&dir[0]);
+		radiusUniform->setData(&radius[0]);
+		//float mouseX = Input::getMouseX() / (float) Window::getMainWindow()->getFramebufferWidth();
+		//radiusUniform->setData(&mouseX);
+
+		Shader::checkUniformChanges();
+
+		m_FullScreenQuad->setTexture(m_ReflectionBuffer->getTexture());
+		m_FullScreenQuad->draw();
+
+		Framebuffer::use(m_ReflectionBuffer);
+
+		dirUniform->setData(&dir[1]);
+		radiusUniform->setData(&radius[1]);
+
+		//float mouseY = Input::getMouseY() / (float) Window::getMainWindow()->getFramebufferHeight();
+		//radiusUniform->setData(&mouseY);
+
+		Shader::checkUniformChanges();
+
+		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
+		m_FullScreenQuad->setTexture(m_ReflectionScaledBuffer->getTexture());
+		m_FullScreenQuad->draw();
+		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
+	}
+	if (m_DebugRunTimers) {
+		Logging::quickTimePop(true);
+		Logging::quickTimePush("Normal Scene Render");
+	}
 	Framebuffer::use(nullptr);
 
-
 	//render ground
+	if (m_DebugRunTimers) {
+		Logging::quickTimePush("Normal Scene Render - ground");
+	}	
+
 	{
 		Shader::use(m_ShaderBasic);
 
@@ -271,12 +335,24 @@ void SideShooter::draw() {
 
 		drawObject(m_Ground, false);
 	}
+
+	if (m_DebugRunTimers) {
+		Logging::quickTimePop(true);
+		Logging::quickTimePush("Normal Scene Render - rest of the scene");
+	}
+
+	sceneRender(m_Camera, false);
+
 	//render reflection pond
+	if (m_DebugRunTimers) {
+		Logging::quickTimePop(true);
+		Logging::quickTimePush("Normal Scene Render - pond reflection");
+	}
 	{
 		glEnable(GL_BLEND);
 
-		glDepthMask(false);
-		glDepthFunc(GL_ALWAYS);
+		//glDepthMask(false);
+		glDepthFunc(GL_LEQUAL);
 		Shader::use(m_ReflectionShader);
 
 		ShaderUniformData* uniformPvm = m_ReflectionShader->m_CommonUniforms.m_ProjectionViewMatrix;
@@ -285,15 +361,16 @@ void SideShooter::draw() {
 
 		//m_QuadMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture());
 		for (int i = 0; i < NUM_OF_PONDS; i++) {
-			drawObject(m_Ponds[i], false);
+			drawObject(m_Ponds[i], true, m_PondSize);
 		}
 		glDepthFunc(GL_LESS);
-		glDepthMask(true);
+		//glDepthMask(true);
 		glDisable(GL_BLEND);
 	}
-
-	sceneRender(m_Camera, false);
-
+	if (m_DebugRunTimers) {
+		Logging::quickTimePop(true);
+		Logging::quickTimePop(true);
+	}
 }
 
 void SideShooter::drawUi() {
@@ -378,7 +455,7 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 	}
 }
 
-void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull) {
+void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull,float a_CullOffset) {
 
 	glm::vec3 startingPos = a_Renderable->m_Transform.getGlobalPosition();
 
@@ -386,8 +463,8 @@ void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull) {
 		glm::vec3 newPos = startingPos + glm::vec3(SSConstants::GAME_WIDTH * 2 * i, 0, 0);
 
 		if(a_Cull) {
-			float dist = abs(newPos.x - m_Player->m_Transform.getLocalPosition().x) + newPos.z;
-			if (dist > SSConstants::CLOSE_RENDER) {
+			float dist = abs(newPos.x - m_Camera->m_Transform.getLocalPosition().x) + newPos.z;
+			if (dist > SSConstants::CLOSE_RENDER + a_CullOffset) {
 				continue;
 			}
 		}
