@@ -22,13 +22,24 @@ void main() {
     
 	vec4 col = texture(TexDiffuse1, screenUV); 
     
-    float colScales = abs((sin(((time*0.25) + (screenUV.y*4) + (time+(screenUV.y*5)*screenUV.x*10))) * 0.2) * 0.25f)+ 0.1;
+    float alpha = -((vPosition2.z*11));
+    
+    //change between different color tests
+    //just comment out the line below
+    //#define Color1
+    
+    #ifdef Color1
+        float colScales = abs((sin(((time*0.25) + (screenUV.y*4) + (time+(screenUV.y*5)*screenUV.x*10))) * 0.2) * 0.25f)+ 0.1;
+        fragColor = col * vec4(colScales, 1.2*colScales, 0.7f, 1);  
+    #else 
+        float colScales = abs(offset.x+0.25)*0.7;
+        fragColor = col * vec4(colScales, 1.2*colScales, 0.9, 1) * (1-alpha*0.2); 
+    #endif
+       
     //float colScales = abs((sin(((time*1) + (screenUV.y) + (time+(screenUV.y)*screenUV.x))) * 0.2) * 0.25f)+ 0.1;
     
-    float alpha = -(vPosition2.z*9);
-    //col *= 1-alpha*3;
-	fragColor = col * vec4(colScales, 1.2*colScales, 0.7f, 1); 
-    fragColor.a = 1-alpha;
+	
+    fragColor.a = (1-alpha);
     //float dotVal = dot(normalize(vNormal.xyz),vec3(0,1,0));
     //fragColor += vec4(dotVal,dotVal,dotVal,1);
 } 

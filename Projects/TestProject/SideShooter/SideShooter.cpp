@@ -104,7 +104,7 @@ void SideShooter::startUp() {
 		m_Ground = new Object("Ground Plane");
 		m_Ground->m_Renderable = m_QuadMesh;
 		m_Ground->m_Transform.setPosition(glm::vec3(0, -SSConstants::GROUND_Y, -150));
-		m_Ground->m_Transform.setScale(SSConstants::GAME_WIDTH/100.0f);
+		m_Ground->m_Transform.setScale(SSConstants::GAME_WIDTH / 100.0f);
 
 		//had to create player first, then the camera to give it the reference
 		//then set the camera in the player
@@ -122,7 +122,7 @@ void SideShooter::startUp() {
 			pond->m_Transform.setPosition(
 				glm::vec3(
 				getRandomWithinRange(-SSConstants::GAME_WIDTH, SSConstants::GAME_WIDTH),
-				-SSConstants::GROUND_Y+0.5f,
+				-SSConstants::GROUND_Y + 0.5f,
 				-getRandomWithinRange(-50, 200)));
 			float xzRot = 8.0f;
 			pond->m_Transform.setRotation(
@@ -227,9 +227,40 @@ void SideShooter::shutDown() {
 void SideShooter::update() {
 	if (Input::wasKeyPressed(KEY_Q)) {
 		m_DOFDrawShader->reloadShaders();
-	}	
+	}
 	if (Input::wasKeyPressed(KEY_E)) {
 		m_DOFGenShader->reloadShaders();
+	}
+	if (Input::wasKeyPressed(KEY_R)) {
+		m_ReflectionShader->reloadShaders();
+	}
+
+	m_AppOptions.m_EnableDof ^= Input::wasKeyPressed(KEY_KP_1);
+	m_Flags.m_RunDebugTimers ^= Input::wasKeyPressed(KEY_F1);
+
+	//adjust dof
+	{
+		int keys = 0;
+		keys |= Input::isKeyDown(KEY_KP_ADD) << 0;
+		keys |= Input::isKeyDown(KEY_KP_SUBTRACT) << 1;
+		if (keys != 0) {
+			ShaderUniformData* fDist = m_DOFGenShader->getUniform(ShaderUniformTypes::FLOAT, "focusDistance");
+			float value = *(float*) fDist->getDataVoid();
+			float increment = 50 * TimeHandler::getDeltaTime();
+			if (keys == 1) {
+				value += increment;
+				if (value > 1000) {
+					value = 1000;
+				}
+			}
+			if (keys == 2) {
+				value -= increment;
+				if (value < 0) {
+					value = 0;
+				}
+			}
+			fDist->setData(&value);
+		}
 	}
 
 	m_Player->update();
@@ -264,9 +295,9 @@ void SideShooter::update() {
 
 	glm::vec3 camPos = m_Camera->m_Transform.getGlobalPosition();
 	float camY = camPos.y;
-	camPos.y = -SSConstants::GROUND_Y -(camPos.y+SSConstants::GROUND_Y);
+	camPos.y = -SSConstants::GROUND_Y - (camPos.y + SSConstants::GROUND_Y);
 	glm::vec3 camRot = m_Camera->m_Transform.getGlobalRotationEulers();
-	camRot *=  glm::vec3(-1,1,-1);
+	camRot *= glm::vec3(-1, 1, -1);
 	m_ReflectionCamera->m_Transform.setPosition(camPos);
 	m_ReflectionCamera->m_Transform.setRotation(camRot);
 	m_ReflectionCamera->m_Transform.setScale(glm::vec3(1, -1, 1));
@@ -347,7 +378,7 @@ void SideShooter::draw() {
 	//render ground
 	if (m_DebugRunTimers) {
 		Logging::quickTimePush("Normal Scene Render - ground");
-	}	
+	}
 
 	{
 		Shader::use(m_ShaderBasic);
@@ -390,14 +421,16 @@ void SideShooter::draw() {
 		//glDepthMask(true);
 		glDisable(GL_BLEND);
 	}
-	Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
+
 
 	if (m_DebugRunTimers) {
 		Logging::quickTimePop(true);
-		Logging::quickTimePush("Normal Scene Render - DOF");
 	}
-	{
-
+	if (m_AppOptions.m_EnableDof) {
+		if (m_DebugRunTimers) {
+			Logging::quickTimePush("Normal Scene Render - DOF");
+		}
+		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
 
 		int width = Window::getMainWindow()->getFramebufferWidth();
 		int height = Window::getMainWindow()->getFramebufferHeight();
@@ -412,6 +445,7 @@ void SideShooter::draw() {
 		Framebuffer::use(m_DepthOfFieldTest);
 		Framebuffer::clearCurrentBuffer(true, true);
 
+		m_DOFGenShader->checkUniformChanges();
 
 		m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture(1));
 		m_FullScreenQuad->draw();
@@ -467,12 +501,14 @@ void SideShooter::draw() {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE0 + 2);
 		glBindTexture(GL_TEXTURE_2D, 0);
-	}
 
 		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
+		if (m_DebugRunTimers) {
+			Logging::quickTimePop(true);
+		}
+	}//dof end
 
 	if (m_DebugRunTimers) {
-		Logging::quickTimePop(true);
 		Logging::quickTimePop(true);
 	}
 }
@@ -539,7 +575,7 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 
 	glm::vec4 offset = glm::vec4(0);
 	const int MAX_INSTANCES_PER_DRAW = 128;
-	float batches = a_ArraySize / (float)MAX_INSTANCES_PER_DRAW;
+	float batches = a_ArraySize / (float) MAX_INSTANCES_PER_DRAW;
 	float batchesAmount = batches;
 	int amountToRender = MAX_INSTANCES_PER_DRAW;
 	for (int i = 0; i < batchesAmount; i++) {
@@ -559,14 +595,14 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 	}
 }
 
-void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull,float a_CullOffset) {
+void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull, float a_CullOffset) {
 
 	glm::vec3 startingPos = a_Renderable->m_Transform.getGlobalPosition();
 
 	for (int i = -1; i < 2; i++) {
 		glm::vec3 newPos = startingPos + glm::vec3(SSConstants::GAME_WIDTH * 2 * i, 0, 0);
 
-		if(a_Cull) {
+		if (a_Cull) {
 			float dist = abs(newPos.x - m_Camera->m_Transform.getLocalPosition().x) + newPos.z;
 			if (dist > SSConstants::CLOSE_RENDER + a_CullOffset) {
 				continue;

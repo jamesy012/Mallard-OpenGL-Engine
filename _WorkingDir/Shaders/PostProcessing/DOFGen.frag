@@ -10,6 +10,11 @@ uniform vec2 resolution;
 //depth texture
 uniform sampler2D TexDiffuse1;
 
+uniform float focusDistance = 95f;
+uniform float farDof = 6f;
+uniform float nearDof = 6f;
+uniform float falloff = 2.7f;
+
 void main() {
     vec2 uvOffset = 5/resolution;
     float average;
@@ -30,21 +35,19 @@ void main() {
     
     float dofStrength = 0;
     
-    float focusDistance = 0.1f;
-    float farDof = 0.03f;
-    float nearDof = 0.011f;
-
-    float falloff = 3f;
+    float sFocusDistance = focusDistance/f;
+    float sFarDof = farDof/f;
+    float sNearDof = nearDof/f;
 
      
-    if(z > focusDistance){
-       dofStrength = 1-((focusDistance+farDof)/(z));
+    if(z > sFocusDistance){
+       dofStrength = 1-((sFocusDistance+sFarDof)/(z));
     }else{
-       dofStrength = 1-((z)/(focusDistance-nearDof));
+       dofStrength = 1-((z)/(sFocusDistance-sNearDof));
     }
-    dofStrength *= falloff;
-    dofStrength = clamp(dofStrength,0.0f,0.99f);
     
+    dofStrength = clamp(dofStrength,0.0f,0.99f);
+    dofStrength *= falloff;
     
     //if(z > focusDistance + farDof){
     //    dofStrength = 1;

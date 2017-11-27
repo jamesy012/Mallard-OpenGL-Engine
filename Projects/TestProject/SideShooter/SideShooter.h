@@ -68,5 +68,10 @@ private:
 	static const unsigned int NUM_OF_TREES = 250;
 	unsigned int m_NumofTreesGenerated = NUM_OF_TREES;
 	glm::mat4 m_UniformTrees[NUM_OF_TREES];
+
+	//list of application option flags
+	struct {
+		bool m_EnableDof = true;
+	} m_AppOptions;
 };
 
