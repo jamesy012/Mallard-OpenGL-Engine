@@ -10,6 +10,7 @@
 //for auto assigning uniforms for shaders
 #include "TimeHandler.h"
 #include "Window.h"
+#include "Framebuffer.h"
 
 static const Shader* m_LastUsed = nullptr;
 
@@ -253,9 +254,15 @@ void Shader::use(const Shader* a_Shader) {
 	//assign the resolution 
 	//(could make this a common uniform between all shaders and only change when window it resized)
 	if (a_Shader->m_CommonUniforms.m_Resolution != nullptr) {
-		Window* mainWin = Window::getMainWindow();
-		float resulution[2] = { (float)mainWin->getFramebufferWidth(), (float)mainWin->getFramebufferHeight() };
-		a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);
+		Framebuffer* fb = Framebuffer::getCurrentFramebuffer();
+		if (fb != nullptr) {
+			float resulution[2] = { (float) fb->getFramebufferWidth(), (float) fb->getFramebufferHeight() };
+			a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);
+		} else {
+			Window* mainWin = Window::getMainWindow();
+			float resulution[2] = { (float) mainWin->getFramebufferWidth(), (float) mainWin->getFramebufferHeight() };
+			a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);
+		}
 		a_Shader->applyUniform(a_Shader->m_CommonUniforms.m_Resolution);
 	}
 }

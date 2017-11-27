@@ -102,7 +102,11 @@ void Application::run() {
 		for (int i = 0; i < numOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
 			(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
-			if (i >= 2) {
+			if (i <= 1) {
+				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
+				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
+				(*frame[i])->genFramebuffer();
+			}else if (i >= 2) {
 				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
 				(*frame[i])->genFramebuffer();
 			}
@@ -197,7 +201,11 @@ void Application::run() {
 
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
-		m_DebugRunTimers = (TimeHandler::getCurrentFrameNumber() % 60 * 2) == 0;
+		if (m_Flags.m_RunDebugTimers) {
+			m_DebugRunTimers = (TimeHandler::getCurrentFrameNumber() % 60 * 2) == 0;
+		} else {
+			m_DebugRunTimers = false;
+		}
 		if (m_DebugRunTimers) {
 			printf("Frame %i timing debugs\n", TimeHandler::getCurrentFrameNumber());
 			Logging::quickTimePush("Pre Frame");

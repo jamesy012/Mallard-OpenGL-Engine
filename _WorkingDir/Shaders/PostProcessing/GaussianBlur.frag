@@ -1,4 +1,5 @@
 #version 410
+//for the gaussian blur
 //https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson5
 in vec2 vTexCoord;
 

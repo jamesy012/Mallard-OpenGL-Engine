@@ -58,6 +58,10 @@ private:
 	Shader* m_ReflectionShader;
 	Shader* m_BlurShader;
 
+	Framebuffer* m_DepthOfFieldTest;
+	Shader* m_DOFGenShader;
+	Shader* m_DOFDrawShader;
+
 	static const unsigned int NUM_OF_PROJECTILES = 50;
 	Projectile* m_Projectiles[NUM_OF_PROJECTILES] = { nullptr };
 

@@ -14,8 +14,8 @@ void main() {
     vec2 screenUV = gl_FragCoord.xy/resolution;
     
     vec2 offset;
-    offset.x += (sin((time*0.2) + (screenUV.x*30)+(time + (screenUV.y*8))))*0.0045f;
-    offset.y += (sin((time+1029) + (screenUV.x*0.15f)+((time + 1948) + (screenUV.y*0.1))))*0.001f;
+    offset.x += (sin((time*3) + (screenUV.x*30)+(time + (screenUV.y*8))))*0.0055f;
+    offset.y += (sin((time+1029) + (screenUV.x*0.15f)+((time + 1948) + (screenUV.y*0.1))))*0.003f;
     
     screenUV.x = clamp(screenUV.x+offset.x,0,0.99f);
     screenUV.y = clamp(screenUV.y+offset.y,0,0.99f);

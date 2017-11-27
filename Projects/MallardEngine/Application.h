@@ -41,6 +41,7 @@ protected:
 		bool m_UpdateUICameraToScreenSize = true;
 		bool m_UpdateGameCameraToScreenSize = true;
 		bool m_AllowInternalFramebufferResizes = true;
+		bool m_RunDebugTimers = true;
 	} m_Flags;
 
 	Window* m_ApplicationWindow = nullptr;
@@ -54,6 +55,7 @@ protected:
 	Camera* m_CameraUi = nullptr;
 
 	//
+	Framebuffer* m_FbGameFrame;
 	Framebuffer* m_FbGameFrameCopy;
 	Framebuffer* m_FbUIFrame;
 	Framebuffer* m_FbCombinedFrame;
@@ -79,7 +81,6 @@ private:
 	//root transform for every transform
 	Transform* m_RootTransform;
 
-	Framebuffer* m_FbGameFrame;
 
 };
 

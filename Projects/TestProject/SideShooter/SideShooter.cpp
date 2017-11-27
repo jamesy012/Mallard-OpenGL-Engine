@@ -59,6 +59,22 @@ void SideShooter::startUp() {
 		m_BlurShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
 		m_BlurShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/GaussianBlur.frag");
 		m_BlurShader->linkShader();
+
+		m_DOFGenShader = new Shader();
+		m_DOFGenShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+		m_DOFGenShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/DOFGen.frag");
+		m_DOFGenShader->linkShader();
+		m_DOFDrawShader = new Shader();
+		m_DOFDrawShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+		m_DOFDrawShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/DOFDraw.frag");
+		m_DOFDrawShader->linkShader();
+	}
+	//framebuffers
+	{
+		m_DepthOfFieldTest = new Framebuffer();
+		m_DepthOfFieldTest->setSize(1024, 1024);
+		m_DepthOfFieldTest->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA, 16);
+		m_DepthOfFieldTest->genFramebuffer();
 	}
 	//textures
 	{
@@ -128,7 +144,7 @@ void SideShooter::startUp() {
 
 		m_ReflectionScaledBuffer = new Framebuffer();
 		//m_ReflectionScaledBuffer->setSize(256, 256);
-		m_ReflectionScaledBuffer->setSize(512, 512);
+		m_ReflectionScaledBuffer->setSize(1024, 1024);
 		m_ReflectionScaledBuffer->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA, 16);
 		m_ReflectionScaledBuffer->genFramebuffer();
 
@@ -197,6 +213,10 @@ void SideShooter::shutDown() {
 	delete m_ReflectionScaledBuffer;
 	delete m_BlurShader;
 
+	delete m_DOFGenShader;
+	delete m_DOFDrawShader;
+	delete m_DepthOfFieldTest;
+
 	for (unsigned int i = 0; i < NUM_OF_PROJECTILES; i++) {
 		if (m_Projectiles[i] != nullptr) {
 			delete m_Projectiles[i];
@@ -206,10 +226,10 @@ void SideShooter::shutDown() {
 
 void SideShooter::update() {
 	if (Input::wasKeyPressed(KEY_Q)) {
-		m_BlurShader->reloadShaders();
+		m_DOFDrawShader->reloadShaders();
 	}	
 	if (Input::wasKeyPressed(KEY_E)) {
-		m_ReflectionShader->reloadShaders();
+		m_DOFGenShader->reloadShaders();
 	}
 
 	m_Player->update();
@@ -319,6 +339,9 @@ void SideShooter::draw() {
 		Logging::quickTimePop(true);
 		Logging::quickTimePush("Normal Scene Render");
 	}
+
+	//Framebuffer::use(m_DepthOfFieldTest);
+	//Framebuffer::clearCurrentBuffer();
 	Framebuffer::use(nullptr);
 
 	//render ground
@@ -367,6 +390,87 @@ void SideShooter::draw() {
 		//glDepthMask(true);
 		glDisable(GL_BLEND);
 	}
+	Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
+
+	if (m_DebugRunTimers) {
+		Logging::quickTimePop(true);
+		Logging::quickTimePush("Normal Scene Render - DOF");
+	}
+	{
+
+
+		int width = Window::getMainWindow()->getFramebufferWidth();
+		int height = Window::getMainWindow()->getFramebufferHeight();
+		if (m_ReflectionScaledBuffer->getFramebufferWidth() != width || m_ReflectionScaledBuffer->getFramebufferHeight() != height) {
+			m_ReflectionScaledBuffer->resizeFramebuffer(width, height);
+		}
+		if (m_DepthOfFieldTest->getFramebufferWidth() != width || m_DepthOfFieldTest->getFramebufferHeight() != height) {
+			m_DepthOfFieldTest->resizeFramebuffer(width, height);
+		}
+
+		Shader::use(m_DOFGenShader);
+		Framebuffer::use(m_DepthOfFieldTest);
+		Framebuffer::clearCurrentBuffer(true, true);
+
+
+		m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture(1));
+		m_FullScreenQuad->draw();
+
+
+		Framebuffer::use(m_ReflectionScaledBuffer);
+		Framebuffer::clearCurrentBuffer(true, true);
+
+		Shader::use(m_DOFDrawShader);
+
+		m_FbGameFrame->getTexture(0)->bindTexture(1);
+		m_DepthOfFieldTest->getTexture()->bindTexture(2);
+
+
+		ShaderUniformData* radiusUniform = m_DOFDrawShader->getUniform(ShaderUniformTypes::FLOAT, "radius");
+		ShaderUniformData* dirUniform = m_DOFDrawShader->getUniform(ShaderUniformTypes::VEC2, "dir");
+		glm::vec2 dir[2] = { glm::vec2(1,0),glm::vec2(0,1) };
+		float radius[2] = { .2,.2 };
+
+		int loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "TexDiffuse1");
+		glUniform1i(loc, 1);
+		loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "depthTexture");
+		glUniform1i(loc, 2);
+
+		if (dirUniform != nullptr) {
+			dirUniform->setData(&dir[0]);
+			radiusUniform->setData(&radius[0]);
+		}
+
+		Shader::checkUniformChanges();
+
+		m_FullScreenQuad->setTexture(nullptr);
+		m_FullScreenQuad->draw();
+
+		Framebuffer::use(nullptr);
+		//Framebuffer::clearCurrentBuffer();
+
+		m_ReflectionScaledBuffer->getTexture(0)->bindTexture(1);
+
+		if (dirUniform != nullptr) {
+			dirUniform->setData(&dir[1]);
+			radiusUniform->setData(&radius[1]);
+		}
+
+		Shader::checkUniformChanges();
+
+		m_FullScreenQuad->setTexture(nullptr);
+		m_FullScreenQuad->draw();
+
+
+		//unbind texture
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE0 + 2);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
+
 	if (m_DebugRunTimers) {
 		Logging::quickTimePop(true);
 		Logging::quickTimePop(true);
