@@ -25,6 +25,7 @@ public:
 	//checks to see if we should have deleted this object or not
 	//will delete the memory from the pointer
 	virtual ~IResource() {
+		//please use unload() instead
 		assert(m_Resource_CanDelete);
 	}
 

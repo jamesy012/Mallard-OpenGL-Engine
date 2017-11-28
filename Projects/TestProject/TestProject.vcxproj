@@ -24,6 +24,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SideShooter\Enemys\Enemy.cpp" />
+    <ClCompile Include="SideShooter\Enemys\EnemyStationary.cpp" />
     <ClCompile Include="SideShooter\SideShooterCamera.cpp" />
     <ClCompile Include="SideShooter\Player.cpp" />
     <ClCompile Include="SideShooter\Projectile.cpp" />
@@ -32,6 +34,8 @@
     <ClCompile Include="TestApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SideShooter\Enemys\Enemy.h" />
+    <ClInclude Include="SideShooter\Enemys\EnemyStationary.h" />
     <ClInclude Include="SideShooter\SideShooterCamera.h" />
     <ClInclude Include="SideShooter\Player.h" />
     <ClInclude Include="SideShooter\Helpers.h" />

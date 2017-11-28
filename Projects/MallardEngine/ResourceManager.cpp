@@ -22,6 +22,7 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 		//create new mainResource, copy file path, and load
 		IResource* mainResource = a_Resource->resourceCreate();
 		mainResource->m_Resource_IsMain = true;
+		mainResource->m_Resource_CanDelete = false;
 		mainResource->m_Resource_FileName = a_Resource->m_Resource_FileName;
 		bool didLoad = mainResource->resourceLoad();
 		if (!didLoad) {
@@ -38,6 +39,8 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 	}
 	//there is a resource to copy from, so lets do that
 	a_Resource->resourceCopy(mainReference->resource);
+	a_Resource->m_Resource_CanDelete = false;
+
 	mainReference->resourceCount++;
 
 	return createdResource;

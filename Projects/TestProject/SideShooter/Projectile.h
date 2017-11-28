@@ -15,6 +15,8 @@ public:
 
 	float m_ProjectileSpeed = 100.0f;
 
+	float m_ProjectileSize = 3.0f;
+
 	//how long this projectile is alive in seconds
 	const float m_TimeAlive = 5.0f;
 	const float m_TimeAliveRandomOffsetMax = 2.0f;

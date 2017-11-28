@@ -33,6 +33,12 @@
     <ClCompile Include="SideShooter\SideShooterCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SideShooter\Enemys\Enemy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SideShooter\Enemys\EnemyStationary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestApp.h">
@@ -54,6 +60,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SideShooter\SideShooterContants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SideShooter\Enemys\Enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SideShooter\Enemys\EnemyStationary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

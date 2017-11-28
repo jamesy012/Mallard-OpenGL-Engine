@@ -25,3 +25,7 @@ void Object::draw() {
 void Object::drawInstance(unsigned int a_Amount) {
 	m_Renderable->drawInstance(a_Amount);
 }
+
+glm::vec3 Object::getPosition() {
+	return m_Transform.getGlobalPosition() + m_Renderable->m_Transform.getLocalPosition();
+}

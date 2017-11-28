@@ -16,6 +16,9 @@ public:
 
 	virtual void update() {};
 
+	//gets position of this objects transform + IRenderable offset
+	glm::vec3 getPosition();
+
 	IRenderable* m_Renderable;
 
 };
