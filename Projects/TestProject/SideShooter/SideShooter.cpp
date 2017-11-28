@@ -31,8 +31,10 @@
 #include "Player.h"
 #include "SideShooterCamera.h"
 #include "SideShooterContants.h"
+#include "EnemySpawner.h"
 
 #include "Enemys\EnemyStationary.h"
+
 
 static bool objectDistSort(glm::mat4& a, glm::mat4& b) {
 	return glm::value_ptr(a)[14] > glm::value_ptr(b)[14];
@@ -153,18 +155,7 @@ void SideShooter::startUp() {
 		m_PondMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture(0));
 	}
 
-	//Enemies
-	{
-		m_EnemyStationaryMesh = new Model();
-		m_EnemyStationaryMesh->load("Models\\SideShooter\\Enemy1.obj");
-
-		for (int i = 0; i < 4; i++) {
-			for (int q = -1; q < 0; q += 2) {
-				spawnEnemy(glm::vec3(q * 10, -10 + (i * 5), 0));
-			}
-		}
-	}
-
+	m_EnemySpawner = new EnemySpawner(this, m_Player);
 
 	//map generation
 	{
@@ -230,7 +221,7 @@ void SideShooter::shutDown() {
 	delete m_DOFDrawShader;
 	delete m_DepthOfFieldTest;
 
-	m_EnemyStationaryMesh->unload();
+
 
 	for (unsigned int i = 0; i < MAX_NUM_OF_PROJECTILES; i++) {
 		if (m_Projectiles[i] != nullptr) {
@@ -243,6 +234,8 @@ void SideShooter::shutDown() {
 			delete (EnemyStationary*) m_Enemies[i];
 		}
 	}
+
+	delete m_EnemySpawner;
 }
 
 void SideShooter::update() {
@@ -261,7 +254,20 @@ void SideShooter::update() {
 	m_Flags.m_RunDebugTimers ^= Input::wasKeyPressed(KEY_F1);
 
 	//adjust dof
-	{
+	if (m_IsDoingDofIntro) {
+		if (m_DofChangeStartTime < 0) {
+			m_DofChangeStartTime = TimeHandler::getCurrentTime();
+		} else {
+			float percentage = (TimeHandler::getCurrentTime() - m_DofChangeStartTime) / m_DofChangeDuration;
+			if (percentage > 1) {
+				m_IsDoingDofIntro = false;
+				percentage = 1;
+			}
+			ShaderUniformData* fDist = m_DOFGenShader->getUniform(ShaderUniformTypes::FLOAT, "focusDistance");
+			float value = lerp(m_StartingDof, m_TargetDof, percentage);
+			fDist->setData(&value);
+		}
+	} else {
 		int keys = 0;
 		keys |= Input::isKeyDown(KEY_KP_ADD) << 0;
 		keys |= Input::isKeyDown(KEY_KP_SUBTRACT) << 1;
@@ -302,14 +308,18 @@ void SideShooter::update() {
 		}
 	}
 
+	m_NumOfEnemiesAlive = 0;
 	for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
 		if (m_Enemies[i] != nullptr) {
 			m_Enemies[i]->update();
+			m_NumOfEnemiesAlive++;
 		}
 	}
 
 	//Collision check 
 	runCollisionCheck();
+
+	m_EnemySpawner->update();
 
 	m_Camera->update();
 
@@ -669,10 +679,10 @@ void SideShooter::runCollisionCheck() {
 	for (unsigned int i = 0; i < MAX_NUM_OF_PROJECTILES; i++) {
 		bool didHit = false;
 		if (m_Projectiles[i] != nullptr) {
-			glm::vec3 projPos = m_Projectiles[i]->getPosition();
+			glm::vec3 projPos = m_Projectiles[i]->getPositionCombined();
 			for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES; q++) {
 				if (m_Enemies[q] != nullptr) {
-					glm::vec3 dist = projPos - m_Enemies[q]->getPosition();
+					glm::vec3 dist = projPos - m_Enemies[q]->getPositionCombined();
 					if (abs(dist.x) < m_Projectiles[i]->m_ProjectileSize &&
 						abs(dist.y) < m_Projectiles[i]->m_ProjectileSize) {
 
@@ -690,7 +700,7 @@ void SideShooter::runCollisionCheck() {
 				m_Projectiles[i] = nullptr;
 			}
 		}
-	}	
+	}
 }
 
 void SideShooter::sceneRender(Camera * a_Camera, bool a_CloseOnly) {
@@ -710,6 +720,33 @@ void SideShooter::sceneRender(Camera * a_Camera, bool a_CloseOnly) {
 		}
 
 		Logging::quickGpuDebugGroupPop();
+
+		if (m_NumOfEnemiesAlive != 0) {
+			glm::mat4* enemies = new glm::mat4[m_NumOfEnemiesAlive];
+			int index = 0;
+			for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
+				if (m_Enemies[i] != nullptr) {
+					enemies[index++] = m_Enemies[i]->getGlobalMatrixCombined();
+					if (index > m_NumOfEnemiesAlive) {
+						break;
+					}
+				}
+			}
+			drawObjectInstanced(m_EnemySpawner->m_EnemyStationaryMesh, &enemies[0], m_NumOfEnemiesAlive);
+
+			delete enemies;
+		}
+		{
+			glm::mat4 projectiles[MAX_NUM_OF_PROJECTILES];
+			int index = 0;
+			for (unsigned int i = 0; i < MAX_NUM_OF_PROJECTILES; i++) {
+				if (m_Projectiles[i] != nullptr) {
+					projectiles[index++] = m_Projectiles[i]->getGlobalMatrixCombined();
+				}
+			}
+			drawObjectInstanced(m_Box, &projectiles[0], index);
+		}
+	
 	}
 	{
 		Shader::use(m_ShaderBasic);
@@ -739,25 +776,25 @@ void SideShooter::sceneRender(Camera * a_Camera, bool a_CloseOnly) {
 		//Logging::quickGpuDebugGroupPop();
 
 		//draw Projectiles
-		uniformColor->setData(&colors[1]);
-		Shader::applyUniform(uniformColor);
-
-		for (unsigned int i = 0; i < MAX_NUM_OF_PROJECTILES; i++) {
-			if (m_Projectiles[i] != nullptr) {
-				//m_Projectiles[i]->draw();
-				drawObject(m_Projectiles[i]);
-			}
-		}
-
-		uniformColor->setData(&colors[0]);
-		Shader::applyUniform(uniformColor);
+		//uniformColor->setData(&colors[1]);
+		//Shader::applyUniform(uniformColor);
+		//
+		//for (unsigned int i = 0; i < MAX_NUM_OF_PROJECTILES; i++) {
+		//	if (m_Projectiles[i] != nullptr) {
+		//		//m_Projectiles[i]->draw();
+		//		drawObject(m_Projectiles[i]);
+		//	}
+		//}
+		//
+		//uniformColor->setData(&colors[0]);
+		//Shader::applyUniform(uniformColor);
 
 		//draw enemies
-		for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
-			if (m_Enemies[i] != nullptr) {
-				//m_Projectiles[i]->draw();
-				drawObject(m_Enemies[i]);
-			}
-		}
+		//for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
+		//	if (m_Enemies[i] != nullptr) {
+		//		//m_Projectiles[i]->draw();
+		//		drawObject(m_Enemies[i]);
+		//	}
+		//}
 	}
 }

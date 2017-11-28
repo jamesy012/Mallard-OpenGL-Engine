@@ -18,6 +18,7 @@ class SideShooterCamera;
 class Camera;
 
 class Enemy;
+class EnemySpawner;
 
 class SideShooter :	public Application {
 public:
@@ -32,6 +33,7 @@ public:
 	Projectile* spwanProjectile(Transform* a_Position, bool a_Right, IRenderable* a_Model);
 	Enemy* spawnEnemy(glm::vec3 a_Position);
 
+	unsigned int m_NumOfEnemiesAlive = 0;
 
 	//list of application option flags
 	struct {
@@ -85,12 +87,18 @@ private:
 	unsigned int m_NumofTreesGenerated = NUM_OF_TREES;
 	glm::mat4 m_UniformTrees[NUM_OF_TREES];
 
-	//enemys
-	//we store a loaded reference to all enemies meshs, so we dont have to reload the mesh from file
-	Model* m_EnemyStationaryMesh;
+	EnemySpawner* m_EnemySpawner;
 
+	//enemys
 	static const unsigned int MAX_NUM_OF_ENEMIES = 50;
 	Enemy* m_Enemies[MAX_NUM_OF_ENEMIES] = { nullptr };
 
+
+	//dof change
+	bool m_IsDoingDofIntro = true;
+	const float m_TargetDof = 95.0f;
+	float m_StartingDof = 200.0f;
+	float m_DofChangeStartTime = -1;
+	const float m_DofChangeDuration = 5.0f;
 };
 

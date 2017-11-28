@@ -17,7 +17,9 @@ public:
 	virtual void update() {};
 
 	//gets position of this objects transform + IRenderable offset
-	glm::vec3 getPosition();
+	glm::vec3 getPositionCombined();
+	//returns the transforms global matrix multiplyed by the m_Renderable's global matrix
+	glm::mat4 getGlobalMatrixCombined();
 
 	IRenderable* m_Renderable;
 

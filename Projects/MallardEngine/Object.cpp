@@ -26,6 +26,13 @@ void Object::drawInstance(unsigned int a_Amount) {
 	m_Renderable->drawInstance(a_Amount);
 }
 
-glm::vec3 Object::getPosition() {
+glm::vec3 Object::getPositionCombined() {
 	return m_Transform.getGlobalPosition() + m_Renderable->m_Transform.getLocalPosition();
+}
+
+glm::mat4 Object::getGlobalMatrixCombined() {
+	if (m_Renderable == nullptr) {
+		return m_Transform.getGlobalMatrix();
+	}
+	return  m_Transform.getGlobalMatrix() * m_Renderable->getTransformMatrix();
 }

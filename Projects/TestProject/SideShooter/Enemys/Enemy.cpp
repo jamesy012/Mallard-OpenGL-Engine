@@ -14,7 +14,7 @@ Enemy::Enemy(IRenderable* a_Model, Player* a_Player, glm::vec3 a_StartingPos, IR
 	m_StartTime = TimeHandler::getCurrentTime();
 	m_StartPos = a_StartingPos;
 
-	m_Transform.setPosition(m_StartPos + glm::vec3(0, SSConstants::GAME_HEIGHT, 0));
+	m_Transform.setPosition(m_StartPos + glm::vec3(0, SSConstants::GAME_HEIGHT*3, 0));
 }
 
 

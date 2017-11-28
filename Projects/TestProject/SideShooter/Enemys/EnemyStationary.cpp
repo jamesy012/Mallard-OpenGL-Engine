@@ -8,9 +8,16 @@
 EnemyStationary::EnemyStationary(IRenderable* a_Model, Player* a_Player, glm::vec3 a_StartingPos, IRenderable* a_ProjectileModel, SideShooter* a_App)
 	: Enemy(a_Model, a_Player, a_StartingPos, a_ProjectileModel, a_App) {
 	//m_TimeScale = getRandomWithinRange(1.0f, 10.0f);
-	m_TimeOffset = getRandomWithinRange(-0.2f, 0.2f);
+	m_TimeOffset = getRandomWithinRange(-0.3f, 0.3f);
 
 	loadModel("Models\\SideShooter\\Enemy1.obj");
+
+
+	m_Renderable->m_Transform.rotate(glm::vec3(
+		0,
+		getRandomWithinRange(0,360),
+		0));
+
 }
 
 EnemyStationary::~EnemyStationary() {

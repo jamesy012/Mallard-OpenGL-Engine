@@ -6,7 +6,7 @@ public:
 	EnemyStationary(IRenderable* a_Model, Player* a_Player, glm::vec3 a_StartingPos, IRenderable* a_ProjectileModel, SideShooter* a_App);
 	~EnemyStationary();
 
-	float const m_MovementScale = 5;
+	float const m_MovementScale = 3;
 	float m_TimeScale = 1;
 
 	float const m_RotationSpeed = 30.0f;
