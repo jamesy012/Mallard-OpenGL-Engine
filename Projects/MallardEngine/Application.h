@@ -40,8 +40,10 @@ protected:
 		bool m_CloseOnEscape = true;
 		bool m_UpdateUICameraToScreenSize = true;
 		bool m_UpdateGameCameraToScreenSize = true;
+		//when the window is resized should we also resize the framebuffers
 		bool m_AllowInternalFramebufferResizes = true;
-		bool m_RunDebugTimers = true;
+		//allow the debug timer to run every second, when it does run m_DebugRunTimers will be true
+		bool m_RunDebugTimers = false;
 	} m_Flags;
 
 	Window* m_ApplicationWindow = nullptr;
@@ -54,7 +56,7 @@ protected:
 	Camera* m_CameraGame = nullptr;
 	Camera* m_CameraUi = nullptr;
 
-	//
+	//framebuffers for game, ui and rendering to the screen render
 	Framebuffer* m_FbGameFrame;
 	Framebuffer* m_FbGameFrameCopy;
 	Framebuffer* m_FbUIFrame;
@@ -69,7 +71,9 @@ protected:
 	Shader* m_ShaderPPBcs;
 	Shader* m_ShaderBasic;
 
+	//shader for rendering text
 	Shader* m_ShaderText;
+	//reference to a precreated font object
 	Font* m_Font;
 private:
 	void setCallbacksForWindow(Window* a_Window);
@@ -81,6 +85,7 @@ private:
 	//root transform for every transform
 	Transform* m_RootTransform;
 
+	float m_LastDebugTimerRun = 0;
 
 };
 

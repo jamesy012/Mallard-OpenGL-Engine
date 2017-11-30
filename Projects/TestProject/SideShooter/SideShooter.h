@@ -46,14 +46,13 @@ private:
 
 	void runCollisionCheck();
 
-	void sceneRender(Camera* a_Camera, bool a_CloseOnly);
+	void sceneRender(bool a_CloseOnly, bool a_IncludeGround);
 
 	Model* m_TreeModel;
 	Mesh* m_Box;
 	Model* m_QuadMesh;
 	Model* m_PondMesh;
 	Texture* m_GrassTexture;
-
 
 	Shader* m_UniformShader;
 
@@ -75,26 +74,35 @@ private:
 	Shader* m_ReflectionShader;
 	Shader* m_BlurShader;
 
+	//Depth of field
 	Framebuffer* m_DepthOfFieldTest;
 	Shader* m_DOFGenShader;
 	Shader* m_DOFDrawShader;
 
+	//Shadows
+	Framebuffer* m_ShadowDirectionalLightFb;
+	Shader* m_ShadowGenInstancedShader;
+	Shader* m_ShadowDrawInstancedShader;
+	Camera* m_ShadowDirectionalCamera;
+	glm::vec3 m_LightDir = glm::normalize(glm::vec3(-2.0f, -2.5f, -3.0f));
+	const float m_ShadowMapSize = 100.0f;
+
+	//common object arrays
 	static const unsigned int MAX_NUM_OF_PROJECTILES = 50;
 	Projectile* m_Projectiles[MAX_NUM_OF_PROJECTILES] = { nullptr };
 
-
-	static const unsigned int NUM_OF_TREES = 250;
+	static const unsigned int NUM_OF_TREES = 384u;
 	unsigned int m_NumofTreesGenerated = NUM_OF_TREES;
 	glm::mat4 m_UniformTrees[NUM_OF_TREES];
 
+	//enemys
 	EnemySpawner* m_EnemySpawner;
 
-	//enemys
 	static const unsigned int MAX_NUM_OF_ENEMIES = 50;
 	Enemy* m_Enemies[MAX_NUM_OF_ENEMIES] = { nullptr };
 
 
-	//dof change
+	//dof intro changer
 	bool m_IsDoingDofIntro = true;
 	const float m_TargetDof = 95.0f;
 	float m_StartingDof = 200.0f;

@@ -150,6 +150,7 @@ void Application::run() {
 	//show loading text before we run startup
 	{
 		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_DEPTH_TEST);
 		Shader::use(m_ShaderText);
 
@@ -181,9 +182,6 @@ void Application::run() {
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	//glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	if (!m_SkyboxGame->hasBeenGenerated()) {
 		m_SkyboxGame->genSkybox("Textures\\Skybox\\Vindelalven\\");
 	}
@@ -202,12 +200,14 @@ void Application::run() {
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
 		if (m_Flags.m_RunDebugTimers) {
-			m_DebugRunTimers = (TimeHandler::getCurrentFrameNumber() % 60 * 2) == 0;
+			m_DebugRunTimers = (TimeHandler::getCurrentTime() - m_LastDebugTimerRun) > 1;
 		} else {
 			m_DebugRunTimers = false;
 		}
 		if (m_DebugRunTimers) {
-			printf("Frame %i timing debugs\n", TimeHandler::getCurrentFrameNumber());
+			//update the last run variable time for the debug timer
+			m_LastDebugTimerRun = TimeHandler::getCurrentTime();
+			printf("-- Frame %i timing debugs\n", TimeHandler::getCurrentFrameNumber());
 			Logging::quickTimePush("Pre Frame");
 		}
 		//update time
@@ -312,16 +312,16 @@ void Application::run() {
 				m_FbGameFrame->resizeFramebuffer(256, 256);
 			}
 
-			if (Input::isKeyDown(GLFW_KEY_G)) {
-				Shader::use(m_ShaderPPBasic);
-			}
-			else {
-				Shader::use(m_ShaderPPBcs);
-			}
-			Shader::checkUniformChanges();
 			//set up combined frame framebuffer
 			Framebuffer::setDefaultFramebuffer(m_FbCombinedFrame);
 			Framebuffer::clearCurrentBuffer();
+			//set which shader we are using for drawing the game frame
+			if (Input::isKeyDown(GLFW_KEY_G)) {
+				Shader::use(m_ShaderPPBasic);
+			} else {
+				Shader::use(m_ShaderPPBcs);
+			}
+			Shader::checkUniformChanges();
 
 			//draw the game frame 
 			m_FullScreenQuad->setTexture(m_FbGameFrame->getTexture());

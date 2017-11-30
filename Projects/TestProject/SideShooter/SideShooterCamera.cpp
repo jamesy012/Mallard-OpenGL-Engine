@@ -1,5 +1,7 @@
 #include "SideShooterCamera.h"
 
+#include "TimeHandler.h"
+
 #include "Player.h"
 #include "Helpers.h"
 #include "SideShooterContants.h"
@@ -36,7 +38,7 @@ void SideShooterCamera::update() {
 		targetPos.y += abs(movement.x) * 2;
 
 		//m_Transform.setPosition(targetPos + m_Offset);
-		glm::vec3 newPos = lerp(m_Transform.getGlobalPosition(), targetPos, 0.1);
+		glm::vec3 newPos = lerp(m_Transform.getGlobalPosition(), targetPos, 3.0f * TimeHandler::getDeltaTime());
 		m_Transform.setPosition(newPos);
 	}
 
@@ -45,8 +47,8 @@ void SideShooterCamera::update() {
 		float rotTargetZ = movement.x * -4;
 		float rotTargetX = movement.y * 10;
 
-		m_RotCurrentZ = lerp(m_RotCurrentZ, rotTargetZ, m_RotSpeedZ);
-		m_RotCurrentX = lerp(m_RotCurrentX, rotTargetX, m_RotSpeedX);
+		m_RotCurrentZ = lerp(m_RotCurrentZ, rotTargetZ, m_RotSpeedZ * TimeHandler::getDeltaTime());
+		m_RotCurrentX = lerp(m_RotCurrentX, rotTargetX, m_RotSpeedX * TimeHandler::getDeltaTime());
 
 		glm::vec3 rot;
 		rot.z = m_RotCurrentZ;

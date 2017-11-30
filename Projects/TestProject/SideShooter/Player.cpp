@@ -102,5 +102,5 @@ void Player::swapDirection() {
 	m_IsChangingDirection = true;
 	m_FacingRight = !m_FacingRight;
 	m_SwapStartTime = TimeHandler::getCurrentTime();
-	m_DirectionFacing = m_FacingRight ? 1 : -1;
+	m_DirectionFacing = m_FacingRight ? 1.0f : -1.0f;
 }

@@ -18,6 +18,6 @@ private:
 
 	float m_RotCurrentZ = 0, m_RotCurrentX = 0;
 	//what mix of RotCurrent_ and the target rotation do we take in the lerp
-	const float m_RotSpeedZ = 0.15f, m_RotSpeedX = 0.07f;
+	const float m_RotSpeedZ = 9.375f, m_RotSpeedX = 4.375;
 };
 

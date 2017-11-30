@@ -28,7 +28,7 @@ Enemy::~Enemy() {
 
 void Enemy::update() {
 	if (m_IsDoingIntro) {
-		glm::vec3 lerpPos = lerp(m_Transform.getLocalPosition(), m_StartPos + glm::vec3(0,-2,0), 0.01);
+		glm::vec3 lerpPos = lerp(m_Transform.getLocalPosition(), m_StartPos + glm::vec3(0,-2,0), 0.625f * TimeHandler::getDeltaTime());
 		if (lerpPos.y < m_StartPos.y) {
 			m_IsDoingIntro = false;
 			m_StartTime = TimeHandler::getCurrentTime();

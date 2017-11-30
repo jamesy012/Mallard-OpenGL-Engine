@@ -16,7 +16,7 @@ uniform vec3 luminanceWeights = vec3(0.2126f,0.5152f,0.1722f);
 uniform vec3 gamma = vec3(1.25f);
 
 //radius of our vignette, where 0.5 results in a circle fitting the screen
-uniform float vignetteRadius = 0.75f;
+uniform float vignetteRadius = 0.65f;
 //softness of our vignette, between 0.0 and 1.0
 uniform float vignetteSoftness = 0.3f;
 //center of the vignette
