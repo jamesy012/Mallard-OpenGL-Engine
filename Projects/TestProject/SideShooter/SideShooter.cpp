@@ -160,7 +160,7 @@ void SideShooter::startUp() {
 	{
 		m_ShadowDirectionalLightFb = new Framebuffer();
 		m_ShadowDirectionalLightFb->setSize(1024, 1024);
-		m_ShadowDirectionalLightFb->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
+		m_ShadowDirectionalLightFb->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH, 32);
 		m_ShadowDirectionalLightFb->genFramebuffer();
 
 		m_ShadowGenInstancedShader = new Shader();
@@ -173,7 +173,7 @@ void SideShooter::startUp() {
 		m_ShadowDrawInstancedShader->linkShader();
 
 		m_ShadowDirectionalCamera = new Camera();
-		m_ShadowDirectionalCamera->setOrthographic(-m_ShadowMapSize, m_ShadowMapSize, -m_ShadowMapSize / 2, m_ShadowMapSize, -50, 300);
+		m_ShadowDirectionalCamera->setOrthographic(-m_ShadowMapSize, m_ShadowMapSize, -m_ShadowMapSize / 2, m_ShadowMapSize, -50, 200);
 		m_ShadowDirectionalCamera->m_Transform.setLookAt(m_LightDir);
 	}
 
@@ -420,7 +420,7 @@ void SideShooter::draw() {
 		Logging::quickTimePop(true);
 		Logging::quickTimePush("Reflection Blur Render");
 	}
-	{
+	if (m_DoRenderPonds) {
 		Framebuffer::use(m_ReflectionScaledBuffer);
 		Framebuffer::clearCurrentBuffer(true, false);
 		Shader::use(m_BlurShader);
@@ -501,20 +501,24 @@ void SideShooter::draw() {
 		uniformPvm->setData(m_Camera);
 		Shader::applyUniform(uniformPvm);
 
+		int numOfPondRenders = 0;
 		//m_QuadMesh->m_Meshs[0]->setTexture(m_ReflectionBuffer->getTexture());
 		for (int i = 0; i < NUM_OF_PONDS; i++) {
-			drawObject(m_Ponds[i], true, m_PondSize);
+			numOfPondRenders += drawObject(m_Ponds[i], true, m_PondSize);
 		}
 		glDepthFunc(GL_LESS);
 		//glDepthMask(true);
 		glDisable(GL_BLEND);
+	
+		m_DoRenderPonds = numOfPondRenders != 0;
+
 	}
 
 
 	if (m_DebugRunTimers) {
 		Logging::quickTimePop(true);
 	}
-
+	//DEPTH OF FIELD
 	if (m_AppOptions.m_EnableDof) {
 		if (m_DebugRunTimers) {
 			Logging::quickTimePush("Normal Scene Render - DOF");
@@ -601,29 +605,29 @@ void SideShooter::draw() {
 		Logging::quickTimePop(true);
 	}
 
-	{
-		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
-		Transform model;
-		Shader::use(m_ShaderBasic);
-
-		ShaderUniformData* cameraPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
-		ShaderUniformData* modelMatrix = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
-
-		model = m_CameraMain->m_Transform;
-		model.translate(glm::vec3(-15, 0, -20), false);
-		model.rotate(glm::vec3(90, 0, 0));
-		model.setScale(3);
-
-		cameraPvm->setData(&m_CameraMain->getProjectionViewMatrix());
-		Shader::applyUniform(cameraPvm);
-		modelMatrix->setData(&model);
-		Shader::applyUniform(modelMatrix);
-
-		m_FullScreenQuad->setTexture(m_ShadowDirectionalLightFb->getTexture());
-		m_FullScreenQuad->draw();
-
-		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
-	}
+	//{
+	//	Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
+	//	Transform model;
+	//	Shader::use(m_ShaderBasic);
+	//
+	//	ShaderUniformData* cameraPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
+	//	ShaderUniformData* modelMatrix = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
+	//
+	//	model = m_CameraMain->m_Transform;
+	//	model.translate(glm::vec3(-15, 0, -20), false);
+	//	model.rotate(glm::vec3(90, 0, 0));
+	//	model.setScale(3);
+	//
+	//	cameraPvm->setData(&m_CameraMain->getProjectionViewMatrix());
+	//	Shader::applyUniform(cameraPvm);
+	//	modelMatrix->setData(&model);
+	//	Shader::applyUniform(modelMatrix);
+	//
+	//	m_FullScreenQuad->setTexture(m_ShadowDirectionalLightFb->getTexture());
+	//	m_FullScreenQuad->draw();
+	//
+	//	Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
+	//}
 }
 
 void SideShooter::drawUi() {
@@ -733,10 +737,11 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 			a_Renderable->drawInstance(amountToRender);
 		}
 	}
+
 }
 
-void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull, float a_CullOffset) {
-
+bool SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull, float a_CullOffset) {
+	bool didRender = false;
 	glm::vec3 startingPos = a_Renderable->m_Transform.getGlobalPosition();
 
 	for (int i = -1; i < 2; i++) {
@@ -751,9 +756,10 @@ void SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull, float a_Cul
 
 		a_Renderable->m_Transform.setPosition(newPos);
 		a_Renderable->draw();
+		didRender = true;
 	}
 	a_Renderable->m_Transform.setPosition(startingPos);
-
+	return didRender;
 }
 
 void SideShooter::runCollisionCheck() {

@@ -42,7 +42,7 @@ public:
 	} m_AppOptions;
 private:
 	void drawObjectInstanced(IRenderable* a_Renderable, glm::mat4* a_Array, int a_ArraySize);
-	void drawObject(IRenderable* a_Renderable, bool a_Cull = true, float a_CullOffset  = 0);
+	bool drawObject(IRenderable* a_Renderable, bool a_Cull = true, float a_CullOffset  = 0);
 
 	void runCollisionCheck();
 
@@ -73,6 +73,7 @@ private:
 	Camera* m_ReflectionCamera;
 	Shader* m_ReflectionShader;
 	Shader* m_BlurShader;
+	bool m_DoRenderPonds = true;
 
 	//Depth of field
 	Framebuffer* m_DepthOfFieldTest;

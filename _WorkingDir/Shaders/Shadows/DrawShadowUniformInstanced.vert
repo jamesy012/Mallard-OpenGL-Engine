@@ -9,6 +9,7 @@ out vec4 vNormal;
 out vec4 vShadowCoord;
 out vec2 vTexCoord;
 out vec4 vVertexColor;
+out vec4 vWorldPosition;
 
 uniform mat4 projectionViewMatrix;
 uniform mat4 models[128];
@@ -29,4 +30,5 @@ void main() {
     vNormal = normalRot * normal;    
     vTexCoord = texCoords;
 	vVertexColor = vertexColor;
+	vWorldPosition = models[gl_InstanceID] * position;
 }
