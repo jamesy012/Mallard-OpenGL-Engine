@@ -87,8 +87,17 @@ void SideShooter::startUp() {
 	}
 	//model/meshs
 	{
-		m_TreeModel = new Model();
-		m_TreeModel->load("Models/SideShooter/lowpolytree.obj");
+		//m_TreeModel = new Model();
+		//m_TreeModel->load("Models/SideShooter/lowpolytree.obj");
+		//m_TreeModel2 = new Model();
+		//m_TreeModel2->load("Models\\Low Poly Forest Decoration Pack\\Tree3.1.obj");
+		for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
+			m_TreeModels[i] = new Model();
+		}
+		m_TreeModels[0]->load("Models/SideShooter/lowpolytree.obj");
+		m_TreeModels[1]->load("Models\\Low Poly Forest Decoration Pack\\Tree3.1.obj");
+		m_TreeModels[2]->load("Models\\Low Poly Forest Decoration Pack\\Tree1.1.obj");
+		m_TreeModels[3]->load("Models\\Low Poly Forest Decoration Pack\\Tree2.2.obj");
 		//m_TreeModel->m_Transform.setScale(0.05f);
 
 		m_Box = new Mesh();
@@ -181,6 +190,8 @@ void SideShooter::startUp() {
 
 	//map generation
 	{
+		unsigned int unuseableTrees = 0;
+		unsigned int treeIndex = 0;
 		//glm::vec3 pondPos = m_Pond->m_Transform.getLocalPosition();
 		for (int i = 0; i < NUM_OF_TREES; i++) {
 			Transform t;
@@ -195,12 +206,19 @@ void SideShooter::startUp() {
 					break;
 				}
 			}
+			t.setPosition(treePos);
 			if (failedPondTest) {
+				t.translate(glm::vec3(0,0,-999));
+				glm::mat4 pos = t.getLocalMatrix();
+				unuseableTrees++;
+				m_UniformTrees[NUM_OF_TREES - unuseableTrees] = pos;
+				m_UniformTreesSorted[i] = pos;
+
+
 				m_NumofTreesGenerated--;
-				i--;
 				continue;
 			}
-			t.setPosition(treePos);
+			
 			t.setScale(getRandomWithinRange(2, 5));
 			float xzRot = 8.0f;
 			t.setRotation(
@@ -208,14 +226,19 @@ void SideShooter::startUp() {
 					getRandomWithinRange(-xzRot, xzRot),
 					getRandomWithinRange(0, 360),
 					getRandomWithinRange(-xzRot, xzRot)));
-			m_UniformTrees[i] = t.getGlobalMatrix();
+			m_UniformTrees[treeIndex++] = t.getGlobalMatrix();
+			m_UniformTreesSorted[i] = m_UniformTrees[treeIndex-1];
 		}
-		std::sort(std::begin(m_UniformTrees), std::end(m_UniformTrees), objectDistSort);
+		std::sort(std::begin(m_UniformTreesSorted), std::end(m_UniformTreesSorted), objectDistSort);
 	}
 }
 
 void SideShooter::shutDown() {
-	m_TreeModel->unload();
+	//m_TreeModel->unload();
+	//m_TreeModel2->unload();
+	for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
+		m_TreeModels[i]->unload();
+	}
 	m_QuadMesh->unload();
 	m_GrassTexture->unload();
 	m_PondMesh->unload();
@@ -483,6 +506,9 @@ void SideShooter::draw() {
 		Shader::checkUniformChanges();
 
 		sceneRender(false, true);
+
+		glActiveTexture(GL_TEXTURE0 + 3);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	//render reflection ponds
@@ -798,12 +824,21 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 		{
 			Logging::quickGpuDebugGroupPush("TREE RENDER1");
 
+#if USE_ONE_TREE_MODEL == true
 			if (a_CloseOnly) {
 				int maxAmount = std::min(128u, m_NumofTreesGenerated);
-				drawObjectInstanced(m_TreeModel, &m_UniformTrees[0], maxAmount);
+				drawObjectInstanced(m_TreeModels[0], &m_UniformTreesSorted[0], maxAmount);
 			} else {
-				drawObjectInstanced(m_TreeModel, &m_UniformTrees[0], m_NumofTreesGenerated);
+				drawObjectInstanced(m_TreeModels[0], &m_UniformTrees[0], m_NumofTreesGenerated);
+			//	drawObjectInstanced(m_TreeModel2, &m_UniformTrees[m_NumofTreesGenerated/2], m_NumofTreesGenerated/2);
 			}
+#else
+			unsigned int useableTrees = m_NumofTreesGenerated / NUM_OF_TREE_MODELS;
+			for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
+				drawObjectInstanced(m_TreeModels[i], &m_UniformTrees[useableTrees*i], useableTrees);
+
+			}
+#endif // USE_ONE_TREE_MODEL
 
 			Logging::quickGpuDebugGroupPop();
 		}

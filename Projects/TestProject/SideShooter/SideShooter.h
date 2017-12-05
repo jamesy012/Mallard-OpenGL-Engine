@@ -20,6 +20,9 @@ class Camera;
 class Enemy;
 class EnemySpawner;
 
+#define USE_ONE_TREE_MODEL false
+
+
 class SideShooter :	public Application {
 public:
 	// Inherited via Application
@@ -48,7 +51,12 @@ private:
 
 	void sceneRender(bool a_CloseOnly, bool a_IncludeGround);
 
-	Model* m_TreeModel;
+	static const unsigned int NUM_OF_TREES = 384u;//512u;
+	static const unsigned int NUM_OF_TREE_MODELS = 4u;
+	static const unsigned int NUM_OF_TREES_PER_MODEL = NUM_OF_TREES / NUM_OF_TREE_MODELS;
+
+	//Model* m_TreeModel;
+	Model* m_TreeModels[NUM_OF_TREE_MODELS];
 	Mesh* m_Box;
 	Model* m_QuadMesh;
 	Model* m_PondMesh;
@@ -92,9 +100,10 @@ private:
 	static const unsigned int MAX_NUM_OF_PROJECTILES = 50;
 	Projectile* m_Projectiles[MAX_NUM_OF_PROJECTILES] = { nullptr };
 
-	static const unsigned int NUM_OF_TREES = 384u;
+
 	unsigned int m_NumofTreesGenerated = NUM_OF_TREES;
 	glm::mat4 m_UniformTrees[NUM_OF_TREES];
+	glm::mat4 m_UniformTreesSorted[NUM_OF_TREES];
 
 	//enemys
 	EnemySpawner* m_EnemySpawner;
