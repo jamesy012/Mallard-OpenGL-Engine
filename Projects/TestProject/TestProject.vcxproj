@@ -26,6 +26,7 @@
   <ItemGroup>
     <ClCompile Include="SideShooter\EnemySpawner.cpp" />
     <ClCompile Include="SideShooter\Enemys\Enemy.cpp" />
+    <ClCompile Include="SideShooter\Enemys\EnemySider.cpp" />
     <ClCompile Include="SideShooter\Enemys\EnemyStationary.cpp" />
     <ClCompile Include="SideShooter\SideShooterCamera.cpp" />
     <ClCompile Include="SideShooter\Player.cpp" />
@@ -37,6 +38,7 @@
   <ItemGroup>
     <ClInclude Include="SideShooter\EnemySpawner.h" />
     <ClInclude Include="SideShooter\Enemys\Enemy.h" />
+    <ClInclude Include="SideShooter\Enemys\EnemySider.h" />
     <ClInclude Include="SideShooter\Enemys\EnemyStationary.h" />
     <ClInclude Include="SideShooter\SideShooterCamera.h" />
     <ClInclude Include="SideShooter\Player.h" />

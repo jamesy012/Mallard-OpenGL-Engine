@@ -42,6 +42,9 @@
     <ClCompile Include="SideShooter\EnemySpawner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SideShooter\Enemys\EnemySider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestApp.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SideShooter\EnemySpawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SideShooter\Enemys\EnemySider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

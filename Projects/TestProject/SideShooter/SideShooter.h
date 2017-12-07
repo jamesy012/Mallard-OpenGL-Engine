@@ -18,7 +18,8 @@ class SideShooterCamera;
 class Camera;
 
 class Enemy;
-class EnemySpawner;
+
+#include "EnemySpawner.h"
 
 #define USE_ONE_TREE_MODEL false
 
@@ -34,9 +35,9 @@ public:
 
 	//spawn a projecile at a_Position
 	Projectile* spwanProjectile(Transform* a_Position, bool a_Right, IRenderable* a_Model);
-	Enemy* spawnEnemy(glm::vec3 a_Position);
+	Enemy* spawnEnemy(EnemyTypes a_EnemyType, glm::vec3 a_Position);
 
-	unsigned int m_NumOfEnemiesAlive = 0;
+	unsigned int m_NumOfEnemiesAlive[(unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES] = { 0 };
 
 	//list of application option flags
 	struct {
@@ -51,7 +52,7 @@ private:
 
 	void sceneRender(bool a_CloseOnly, bool a_IncludeGround);
 
-	static const unsigned int NUM_OF_TREES = 384u;//512u;
+	static const unsigned int NUM_OF_TREES = 1024u;//512u;
 	static const unsigned int NUM_OF_TREE_MODELS = 4u;
 	static const unsigned int NUM_OF_TREES_PER_MODEL = NUM_OF_TREES / NUM_OF_TREE_MODELS;
 
@@ -108,8 +109,8 @@ private:
 	//enemys
 	EnemySpawner* m_EnemySpawner;
 
-	static const unsigned int MAX_NUM_OF_ENEMIES = 50;
-	Enemy* m_Enemies[MAX_NUM_OF_ENEMIES] = { nullptr };
+	static const unsigned int MAX_NUM_OF_ENEMIES_PER_TYPE = 10;
+	Enemy* m_Enemies[(unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES][MAX_NUM_OF_ENEMIES_PER_TYPE] = { nullptr };
 
 
 	//dof intro changer

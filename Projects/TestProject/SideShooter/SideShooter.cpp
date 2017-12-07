@@ -31,9 +31,9 @@
 #include "Player.h"
 #include "SideShooterCamera.h"
 #include "SideShooterContants.h"
-#include "EnemySpawner.h"
 
 #include "Enemys\EnemyStationary.h"
+#include "Enemys\EnemySider.h"
 
 
 static bool objectDistSort(glm::mat4& a, glm::mat4& b) {
@@ -208,7 +208,7 @@ void SideShooter::startUp() {
 			}
 			t.setPosition(treePos);
 			if (failedPondTest) {
-				t.translate(glm::vec3(0,0,-999));
+				t.translate(glm::vec3(0, 0, -999));
 				glm::mat4 pos = t.getLocalMatrix();
 				unuseableTrees++;
 				m_UniformTrees[NUM_OF_TREES - unuseableTrees] = pos;
@@ -218,7 +218,7 @@ void SideShooter::startUp() {
 				m_NumofTreesGenerated--;
 				continue;
 			}
-			
+
 			t.setScale(getRandomWithinRange(2, 5));
 			float xzRot = 8.0f;
 			t.setRotation(
@@ -227,7 +227,7 @@ void SideShooter::startUp() {
 					getRandomWithinRange(0, 360),
 					getRandomWithinRange(-xzRot, xzRot)));
 			m_UniformTrees[treeIndex++] = t.getGlobalMatrix();
-			m_UniformTreesSorted[i] = m_UniformTrees[treeIndex-1];
+			m_UniformTreesSorted[i] = m_UniformTrees[treeIndex - 1];
 		}
 		std::sort(std::begin(m_UniformTreesSorted), std::end(m_UniformTreesSorted), objectDistSort);
 	}
@@ -278,9 +278,11 @@ void SideShooter::shutDown() {
 		}
 	}
 
-	for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
-		if (m_Enemies[i] != nullptr) {
-			delete (EnemyStationary*)m_Enemies[i];
+	for (unsigned int i = 0; i < (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
+		for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
+			if (m_Enemies[i][q] != nullptr) {
+				delete m_Enemies[i][q];
+			}
 		}
 	}
 
@@ -306,7 +308,8 @@ void SideShooter::update() {
 	if (m_IsDoingDofIntro) {
 		if (m_DofChangeStartTime < 0) {
 			m_DofChangeStartTime = TimeHandler::getCurrentTime();
-		} else {
+		}
+		else {
 			float percentage = (TimeHandler::getCurrentTime() - m_DofChangeStartTime) / m_DofChangeDuration;
 			if (percentage > 1) {
 				m_IsDoingDofIntro = false;
@@ -316,7 +319,8 @@ void SideShooter::update() {
 			float value = lerp(m_StartingDof, m_TargetDof, percentage);
 			fDist->setData(&value);
 		}
-	} else {
+	}
+	else {
 		int keys = 0;
 		keys |= Input::isKeyDown(KEY_KP_ADD) << 0;
 		keys |= Input::isKeyDown(KEY_KP_SUBTRACT) << 1;
@@ -357,11 +361,13 @@ void SideShooter::update() {
 		}
 	}
 
-	m_NumOfEnemiesAlive = 0;
-	for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
-		if (m_Enemies[i] != nullptr) {
-			m_Enemies[i]->update();
-			m_NumOfEnemiesAlive++;
+	for (unsigned int i = 0; i <  (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
+	m_NumOfEnemiesAlive[i] = 0;
+		for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
+			if (m_Enemies[i][q] != nullptr) {
+				m_Enemies[i][q]->update();
+				m_NumOfEnemiesAlive[i]++;
+			}
 		}
 	}
 
@@ -385,7 +391,7 @@ void SideShooter::update() {
 	m_ReflectionCamera->m_Transform.setScale(glm::vec3(1, -1, 1));
 
 	m_ShadowDirectionalCamera->m_Transform.setPosition(m_Player->m_Transform.getLocalPosition() +
-		glm::vec3(-m_LightDir.x * m_ShadowMapSize,0,0));
+		glm::vec3(-m_LightDir.x * m_ShadowMapSize, 0, 0));
 
 }
 
@@ -535,7 +541,7 @@ void SideShooter::draw() {
 		glDepthFunc(GL_LESS);
 		//glDepthMask(true);
 		glDisable(GL_BLEND);
-	
+
 		m_DoRenderPonds = numOfPondRenders != 0;
 
 	}
@@ -729,11 +735,25 @@ Projectile* SideShooter::spwanProjectile(Transform * a_Position, bool a_Right, I
 	return nullptr;
 }
 
-Enemy* SideShooter::spawnEnemy(glm::vec3 a_Position) {
-	for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
-		if (m_Enemies[i] == nullptr) {
-			m_Enemies[i] = new EnemyStationary(nullptr, m_Player, a_Position, m_Box, this);
-			return m_Enemies[i];
+Enemy* SideShooter::spawnEnemy(EnemyTypes a_EnemyType, glm::vec3 a_Position) {
+#define newEnemy(type) m_Enemies[enemyType][i] = new type(nullptr, m_Player, a_Position, m_Box, this);
+
+	unsigned int enemyType = (unsigned int)a_EnemyType;
+	for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES_PER_TYPE; i++) {
+		if (m_Enemies[enemyType][i] == nullptr) {
+			switch (a_EnemyType) {
+			case EnemyTypes::STATIONARY:
+				newEnemy(EnemyStationary);
+				break;
+			case EnemyTypes::SIDER:
+				newEnemy(EnemySider);
+				break;
+			default:
+				_ASSERT_EXPR(false, L"Enemy type not supported in spawnEnemy");
+				break;
+			}
+
+			return m_Enemies[enemyType][i];
 		}
 	}
 	return nullptr;
@@ -793,19 +813,20 @@ void SideShooter::runCollisionCheck() {
 		bool didHit = false;
 		if (m_Projectiles[i] != nullptr) {
 			glm::vec3 projPos = m_Projectiles[i]->getPositionCombined();
-			for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES; q++) {
-				if (m_Enemies[q] != nullptr) {
-					glm::vec3 dist = projPos - m_Enemies[q]->getPositionCombined();
-					if (abs(dist.x) < m_Projectiles[i]->m_ProjectileSize &&
-						abs(dist.y) < m_Projectiles[i]->m_ProjectileSize) {
+			for (unsigned int j = 0; j < (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; j++) {
+				for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
+					if (m_Enemies[j][q] != nullptr) {
+						glm::vec3 dist = projPos - m_Enemies[j][q]->getPositionCombined();
+						if (abs(dist.x) < m_Projectiles[i]->m_ProjectileSize &&
+							abs(dist.y) < m_Projectiles[i]->m_ProjectileSize) {
 
-						//todo spawn explosion particle?
+							//todo spawn explosion particle?
 
-						didHit = true;
-						delete m_Enemies[q];
-						m_Enemies[q] = nullptr;
-						m_NumOfEnemiesAlive--;
-						break;
+							didHit = true;
+							delete m_Enemies[j][q];
+							m_Enemies[j][q] = nullptr;
+							break;
+						}
 					}
 				}
 			}
@@ -828,9 +849,10 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 			if (a_CloseOnly) {
 				int maxAmount = std::min(128u, m_NumofTreesGenerated);
 				drawObjectInstanced(m_TreeModels[0], &m_UniformTreesSorted[0], maxAmount);
-			} else {
+			}
+			else {
 				drawObjectInstanced(m_TreeModels[0], &m_UniformTrees[0], m_NumofTreesGenerated);
-			//	drawObjectInstanced(m_TreeModel2, &m_UniformTrees[m_NumofTreesGenerated/2], m_NumofTreesGenerated/2);
+				//	drawObjectInstanced(m_TreeModel2, &m_UniformTrees[m_NumofTreesGenerated/2], m_NumofTreesGenerated/2);
 			}
 #else
 			unsigned int useableTrees = m_NumofTreesGenerated / NUM_OF_TREE_MODELS;
@@ -845,19 +867,21 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 
 		//enemies draw
 		if (m_NumOfEnemiesAlive != 0) {
-			glm::mat4* enemies = new glm::mat4[m_NumOfEnemiesAlive];
-			unsigned int index = 0;
-			for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES; i++) {
-				if (m_Enemies[i] != nullptr) {
-					enemies[index++] = m_Enemies[i]->getGlobalMatrixCombined();
-					if (index > m_NumOfEnemiesAlive) {
-						break;
+			for (unsigned int i = 0; i < (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
+				unsigned int index = 0;
+				glm::mat4* enemies = new glm::mat4[MAX_NUM_OF_ENEMIES_PER_TYPE];
+				for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
+					if (m_Enemies[i][q] != nullptr) {
+						enemies[index++] = m_Enemies[i][q]->getGlobalMatrixCombined();
+						//if (index > m_NumOfEnemiesAlive) {
+						//	break;
+						//}
 					}
 				}
+				drawObjectInstanced(m_EnemySpawner->m_FirstModel[i], &enemies[0], index);
+				delete enemies;
 			}
-			drawObjectInstanced(m_EnemySpawner->m_EnemyStationaryMesh, &enemies[0], m_NumOfEnemiesAlive);
 
-			delete enemies;
 		}
 		//projectile draw
 		{
