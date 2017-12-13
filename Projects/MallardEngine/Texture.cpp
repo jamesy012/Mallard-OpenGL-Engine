@@ -68,26 +68,33 @@ DLL_BUILD unsigned int Texture::getGLTypeFromTextureType(const TextureType a_Typ
 	}
 }
 
-DLL_BUILD void Texture::bindTexture(const int a_Slot) const {
+DLL_BUILD void Texture::bindTexture(const Texture * a_Texture, const int a_Slot) {
+	glActiveTexture(GL_TEXTURE0 + a_Slot);
+	if (a_Texture == nullptr) {
+		glBindTexture(GL_TEXTURE_2D, 0);
+		return;
+	}
+
 #if _DEBUG
 	Framebuffer* m_Fb = Framebuffer::getCurrentFramebuffer();
 	if (m_Fb != nullptr) {
 		Texture* framebufferTexture = m_Fb->getTexture();
-		if (framebufferTexture != nullptr && framebufferTexture->m_TextureId == m_TextureId) {
+		if (framebufferTexture != nullptr && framebufferTexture->m_TextureId == a_Texture->m_TextureId) {
 			_ASSERT_EXPR(false, L"Binded texture is being used in the current framebuffer");
 		}
 	}
 #endif // DEBUG
-	//m_TextureId can be 0, and it will just unbind that texture
 
-	glActiveTexture(GL_TEXTURE0 + a_Slot);
-	glBindTexture(GL_TEXTURE_2D, m_TextureId);
+	glBindTexture(GL_TEXTURE_2D, a_Texture->m_TextureId);
 }
 
-DLL_BUILD void Texture::bindAndApplyTexture(const int a_Slot, ShaderUniformData * a_TextureUniform) const {
-	bindTexture(a_Slot);
+DLL_BUILD void Texture::bindAndApplyTexture(const Texture * a_Texture, const int a_Slot, ShaderUniformData * a_TextureUniform) {
+	//bind a_Texture to a_Slot in the current shader
+	bindTexture(a_Texture, a_Slot);
 
+	//set a_TextureUniform to the slot we binded the texture to
 	a_TextureUniform->setData(&a_Slot);
+	//and send it to the uniform
 	Shader::applyUniform(a_TextureUniform);
 }
 

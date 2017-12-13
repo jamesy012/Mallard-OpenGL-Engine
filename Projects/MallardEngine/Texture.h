@@ -25,9 +25,11 @@ public:
 
 	DLL_BUILD static unsigned int getGLTypeFromTextureType(const TextureType a_Type);
 	//binds this texture to the slot in a_Slot
-	DLL_BUILD void bindTexture(const int a_Slot) const;
+	//DLL_BUILD void bindTexture(const int a_Slot) const;
 
-	DLL_BUILD void bindAndApplyTexture(const int a_Slot, ShaderUniformData * a_TextureUniform)const;
+	DLL_BUILD static void bindTexture(const Texture* a_Texture, const int a_Slot);
+	DLL_BUILD static void bindAndApplyTexture(const Texture* a_Texture, const int a_Slot, ShaderUniformData * a_TextureUniform);
+	//DLL_BUILD static void bindAndApplyTexture(const unsigned int a_Texture, const int a_Slot, ShaderUniformData * a_TextureUniform);
 
 	///IResource
 	DLL_BUILD virtual unsigned int getResourceType() const override;

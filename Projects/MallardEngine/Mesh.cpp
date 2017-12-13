@@ -136,11 +136,7 @@ void Mesh::draw() {
 	if (m_Texture != nullptr) {
 		//todo move this out of mesh
 		int slot = 0;
-		m_Texture->bindTexture(slot);
-
-		//TexDiffuse1 name in shader
-		loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "TexDiffuse1");
-		glUniform1i(loc, slot);
+		Texture::bindAndApplyTexture(m_Texture, slot, Shader::getCurrentShader()->m_CommonUniforms.m_Textures[0]);
 	}
 
 	glBindVertexArray(m_Vao);
@@ -159,11 +155,8 @@ void Mesh::drawInstance(unsigned int a_Amount) {
 	if (m_Texture != nullptr) {
 		//todo move this out of mesh
 		int slot = 0;
-		m_Texture->bindTexture(slot);
+		Texture::bindAndApplyTexture(m_Texture, slot, Shader::getCurrentShader()->m_CommonUniforms.m_Textures[0]);
 
-		//TexDiffuse1 name in shader
-		loc = glGetUniformLocation(Shader::getCurrentShader()->getProgram(), "TexDiffuse1");
-		glUniform1i(loc, slot);
 	}
 
 	glBindVertexArray(m_Vao);

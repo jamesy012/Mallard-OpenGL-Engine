@@ -78,6 +78,20 @@ public:
 	//list of common uniforms for easy and quick access to them
 	//these are set up after linking
 	struct CommonUniforms {
+		friend Shader;
+	protected:
+		static const unsigned int NUM_OF_COMMON_UNIFORMS = 7u;
+		char* m_UniformNames[NUM_OF_COMMON_UNIFORMS]{
+			"projectionViewMatrix",
+			"model",
+			"normalRot",
+			"color",
+			"time",
+			"resolution",
+			"TexDiffuse1",
+		};
+		ShaderUniformData** m_FirstUSD;
+	public:
 		//direct reference to the projectionView Matrix
 		//this is a mat4, in the Vertex Shader
 		//it is used to place the camera around the 
@@ -98,6 +112,7 @@ public:
 		ShaderUniformData* m_Time = nullptr;
 		//Resulution of the main window
 		ShaderUniformData* m_Resolution = nullptr;
+		ShaderUniformData* m_Textures[1]{ nullptr };
 	} m_CommonUniforms;
 
 private:
@@ -107,7 +122,7 @@ private:
 	//input: ShaderTypes::TYPE_VERTEX 
 	//output: GL_VERTEX_SHADER define from opengl header
 	unsigned int getOpenglShaderType(ShaderTypes a_Type) const;
-	
+
 	//Creates and compiles a shader using the type and code provided
 	//will print a error if there was a issue with the shader code provided
 	void createShader(ShaderTypes a_Type, const char* const* a_Code);
@@ -118,7 +133,7 @@ private:
 	//errorMessage appears before the error log so you can work out what function is having the issue
 	//example ERROR::SHADER::ProgramID \n a_ErrorMessage \n {error log}
 	static bool checkGlErrorProgram(const int a_ErrorType, const unsigned int a_Program, const char* a_ErrorMessage = "");
-	
+
 	//Gets the error from opengl and prints it
 	//errorMessage appears before the error log so you can work out what function is having the issue
 	//example ERROR::SHADER::ShaderID \n a_ErrorMessage \n {error log}

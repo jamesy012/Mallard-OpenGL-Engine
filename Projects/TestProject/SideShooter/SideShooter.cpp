@@ -508,7 +508,7 @@ void SideShooter::draw() {
 
 		uniformPvm->setData(m_Camera);
 		lightMatrix->setData(&offsetLightMatrix);
-		m_ShadowDirectionalLightFb->getTexture()->bindAndApplyTexture(3, shadowMapTex);
+		Texture::bindAndApplyTexture(m_ShadowDirectionalLightFb->getTexture(), 3, shadowMapTex);
 		Shader::checkUniformChanges();
 
 		sceneRender(false, true);
@@ -580,8 +580,8 @@ void SideShooter::draw() {
 
 		Shader::use(m_DOFDrawShader);
 
-		m_FbGameFrame->getTexture(0)->bindTexture(1);
-		m_DepthOfFieldTest->getTexture()->bindTexture(2);
+		Texture::bindTexture(m_FbGameFrame->getTexture(), 1);
+		Texture::bindTexture(m_DepthOfFieldTest->getTexture(), 2);
 
 
 		ShaderUniformData* radiusUniform = m_DOFDrawShader->getUniform(ShaderUniformTypes::FLOAT, "radius");
@@ -607,7 +607,7 @@ void SideShooter::draw() {
 		Framebuffer::use(nullptr);
 		//Framebuffer::clearCurrentBuffer();
 
-		m_ReflectionScaledBuffer->getTexture(0)->bindTexture(1);
+		Texture::bindTexture(m_ReflectionScaledBuffer->getTexture(), 1);
 
 		if (dirUniform != nullptr) {
 			dirUniform->setData(&dir[1]);
