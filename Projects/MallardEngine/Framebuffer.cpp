@@ -316,6 +316,8 @@ unsigned int Framebuffer::getGLCallFromEnum(GL_CALLS a_Call) {
 	switch (a_Call) {
 		case Framebuffer::GL_CALLS::DEPTH_TEST:
 			return GL_DEPTH_TEST;
+		case Framebuffer::GL_CALLS::CULL_FACE:
+			return GL_CULL_FACE;
 		default:
 			return 0;
 	}

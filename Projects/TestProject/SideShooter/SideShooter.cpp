@@ -409,11 +409,9 @@ void SideShooter::draw() {
 		lightMatrix->setData(m_ShadowDirectionalCamera);
 		Shader::applyUniform(lightMatrix);
 
-		glEnable(GL_CULL_FACE);
-		//glCullFace(GL_FRONT);
+		Framebuffer::glCall(Framebuffer::GL_CALLS::CULL_FACE, true);
 		sceneRender(true, false);
-		//glCullFace(GL_BACK);
-		glDisable(GL_CULL_FACE);
+		Framebuffer::glCall(Framebuffer::GL_CALLS::CULL_FACE, false);
 	}
 
 	if (m_DebugRunTimers) {
@@ -432,7 +430,7 @@ void SideShooter::draw() {
 		//skyboxRefCam.m_Transform.setRotation(camRot);
 		m_SkyboxGame->draw(skyboxRefCam);
 	}
-	glDisable(GL_CULL_FACE);
+	Framebuffer::glCall(Framebuffer::GL_CALLS::CULL_FACE, false);
 
 	Shader::use(m_UniformShader);
 
@@ -442,7 +440,7 @@ void SideShooter::draw() {
 
 	sceneRender(true, false);
 
-	glEnable(GL_CULL_FACE);
+	Framebuffer::glCall(Framebuffer::GL_CALLS::CULL_FACE, true);
 
 	//blur the reflection
 	if (m_DebugRunTimers) {
@@ -620,11 +618,9 @@ void SideShooter::draw() {
 		m_FullScreenQuad->draw();
 
 
-		//unbind texture
-		glActiveTexture(GL_TEXTURE0 + 1);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_TEXTURE0 + 2);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		//unbind textures
+		Texture::bindTexture(nullptr, 1);
+		Texture::bindTexture(nullptr, 2);
 
 		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
 		glDepthFunc(GL_LESS);

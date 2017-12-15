@@ -86,7 +86,8 @@ public:
 	
 	//TODO: Move this out of framebuffer OR intergrate it better
 	enum class GL_CALLS {
-		DEPTH_TEST
+		DEPTH_TEST,
+		CULL_FACE,
 	};
 	static unsigned int getGLCallFromEnum(GL_CALLS a_Call);
 	static void glCall(GL_CALLS a_Call, bool a_Enabled);

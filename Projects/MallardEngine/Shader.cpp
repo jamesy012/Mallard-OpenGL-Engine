@@ -500,21 +500,6 @@ void Shader::getShaderUniforms() {
 			}
 		}
 
-
-		//if (strcmp(name, "projectionViewMatrix") == 0) {
-		//	m_CommonUniforms.m_ProjectionViewMatrix = uniformData;
-		//} else if (strcmp(name, "model") == 0) {
-		//	m_CommonUniforms.m_ModelMatrix = uniformData;
-		//} else if (strcmp(name, "color") == 0) {
-		//	m_CommonUniforms.m_Color = uniformData;
-		//} else if (strcmp(name, "time") == 0) {
-		//	m_CommonUniforms.m_Time = uniformData;
-		//} else if (strcmp(name, "normalRot") == 0) {
-		//	m_CommonUniforms.m_NormalRotMatrix = uniformData;
-		//} else if (strcmp(name, "resolution") == 0) {
-		//	m_CommonUniforms.m_Resolution = uniformData;
-		//}
-
 		//copy defaults from the shader
 		switch (uniformData->m_Type) {
 			case ShaderUniformTypes::MAT4:

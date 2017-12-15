@@ -52,7 +52,7 @@ private:
 
 	void sceneRender(bool a_CloseOnly, bool a_IncludeGround);
 
-	static const unsigned int NUM_OF_TREES = 1024u;//512u;
+	static const unsigned int NUM_OF_TREES = 512u;
 	static const unsigned int NUM_OF_TREE_MODELS = 4u;
 	static const unsigned int NUM_OF_TREES_PER_MODEL = NUM_OF_TREES / NUM_OF_TREE_MODELS;
 
