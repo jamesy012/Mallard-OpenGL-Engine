@@ -10,6 +10,7 @@ public:
 	virtual glm::mat4 getTransformMatrix() {
 		return m_Transform.getGlobalMatrix();
 	}
+	//todo - move this to a IRenderableTransform like class
 
 	Transform m_Transform;
 };

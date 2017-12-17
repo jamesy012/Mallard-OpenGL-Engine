@@ -19,13 +19,19 @@ class Camera;
 
 class Enemy;
 
+#include "Renderer\RenderMFwdDec.h"
+
 #include "EnemySpawner.h"
 
-#define USE_ONE_TREE_MODEL false
+#define USE_ONE_TREE_MODEL true
 
+static SideShooter* SIDESHOOTER_SINGLETON;
 
 class SideShooter :	public Application {
 public:
+
+	SideShooter();
+
 	// Inherited via Application
 	virtual void startUp() override;
 	virtual void shutDown() override;
@@ -44,8 +50,10 @@ public:
 		bool m_EnableDof = true;
 		bool m_DisplayUI = true;
 	} m_AppOptions;
+
 private:
-	void drawObjectInstanced(IRenderable* a_Renderable, glm::mat4* a_Array, int a_ArraySize);
+	static void drawObjectInstanced(IRenderable* a_Renderable, glm::mat4* a_Array, int a_ArraySize);
+	static void renderTrees();
 	bool drawObject(IRenderable* a_Renderable, bool a_Cull = true, float a_CullOffset  = 0);
 
 	void runCollisionCheck();
@@ -119,5 +127,12 @@ private:
 	float m_StartingDof = 200.0f;
 	float m_DofChangeStartTime = -1;
 	const float m_DofChangeDuration = 5.0f;
+
+	//Testing out the Render Manager
+	RenderMList* m_FullScene;
+	RenderMList* m_CommonSceneRender;
+
+	RenderMFnPtr* m_TreeRender;
+
 };
 

@@ -32,6 +32,12 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="Renderer\RenderMFnPtr.h" />
+    <ClInclude Include="Renderer\RenderMFwdDec.h" />
+    <ClInclude Include="Renderer\RenderMIncludeAll.h" />
+    <ClInclude Include="Renderer\RenderMInstanced.h" />
+    <ClInclude Include="Renderer\RenderMShader.h" />
+    <ClInclude Include="Renderer\RenderMList.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderUniformData.h" />
@@ -52,6 +58,10 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Renderer\RenderMInstanced.cpp" />
+    <ClCompile Include="Renderer\RenderMShader.cpp" />
+    <ClCompile Include="Renderer\RenderMList.cpp" />
+    <ClCompile Include="RenderMFnPtr.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderUniformData.cpp" />
