@@ -3,9 +3,11 @@
 
 #include "..\\IRenderable.h"
 
+class Object;
+
 class RenderMInstanced : public IRenderable {
 public:
-	RenderMInstanced(IRenderable* a_InstancedRenderable, const int a_DrawAmount);
+	RenderMInstanced(IRenderable* a_InstancedRenderable, Object* a_Objects, const int a_MaxDrawAmount);
 	~RenderMInstanced();
 
 	int m_DrawAmount = 0;

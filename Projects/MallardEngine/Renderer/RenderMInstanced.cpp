@@ -3,9 +3,9 @@
 
 
 
-RenderMInstanced::RenderMInstanced(IRenderable * a_InstancedRenderable, const int a_DrawAmount) {
+RenderMInstanced::RenderMInstanced(IRenderable* a_InstancedRenderable, Object* a_Objects, const int a_MaxDrawAmount) {
 	m_Renderable = a_InstancedRenderable;
-	m_DrawAmount = a_DrawAmount;
+	m_DrawAmount = a_MaxDrawAmount;
 }
 
 RenderMInstanced::~RenderMInstanced() {

@@ -6,7 +6,7 @@ RenderMFnPtr::RenderMFnPtr() {
 	m_Function = nullptr;
 }
 
-RenderMFnPtr::RenderMFnPtr(RendedererFnPtr a_Function) {
+RenderMFnPtr::RenderMFnPtr(RendedererFnPtr a_Function, IRenderable* a_RenderObject) {
 	m_Function = a_Function;
 }
 
@@ -15,9 +15,9 @@ RenderMFnPtr::~RenderMFnPtr() {
 }
 
 void RenderMFnPtr::draw() {
-	m_Function();
+	m_Function(1);
 }
 
 void RenderMFnPtr::drawInstance(unsigned int a_Amount) {
-	_ASSERT(false);
+	m_Function(a_Amount);
 }

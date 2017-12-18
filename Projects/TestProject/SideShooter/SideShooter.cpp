@@ -43,7 +43,6 @@ static bool objectDistSort(glm::mat4& a, glm::mat4& b) {
 }
 
 SideShooter::SideShooter() {
-	SIDESHOOTER_SINGLETON = this;
 }
 
 void SideShooter::startUp() {
@@ -229,19 +228,13 @@ void SideShooter::startUp() {
 			float xzRot = 8.0f;
 			t.setRotation(
 				glm::vec3(
-					getRandomWithinRange(-xzRot, xzRot),
-					getRandomWithinRange(0, 360),
-					getRandomWithinRange(-xzRot, xzRot)));
+				getRandomWithinRange(-xzRot, xzRot),
+				getRandomWithinRange(0, 360),
+				getRandomWithinRange(-xzRot, xzRot)));
 			m_UniformTrees[treeIndex++] = t.getGlobalMatrix();
 			m_UniformTreesSorted[i] = m_UniformTrees[treeIndex - 1];
 		}
 		std::sort(std::begin(m_UniformTreesSorted), std::end(m_UniformTreesSorted), objectDistSort);
-	}
-	//Testing the Render Manager
-	{
-		//m_CommonSceneRender = new RenderMList();
-		m_TreeRender = new RenderMFnPtr(renderTrees);
-		//m_CommonSceneRender.addObject(&m_TreeRender);
 	}
 }
 
@@ -299,8 +292,6 @@ void SideShooter::shutDown() {
 	}
 
 	delete m_EnemySpawner;
-
-	delete m_TreeRender;
 }
 
 void SideShooter::update() {
@@ -796,15 +787,6 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 
 }
 
-void SideShooter::renderTrees() {
-	SideShooter* ss = SIDESHOOTER_SINGLETON;
-	unsigned int useableTrees = ss->m_NumofTreesGenerated / NUM_OF_TREE_MODELS;
-	for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
-		drawObjectInstanced(ss->m_TreeModels[i], &ss->m_UniformTrees[useableTrees*i], useableTrees);
-
-	}
-}
-
 bool SideShooter::drawObject(IRenderable* a_Renderable, bool a_Cull, float a_CullOffset) {
 	bool didRender = false;
 	glm::vec3 startingPos = a_Renderable->m_Transform.getGlobalPosition();
@@ -864,7 +846,7 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 		{
 			Logging::quickGpuDebugGroupPush("TREE RENDER1");
 
-			/*
+			
 #if USE_ONE_TREE_MODEL == true
 			if (a_CloseOnly) {
 				int maxAmount = std::min(128u, m_NumofTreesGenerated);
@@ -881,8 +863,7 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 
 			}
 #endif // USE_ONE_TREE_MODEL
-*/
-			m_TreeRender->draw();
+
 			Logging::quickGpuDebugGroupPop();
 		}
 
