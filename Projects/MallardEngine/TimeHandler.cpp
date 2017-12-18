@@ -75,7 +75,7 @@ void TimeHandler::update() {
 	m_DeltaTime = m_UnscaledDeltaTime * m_DeltaTimeScale;
 
 	//calculate fps
-	m_FpsDt += (m_UnscaledDeltaTime - m_FpsDt) * 0.1f;
+	m_FpsDt += (m_UnscaledDeltaTime - m_FpsDt) * 0.005f;
 	m_Fps = (unsigned int)roundl(1.0f / m_FpsDt);
 	
 }

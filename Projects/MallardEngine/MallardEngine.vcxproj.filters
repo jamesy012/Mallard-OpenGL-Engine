@@ -99,6 +99,9 @@
     <ClInclude Include="Renderer\RenderMFnPtr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MeshBatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -165,6 +168,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RenderMFnPtr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshBatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

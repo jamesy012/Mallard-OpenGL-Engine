@@ -23,6 +23,7 @@
 
 #include "Model.h"
 #include "Mesh.h"
+#include "MeshBatch.h"
 #include "Transform.h"
 #include "Object.h"
 
@@ -84,6 +85,10 @@ void SideShooter::startUp() {
 		m_DepthOfFieldTest->setSize(1024, 1024);
 		m_DepthOfFieldTest->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
 		m_DepthOfFieldTest->genFramebuffer();
+		m_DepthOfFieldTestScaled = new Framebuffer();
+		m_DepthOfFieldTestScaled->setSize(1024, 1024);
+		m_DepthOfFieldTestScaled->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
+		m_DepthOfFieldTestScaled->genFramebuffer();
 	}
 	//textures
 	{
@@ -139,15 +144,15 @@ void SideShooter::startUp() {
 			pond->m_Transform.setScale(glm::vec3(m_PondSize, 1, m_PondSize));
 			pond->m_Transform.setPosition(
 				glm::vec3(
-					getRandomWithinRange(-SSConstants::GAME_WIDTH, SSConstants::GAME_WIDTH),
-					-SSConstants::GROUND_Y + 0.5f,
-					-getRandomWithinRange(-50, 200)));
+				getRandomWithinRange(-SSConstants::GAME_WIDTH, SSConstants::GAME_WIDTH),
+				-SSConstants::GROUND_Y + 0.5f,
+				-getRandomWithinRange(-50, 200)));
 			float xzRot = 8.0f;
 			pond->m_Transform.setRotation(
 				glm::vec3(
-					0,
-					getRandomWithinRange(0, 360),
-					0));
+				0,
+				getRandomWithinRange(0, 360),
+				0));
 		}
 	}
 
@@ -155,15 +160,16 @@ void SideShooter::startUp() {
 	{
 		m_ReflectionCamera = new Camera();
 		m_ReflectionCamera->setPerspective(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-
+		int reflectionWidth = 512;
+		int reflectionHeight = 512;
 		m_ReflectionBuffer = new Framebuffer();
-		m_ReflectionBuffer->setSize(1024, 1024);
+		m_ReflectionBuffer->setSize(reflectionWidth, reflectionHeight);
 		m_ReflectionBuffer->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
 		m_ReflectionBuffer->genFramebuffer();
 
 		m_ReflectionScaledBuffer = new Framebuffer();
 		//m_ReflectionScaledBuffer->setSize(256, 256);
-		m_ReflectionScaledBuffer->setSize(1024, 1024);
+		m_ReflectionScaledBuffer->setSize(reflectionWidth, reflectionHeight);
 		m_ReflectionScaledBuffer->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
 		m_ReflectionScaledBuffer->genFramebuffer();
 
@@ -232,10 +238,26 @@ void SideShooter::startUp() {
 				getRandomWithinRange(0, 360),
 				getRandomWithinRange(-xzRot, xzRot)));
 			m_UniformTrees[treeIndex++] = t.getGlobalMatrix();
+			//m_UniformTrees[treeIndex++] = glm::mat4(1);
 			m_UniformTreesSorted[i] = m_UniformTrees[treeIndex - 1];
 		}
 		std::sort(std::begin(m_UniformTreesSorted), std::end(m_UniformTreesSorted), objectDistSort);
 	}
+
+	m_StaticTerrainMesh = new MeshBatch();
+	m_StaticTerrainMeshCloseOnly = new MeshBatch();
+	for (int i = 0; i < 128u; i++) {
+		m_StaticTerrainMeshCloseOnly->add(m_TreeModels[0]->m_Meshs[0], m_UniformTreesSorted[i]);
+	}
+	m_StaticTerrainMesh->setFromBatch(m_StaticTerrainMeshCloseOnly);
+	for (int i = 128u; i < m_NumofTreesGenerated; i++) {
+		m_StaticTerrainMesh->add(m_TreeModels[0]->m_Meshs[0], m_UniformTreesSorted[i]);
+	}
+	//m_StaticTerrainMesh->add(m_QuadMesh->m_Meshs[0], m_Ground->getGlobalMatrixCombined());
+	m_StaticTerrainMesh->bind();
+	m_StaticTerrainMeshCloseOnly->bind();
+	m_StaticTerrainObject = new Object();
+	m_StaticTerrainObject->m_Renderable = m_StaticTerrainMesh;
 }
 
 void SideShooter::shutDown() {
@@ -253,6 +275,9 @@ void SideShooter::shutDown() {
 	delete m_Box;
 	delete m_Player;
 	delete m_Ground;
+	delete m_StaticTerrainMesh;
+	delete m_StaticTerrainMeshCloseOnly;
+	delete m_StaticTerrainObject;
 
 	for (int i = 0; i < NUM_OF_PONDS; i++) {
 		delete m_Ponds[i];
@@ -271,6 +296,7 @@ void SideShooter::shutDown() {
 	delete m_DOFGenShader;
 	delete m_DOFDrawShader;
 	delete m_DepthOfFieldTest;
+	delete m_DepthOfFieldTestScaled;
 
 	delete m_ShadowDirectionalCamera;
 	delete m_ShadowDirectionalLightFb;
@@ -283,7 +309,7 @@ void SideShooter::shutDown() {
 		}
 	}
 
-	for (unsigned int i = 0; i < (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
+	for (unsigned int i = 0; i < (unsigned int) EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
 		for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
 			if (m_Enemies[i][q] != nullptr) {
 				delete m_Enemies[i][q];
@@ -308,13 +334,13 @@ void SideShooter::update() {
 	m_AppOptions.m_EnableDof ^= Input::wasKeyPressed(KEY_KP_1);
 	m_AppOptions.m_DisplayUI ^= Input::wasKeyPressed(KEY_KP_2);
 	m_Flags.m_RunDebugTimers ^= Input::wasKeyPressed(KEY_F1);
+	m_AppOptions.m_InstanceTreeRender ^= Input::wasKeyPressed(KEY_F2);
 
 	//adjust dof
 	if (m_IsDoingDofIntro) {
 		if (m_DofChangeStartTime < 0) {
 			m_DofChangeStartTime = TimeHandler::getCurrentTime();
-		}
-		else {
+		} else {
 			float percentage = (TimeHandler::getCurrentTime() - m_DofChangeStartTime) / m_DofChangeDuration;
 			if (percentage > 1) {
 				m_IsDoingDofIntro = false;
@@ -324,14 +350,13 @@ void SideShooter::update() {
 			float value = lerp(m_StartingDof, m_TargetDof, percentage);
 			fDist->setData(&value);
 		}
-	}
-	else {
+	} else {
 		int keys = 0;
 		keys |= Input::isKeyDown(KEY_KP_ADD) << 0;
 		keys |= Input::isKeyDown(KEY_KP_SUBTRACT) << 1;
 		if (keys != 0) {
 			ShaderUniformData* fDist = m_DOFGenShader->getUniform(ShaderUniformTypes::FLOAT, "focusDistance");
-			float value = *(float*)fDist->getDataVoid();
+			float value = *(float*) fDist->getDataVoid();
 			float increment = 50 * TimeHandler::getDeltaTime();
 			if (keys == 1) {
 				value += increment;
@@ -366,8 +391,8 @@ void SideShooter::update() {
 		}
 	}
 
-	for (unsigned int i = 0; i <  (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
-	m_NumOfEnemiesAlive[i] = 0;
+	for (unsigned int i = 0; i < (unsigned int) EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
+		m_NumOfEnemiesAlive[i] = 0;
 		for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
 			if (m_Enemies[i][q] != nullptr) {
 				m_Enemies[i][q]->update();
@@ -396,7 +421,7 @@ void SideShooter::update() {
 	m_ReflectionCamera->m_Transform.setScale(glm::vec3(1, -1, 1));
 
 	m_ShadowDirectionalCamera->m_Transform.setPosition(m_Player->m_Transform.getLocalPosition() +
-		glm::vec3(-m_LightDir.x * m_ShadowMapSize, 0, 0));
+													   glm::vec3(-m_LightDir.x * m_ShadowMapSize, 0, 0));
 
 }
 
@@ -563,11 +588,9 @@ void SideShooter::draw() {
 
 		int width = Window::getMainWindow()->getFramebufferWidth();
 		int height = Window::getMainWindow()->getFramebufferHeight();
-		if (m_ReflectionScaledBuffer->getFramebufferWidth() != width || m_ReflectionScaledBuffer->getFramebufferHeight() != height) {
-			m_ReflectionScaledBuffer->resizeFramebuffer(width, height);
-		}
 		if (m_DepthOfFieldTest->getFramebufferWidth() != width || m_DepthOfFieldTest->getFramebufferHeight() != height) {
 			m_DepthOfFieldTest->resizeFramebuffer(width, height);
+			m_DepthOfFieldTestScaled->resizeFramebuffer(width, height);
 		}
 
 		Shader::use(m_DOFGenShader);
@@ -579,7 +602,7 @@ void SideShooter::draw() {
 		m_FullScreenQuad->draw();
 
 
-		Framebuffer::use(m_ReflectionScaledBuffer);
+		Framebuffer::use(m_DepthOfFieldTestScaled);
 
 		Shader::use(m_DOFDrawShader);
 
@@ -610,7 +633,7 @@ void SideShooter::draw() {
 		Framebuffer::use(nullptr);
 		//Framebuffer::clearCurrentBuffer();
 
-		Texture::bindTexture(m_ReflectionScaledBuffer->getTexture(), 1);
+		Texture::bindTexture(m_DepthOfFieldTestScaled->getTexture(), 1);
 
 		if (dirUniform != nullptr) {
 			dirUniform->setData(&dir[1]);
@@ -718,7 +741,17 @@ void SideShooter::drawUi() {
 		quickText = "Info: Vertices Rendered: ";
 		quickText += std::to_string(Logging::getNumVerticesRendered());
 		float offset = m_Font->drawText(quickText.c_str());
-		model.translate(glm::vec3(0, offset, 0));
+		model.translate(glm::vec3(0, -offset, 0));
+	}
+	{
+		uniformModel->setData(&model);
+		Shader::applyUniform(uniformModel);
+
+		//quick text draw, not as efficient as using a Text object to render
+		quickText = "Tree Mode: ";
+		quickText += m_AppOptions.m_InstanceTreeRender ? "Instanced" : "Batched";
+		float offset = m_Font->drawText(quickText.c_str());
+		model.translate(glm::vec3(0, -offset, 0));
 	}
 }
 
@@ -739,19 +772,19 @@ Projectile* SideShooter::spwanProjectile(Transform * a_Position, bool a_Right, I
 Enemy* SideShooter::spawnEnemy(EnemyTypes a_EnemyType, glm::vec3 a_Position) {
 #define newEnemy(type) m_Enemies[enemyType][i] = new type(nullptr, m_Player, a_Position, m_Box, this);
 
-	unsigned int enemyType = (unsigned int)a_EnemyType;
+	unsigned int enemyType = (unsigned int) a_EnemyType;
 	for (unsigned int i = 0; i < MAX_NUM_OF_ENEMIES_PER_TYPE; i++) {
 		if (m_Enemies[enemyType][i] == nullptr) {
 			switch (a_EnemyType) {
-			case EnemyTypes::STATIONARY:
-				newEnemy(EnemyStationary);
-				break;
-			case EnemyTypes::SIDER:
-				newEnemy(EnemySider);
-				break;
-			default:
-				_ASSERT_EXPR(false, L"Enemy type not supported in spawnEnemy");
-				break;
+				case EnemyTypes::STATIONARY:
+					newEnemy(EnemyStationary);
+					break;
+				case EnemyTypes::SIDER:
+					newEnemy(EnemySider);
+					break;
+				default:
+					_ASSERT_EXPR(false, L"Enemy type not supported in spawnEnemy");
+					break;
 			}
 
 			return m_Enemies[enemyType][i];
@@ -766,7 +799,7 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 
 	glm::vec4 offset = glm::vec4(0);
 	const int MAX_INSTANCES_PER_DRAW = 128;
-	float batches = a_ArraySize / (float)MAX_INSTANCES_PER_DRAW;
+	float batches = a_ArraySize / (float) MAX_INSTANCES_PER_DRAW;
 	float batchesAmount = batches;
 	int amountToRender = MAX_INSTANCES_PER_DRAW;
 	for (int i = 0; i < batchesAmount; i++) {
@@ -814,7 +847,7 @@ void SideShooter::runCollisionCheck() {
 		bool didHit = false;
 		if (m_Projectiles[i] != nullptr) {
 			glm::vec3 projPos = m_Projectiles[i]->getPositionCombined();
-			for (unsigned int j = 0; j < (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; j++) {
+			for (unsigned int j = 0; j < (unsigned int) EnemyTypes::NUM_OF_ENEMY_TYPES; j++) {
 				for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {
 					if (m_Enemies[j][q] != nullptr) {
 						glm::vec3 dist = projPos - m_Enemies[j][q]->getPositionCombined();
@@ -845,31 +878,36 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 		//tree draw
 		{
 			Logging::quickGpuDebugGroupPush("TREE RENDER1");
-
-			
+			if (m_AppOptions.m_InstanceTreeRender) {
 #if USE_ONE_TREE_MODEL == true
-			if (a_CloseOnly) {
-				int maxAmount = std::min(128u, m_NumofTreesGenerated);
-				drawObjectInstanced(m_TreeModels[0], &m_UniformTreesSorted[0], maxAmount);
-			}
-			else {
-				drawObjectInstanced(m_TreeModels[0], &m_UniformTrees[0], m_NumofTreesGenerated);
-				//	drawObjectInstanced(m_TreeModel2, &m_UniformTrees[m_NumofTreesGenerated/2], m_NumofTreesGenerated/2);
-			}
+				if (a_CloseOnly) {
+					int maxAmount = std::min(128u, m_NumofTreesGenerated);
+					drawObjectInstanced(m_TreeModels[0], &m_UniformTreesSorted[0], maxAmount);
+				} else {
+					drawObjectInstanced(m_TreeModels[0], &m_UniformTrees[0], m_NumofTreesGenerated);
+				}
 #else
-			unsigned int useableTrees = m_NumofTreesGenerated / NUM_OF_TREE_MODELS;
-			for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
-				drawObjectInstanced(m_TreeModels[i], &m_UniformTrees[useableTrees*i], useableTrees);
+				unsigned int useableTrees = m_NumofTreesGenerated / NUM_OF_TREE_MODELS;
+				for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
+					drawObjectInstanced(m_TreeModels[i], &m_UniformTrees[useableTrees*i], useableTrees);
 
-			}
+				}
 #endif // USE_ONE_TREE_MODEL
-
+			} else {
+				if (a_CloseOnly) {
+					m_StaticTerrainObject->m_Renderable = m_StaticTerrainMeshCloseOnly;
+					drawObjectInstanced(m_StaticTerrainObject, &m_StaticTerrainObject->getGlobalMatrixCombined(), 1);
+				} else {
+					m_StaticTerrainObject->m_Renderable = m_StaticTerrainMesh;
+					drawObjectInstanced(m_StaticTerrainObject, &m_StaticTerrainObject->getGlobalMatrixCombined(), 1);
+				}
+			}
 			Logging::quickGpuDebugGroupPop();
 		}
 
 		//enemies draw
 		if (m_NumOfEnemiesAlive != 0) {
-			for (unsigned int i = 0; i < (unsigned int)EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
+			for (unsigned int i = 0; i < (unsigned int) EnemyTypes::NUM_OF_ENEMY_TYPES; i++) {
 				unsigned int index = 0;
 				glm::mat4* enemies = new glm::mat4[MAX_NUM_OF_ENEMIES_PER_TYPE];
 				for (unsigned int q = 0; q < MAX_NUM_OF_ENEMIES_PER_TYPE; q++) {

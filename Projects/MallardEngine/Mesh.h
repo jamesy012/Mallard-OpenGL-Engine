@@ -9,6 +9,7 @@
 struct aiMesh;
 struct aiMaterial;
 class Texture;
+class MeshBatch;
 
 struct MeshVertex {
 	glm::vec4 position;
@@ -21,7 +22,7 @@ typedef MeshVertex MeshVerticesType;
 typedef unsigned int MeshIndicesType;
 
 class DLL_BUILD Mesh : public IRenderable {
-
+	friend MeshBatch;
 public:
 	Mesh();
 	~Mesh();

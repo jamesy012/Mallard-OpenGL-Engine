@@ -19,6 +19,6 @@ public:
 	virtual void drawInstance(unsigned int a_Amount) override;
 
 	RendedererFnPtr m_Function;
-	IRenderable* m_RenderObject
+	IRenderable* m_RenderObject;
 };
 

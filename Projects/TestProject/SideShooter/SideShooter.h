@@ -7,6 +7,7 @@
 class Model;
 class Texture;
 class Mesh;
+class MeshBatch;
 class Text;
 class Object;
 class Shader;
@@ -45,6 +46,7 @@ public:
 	struct {
 		bool m_EnableDof = true;
 		bool m_DisplayUI = true;
+		bool m_InstanceTreeRender = false;
 	} m_AppOptions;
 
 private:
@@ -65,6 +67,8 @@ private:
 	Model* m_QuadMesh;
 	Model* m_PondMesh;
 	Texture* m_GrassTexture;
+	MeshBatch* m_StaticTerrainMesh;
+	MeshBatch* m_StaticTerrainMeshCloseOnly;
 
 	Shader* m_UniformShader;
 
@@ -73,6 +77,7 @@ private:
 	Player* m_Player;
 
 	Object* m_Ground;
+	Object* m_StaticTerrainObject;
 
 	static const unsigned int NUM_OF_PONDS = 5;
 	Object* m_Ponds[NUM_OF_PONDS];
@@ -89,11 +94,13 @@ private:
 
 	//Depth of field
 	Framebuffer* m_DepthOfFieldTest;
+	Framebuffer* m_DepthOfFieldTestScaled;
 	Shader* m_DOFGenShader;
 	Shader* m_DOFDrawShader;
 
 	//Shadows
 	Framebuffer* m_ShadowDirectionalLightFb;
+
 	Shader* m_ShadowGenInstancedShader;
 	Shader* m_ShadowDrawInstancedShader;
 	Camera* m_ShadowDirectionalCamera;
