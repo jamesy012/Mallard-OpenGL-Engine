@@ -287,3 +287,7 @@ void Mesh::setTexture(Texture * a_Texture) {
 	}
 	m_Texture = a_Texture;
 }
+
+Texture * Mesh::getTexture() const {
+	return m_Texture;
+}

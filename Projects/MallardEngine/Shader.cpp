@@ -190,6 +190,7 @@ void Shader::createProgram() {
 //will delete all loaded shaders when complete
 //and gets uniforms
 void Shader::linkShader() {
+	printf("Linking Shader: %s, %s\n", m_Shaders[(int) ShaderTypes::TYPE_VERTEX].m_FilePath.c_str(), m_Shaders[(int) ShaderTypes::TYPE_FRAGMENT].m_FilePath.c_str());
 	if (m_Linked) {
 		printf("Shader already linked\n");
 		return;

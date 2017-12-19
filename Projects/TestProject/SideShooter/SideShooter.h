@@ -22,6 +22,8 @@ class Enemy;
 
 #include "EnemySpawner.h"
 
+#include "TexturePacker.h"
+
 #define USE_ONE_TREE_MODEL true
 
 class SideShooter :	public Application {
@@ -130,5 +132,7 @@ private:
 	float m_DofChangeStartTime = -1;
 	const float m_DofChangeDuration = 5.0f;
 
+
+	TexturePacker* m_Tp;
 };
 

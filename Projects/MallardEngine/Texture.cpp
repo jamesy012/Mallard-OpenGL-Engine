@@ -21,11 +21,26 @@ Texture::Texture() {
 	m_CreatedTexture = true;
 }
 
-Texture::Texture(unsigned int a_TextureID, int a_Width, int a_Height) {
+Texture::Texture(unsigned int a_TextureID, unsigned int a_Width, unsigned int a_Height) {
 	m_TextureId = a_TextureID;
 	m_TextureWidth = a_Width;
 	m_TextureHeight = a_Height;
 	m_CreatedTexture = false;
+}
+
+Texture::Texture(unsigned int a_Width, unsigned int a_Height, TextureType a_Type) {
+	m_TextureType = a_Type;
+	m_TextureWidth = a_Width;
+	m_TextureHeight = a_Height;
+	int dataSize = getDataSize();
+	if (dataSize == 0) {
+		m_CreatedTexture = false;
+		return;
+	}
+	int imageSize = a_Width * a_Height;
+	m_TextureData = new GLubyte[imageSize * dataSize]{ 0 };
+
+	m_CreatedTexture = true;
 }
 
 
@@ -48,7 +63,7 @@ DLL_BUILD void Texture::load1x1Texture() {
 
 
 	m_TextureType = TextureType::RGB;
-	
+
 	m_TextureWidth = m_TextureHeight = 1;
 
 	bindTexture();
@@ -98,6 +113,36 @@ DLL_BUILD void Texture::bindAndApplyTexture(const Texture * a_Texture, const int
 	Shader::applyUniform(a_TextureUniform);
 }
 
+DLL_BUILD void Texture::setPixel(unsigned int a_X, unsigned int a_Y, glm::vec4 a_Color) {
+	int dataSize = getDataSize();
+	int pixelPos = (a_X + (a_Y * m_TextureWidth)) * dataSize;
+
+	//could replace with a memcpy
+	m_TextureData[pixelPos] = a_Color.r * 255;
+	m_TextureData[pixelPos + 1] = a_Color.g*255;
+	m_TextureData[pixelPos + 2] = a_Color.b*255;
+	m_TextureData[pixelPos + 3] = a_Color.a*255;
+}
+
+DLL_BUILD glm::vec4 Texture::getPixel(unsigned int a_X, unsigned int a_Y) const {
+
+	int dataSize = getDataSize();
+	int pixelPos = (a_X + (a_Y * m_TextureWidth)) * dataSize;
+
+	glm::vec4 color;
+
+	//could replace with a memcpy
+	color.r = m_TextureData[pixelPos] / 255.0f;
+	color.g = m_TextureData[pixelPos + 1] /255.0f;
+	color.b = m_TextureData[pixelPos + 2] /255.0f;
+	if (m_TextureType == TextureType::RGBA) {
+		color.a = m_TextureData[pixelPos + 3] / 255.0f;
+	} else {
+		color.a = 1.0f;
+	}
+	return color;
+}
+
 unsigned int Texture::getResourceType() const {
 	return ResourceTypes::RESOUCE_TEXTURE;
 }
@@ -111,7 +156,7 @@ bool Texture::resourceLoad() {
 	int imageFormat;
 
 	m_TextureData = stbi_load(m_Resource_FileName.c_str(),
-									&m_TextureWidth, &m_TextureHeight, &imageFormat, STBI_default);
+							  &m_TextureWidth, &m_TextureHeight, &imageFormat, STBI_default);
 
 	if (m_TextureData == nullptr || m_TextureData == '\0') {
 		printf("Could not load Image: %s\n", m_Resource_FileName.c_str());
@@ -140,22 +185,14 @@ bool Texture::resourceLoad() {
 }
 
 void Texture::resourceCopy(IResource * a_Resource) {
-	Texture* tex = (Texture*)a_Resource;
+	Texture* tex = (Texture*) a_Resource;
 	m_TextureWidth = tex->m_TextureWidth;
 	m_TextureHeight = tex->m_TextureHeight;
 	m_TextureType = tex->m_TextureType;
 
 
-	int dataSize;
-	switch (m_TextureType) {
-		case RGBA:
-			dataSize = 4;
-			break;
-		default:
-		case RGB:
-			dataSize = 3;
-			break;
-	}
+	int dataSize = getDataSize();
+
 	int textureSize = m_TextureHeight * m_TextureWidth;
 	int totalSize = textureSize * dataSize;
 	m_TextureData = new DataFormat[totalSize];
@@ -188,5 +225,16 @@ void Texture::bindTexture() {
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0f);
+}
+
+unsigned int Texture::getDataSize() const {
+	switch (m_TextureType) {
+		case RGBA:
+			return 4;
+		case RGB:
+			return 3;
+		default:
+			return 0;
+	}
 }
 

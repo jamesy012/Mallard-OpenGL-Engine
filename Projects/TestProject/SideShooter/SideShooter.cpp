@@ -47,6 +47,8 @@ SideShooter::SideShooter() {
 }
 
 void SideShooter::startUp() {
+
+
 	//text
 	{
 		m_TestText = new Text(m_Font);
@@ -258,9 +260,31 @@ void SideShooter::startUp() {
 	m_StaticTerrainMeshCloseOnly->bind();
 	m_StaticTerrainObject = new Object();
 	m_StaticTerrainObject->m_Renderable = m_StaticTerrainMesh;
+
+
+	m_Tp = new TexturePacker(768, 768);
+	m_Tp->addTexture(m_GrassTexture);
+	m_Tp->testAdd(100, 100, glm::vec4(1, 0, 0, 1));
+	m_Tp->testAdd(50, 50, glm::vec4(1, 0, 1, 1));
+	m_Tp->testAdd(50, 50, glm::vec4(1, 1, 1, 1));
+	m_Tp->testAdd(25, 25, glm::vec4(0, 1, 1, 1));
+	m_Tp->addTexture(m_TreeModels[0]->m_Meshs[0]->getTexture());
+
+	for (int i = 0; i < 20; i++) {
+		m_Tp->testAdd(getRandomWithinRange(8, 100),
+					  getRandomWithinRange(8, 100),
+					  glm::vec4(getRandomWithinRange(0, 1),
+						getRandomWithinRange(0, 1),
+						getRandomWithinRange(0, 1), 1));
+	
+	}
+
+	m_Tp->bind();
 }
 
 void SideShooter::shutDown() {
+	delete m_Tp;
+
 	//m_TreeModel->unload();
 	//m_TreeModel2->unload();
 	for (unsigned int i = 0; i < NUM_OF_TREE_MODELS; i++) {
@@ -661,29 +685,29 @@ void SideShooter::draw() {
 		Logging::quickTimePop(true);
 	}
 
-	//{
-	//	Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
-	//	Transform model;
-	//	Shader::use(m_ShaderBasic);
-	//
-	//	ShaderUniformData* cameraPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
-	//	ShaderUniformData* modelMatrix = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
-	//
-	//	model = m_CameraMain->m_Transform;
-	//	model.translate(glm::vec3(-15, 0, -20), false);
-	//	model.rotate(glm::vec3(90, 0, 0));
-	//	model.setScale(3);
-	//
-	//	cameraPvm->setData(&m_CameraMain->getProjectionViewMatrix());
-	//	Shader::applyUniform(cameraPvm);
-	//	modelMatrix->setData(&model);
-	//	Shader::applyUniform(modelMatrix);
-	//
-	//	m_FullScreenQuad->setTexture(m_ShadowDirectionalLightFb->getTexture());
-	//	m_FullScreenQuad->draw();
-	//
-	//	Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
-	//}
+	{
+		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, false);
+		Transform model;
+		Shader::use(m_ShaderBasic);
+	
+		ShaderUniformData* cameraPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
+		ShaderUniformData* modelMatrix = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
+	
+		model = m_CameraMain->m_Transform;
+		model.translate(glm::vec3(-15, 0, -20), false);
+		model.rotate(glm::vec3(90, 0, 0));
+		model.setScale(3);
+	
+		cameraPvm->setData(&m_CameraMain->getProjectionViewMatrix());
+		Shader::applyUniform(cameraPvm);
+		modelMatrix->setData(&model);
+		Shader::applyUniform(modelMatrix);
+	
+		m_FullScreenQuad->setTexture(m_Tp->m_PackedTexture);
+		m_FullScreenQuad->draw();
+	
+		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
+	}
 }
 
 void SideShooter::drawUi() {

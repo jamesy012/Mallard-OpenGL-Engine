@@ -45,6 +45,7 @@
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TexturePacker.h" />
     <ClInclude Include="TimeHandler.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Window.h" />
@@ -70,6 +71,7 @@
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TexturePacker.cpp" />
     <ClCompile Include="TimeHandler.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Window.cpp" />

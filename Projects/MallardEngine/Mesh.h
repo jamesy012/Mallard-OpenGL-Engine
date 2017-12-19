@@ -47,6 +47,8 @@ public:
 
 	void setTexture(Texture* a_Texture);
 
+	Texture* getTexture() const;
+
 	//temporary fix 
 	//this stores the index of which texture this is using in it's model
 	int m_TextureIndex = 0;
