@@ -23,6 +23,7 @@ public:
 	DLL_BUILD Texture();
 	DLL_BUILD Texture(unsigned int a_TextureID, unsigned int a_Width, unsigned int a_Height);
 	DLL_BUILD Texture(unsigned int a_Width, unsigned int a_Height, TextureType a_Type);
+	DLL_BUILD Texture(const Texture& a_Texture);
 	DLL_BUILD ~Texture();
 
 	//todo add color parameter

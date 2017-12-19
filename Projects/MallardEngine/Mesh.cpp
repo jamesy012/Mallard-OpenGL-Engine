@@ -282,9 +282,9 @@ void Mesh::bind() {
 
 void Mesh::setTexture(Texture * a_Texture) {
 	if (m_CreatedTexture) {
-		m_CreatedTexture = false;
 		delete m_Texture;
 	}
+	m_CreatedTexture = false;
 	m_Texture = a_Texture;
 }
 

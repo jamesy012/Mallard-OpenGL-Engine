@@ -64,7 +64,7 @@
     <ClCompile Include="Renderer\RenderMInstanced.cpp" />
     <ClCompile Include="Renderer\RenderMShader.cpp" />
     <ClCompile Include="Renderer\RenderMList.cpp" />
-    <ClCompile Include="RenderMFnPtr.cpp" />
+    <ClCompile Include="Renderer\RenderMFnPtr.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderUniformData.cpp" />

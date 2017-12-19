@@ -24,7 +24,7 @@ class Enemy;
 
 #include "TexturePacker.h"
 
-#define USE_ONE_TREE_MODEL true
+#define USE_ONE_TREE_MODEL false
 
 class SideShooter :	public Application {
 public:

@@ -8,20 +8,28 @@
 class Texture;
 
 class DLL_BUILD TexturePacker {
-private:
+public:
 	struct TextureBox {
 		int x, y;
 		const int width, height;
 		const Texture* texture;
 	};
-public:
+
 	TexturePacker();
 	TexturePacker(unsigned int a_Width, unsigned int a_Height);
+	TexturePacker(const TexturePacker& a_TexturePacker);
 	~TexturePacker();
 
-	bool addTexture(const Texture* a_Texture);
-	bool testAdd(const int a_Width, const int a_Height, const glm::vec4 a_Color);
+	TextureBox* addTexture(const Texture* a_Texture);
+	TextureBox* testAdd(const int a_Width, const int a_Height, const glm::vec4 a_Color);
 	void bind();
+
+	unsigned int getWidth() const {
+		return m_Width;
+	}
+	unsigned int getHeight() const {
+		return m_Height;
+	}
 
 	Texture* m_PackedTexture;
 private:

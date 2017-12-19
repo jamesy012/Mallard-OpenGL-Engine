@@ -170,13 +170,13 @@
     <ClCompile Include="Renderer\RenderMInstanced.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RenderMFnPtr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MeshBatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TexturePacker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\RenderMFnPtr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

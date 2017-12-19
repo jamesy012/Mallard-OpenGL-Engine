@@ -1,6 +1,4 @@
-#include "Renderer\RenderMFnPtr.h"
-
-
+#include "RenderMFnPtr.h"
 
 RenderMFnPtr::RenderMFnPtr() {
 	m_Function = nullptr;

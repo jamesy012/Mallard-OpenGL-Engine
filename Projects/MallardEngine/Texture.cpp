@@ -22,6 +22,7 @@ Texture::Texture() {
 }
 
 Texture::Texture(unsigned int a_TextureID, unsigned int a_Width, unsigned int a_Height) {
+	m_TextureType = TextureType::NONE;
 	m_TextureId = a_TextureID;
 	m_TextureWidth = a_Width;
 	m_TextureHeight = a_Height;
@@ -43,6 +44,19 @@ Texture::Texture(unsigned int a_Width, unsigned int a_Height, TextureType a_Type
 	m_CreatedTexture = true;
 }
 
+Texture::Texture(const Texture & a_Texture) {
+	m_TextureType = a_Texture.m_TextureType;
+	m_TextureWidth = a_Texture.m_TextureWidth;
+	m_TextureHeight = a_Texture.m_TextureHeight;
+
+	m_CreatedTexture = true;
+
+	int dataSize = getDataSize();
+	int imageSize = m_TextureWidth * m_TextureHeight;
+	m_TextureData = new DataFormat[imageSize*dataSize];
+	memcpy(m_TextureData, a_Texture.m_TextureData, (imageSize * dataSize) * sizeof(DataFormat));
+}
+
 
 Texture::~Texture() {
 	if (m_CreatedTexture) {
@@ -59,7 +73,7 @@ DLL_BUILD void Texture::load1x1Texture() {
 	//is there a better way to do this??
 	m_TextureData = new GLubyte[3];
 	DataFormat data[] = { 255,255,255 };
-	memcpy(m_TextureData, &data, 3 * sizeof(unsigned char));
+	memcpy(m_TextureData, &data, 3 * sizeof(DataFormat));
 
 
 	m_TextureType = TextureType::RGB;
@@ -118,10 +132,10 @@ DLL_BUILD void Texture::setPixel(unsigned int a_X, unsigned int a_Y, glm::vec4 a
 	int pixelPos = (a_X + (a_Y * m_TextureWidth)) * dataSize;
 
 	//could replace with a memcpy
-	m_TextureData[pixelPos] = a_Color.r * 255;
-	m_TextureData[pixelPos + 1] = a_Color.g*255;
-	m_TextureData[pixelPos + 2] = a_Color.b*255;
-	m_TextureData[pixelPos + 3] = a_Color.a*255;
+	m_TextureData[pixelPos + 0] = a_Color.r * 255;
+	m_TextureData[pixelPos + 1] = a_Color.g * 255;
+	m_TextureData[pixelPos + 2] = a_Color.b * 255;
+	m_TextureData[pixelPos + 3] = a_Color.a * 255;
 }
 
 DLL_BUILD glm::vec4 Texture::getPixel(unsigned int a_X, unsigned int a_Y) const {
@@ -132,9 +146,9 @@ DLL_BUILD glm::vec4 Texture::getPixel(unsigned int a_X, unsigned int a_Y) const 
 	glm::vec4 color;
 
 	//could replace with a memcpy
-	color.r = m_TextureData[pixelPos] / 255.0f;
-	color.g = m_TextureData[pixelPos + 1] /255.0f;
-	color.b = m_TextureData[pixelPos + 2] /255.0f;
+	color.r = m_TextureData[pixelPos + 0] / 255.0f;
+	color.g = m_TextureData[pixelPos + 1] / 255.0f;
+	color.b = m_TextureData[pixelPos + 2] / 255.0f;
 	if (m_TextureType == TextureType::RGBA) {
 		color.a = m_TextureData[pixelPos + 3] / 255.0f;
 	} else {
@@ -222,8 +236,8 @@ void Texture::bindTexture() {
 	glTexImage2D(GL_TEXTURE_2D, 0, texTypeGl, m_TextureWidth, m_TextureHeight, 0, texTypeGl, GL_UNSIGNED_BYTE, m_TextureData);
 
 	//filtering
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0f);
 }
 

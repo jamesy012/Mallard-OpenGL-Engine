@@ -246,23 +246,24 @@ void SideShooter::startUp() {
 		std::sort(std::begin(m_UniformTreesSorted), std::end(m_UniformTreesSorted), objectDistSort);
 	}
 
-	m_StaticTerrainMesh = new MeshBatch();
-	m_StaticTerrainMeshCloseOnly = new MeshBatch();
+	m_StaticTerrainMeshCloseOnly = new MeshBatch(1024, 1024);
+	m_StaticTerrainMesh = new MeshBatch(1024, 1024);
 	for (int i = 0; i < 128u; i++) {
-		m_StaticTerrainMeshCloseOnly->add(m_TreeModels[0]->m_Meshs[0], m_UniformTreesSorted[i]);
+		m_StaticTerrainMeshCloseOnly->add(m_TreeModels[i%NUM_OF_TREE_MODELS], m_UniformTreesSorted[i]);
 	}
 	m_StaticTerrainMesh->setFromBatch(m_StaticTerrainMeshCloseOnly);
 	for (int i = 128u; i < m_NumofTreesGenerated; i++) {
-		m_StaticTerrainMesh->add(m_TreeModels[0]->m_Meshs[0], m_UniformTreesSorted[i]);
+		m_StaticTerrainMesh->add(m_TreeModels[i%NUM_OF_TREE_MODELS], m_UniformTreesSorted[i]);
 	}
-	//m_StaticTerrainMesh->add(m_QuadMesh->m_Meshs[0], m_Ground->getGlobalMatrixCombined());
+	m_StaticTerrainMesh->add(m_QuadMesh, m_Ground->getGlobalMatrixCombined());
 	m_StaticTerrainMesh->bind();
 	m_StaticTerrainMeshCloseOnly->bind();
 	m_StaticTerrainObject = new Object();
 	m_StaticTerrainObject->m_Renderable = m_StaticTerrainMesh;
 
 
-	m_Tp = new TexturePacker(768, 768);
+	m_Tp = new TexturePacker(1100, 1024);
+	m_Tp->addTexture(m_GrassTexture);
 	m_Tp->addTexture(m_GrassTexture);
 	m_Tp->testAdd(100, 100, glm::vec4(1, 0, 0, 1));
 	m_Tp->testAdd(50, 50, glm::vec4(1, 0, 1, 1));
@@ -270,9 +271,20 @@ void SideShooter::startUp() {
 	m_Tp->testAdd(25, 25, glm::vec4(0, 1, 1, 1));
 	m_Tp->addTexture(m_TreeModels[0]->m_Meshs[0]->getTexture());
 
-	for (int i = 0; i < 20; i++) {
-		m_Tp->testAdd(getRandomWithinRange(8, 100),
-					  getRandomWithinRange(8, 100),
+	m_Tp->testAdd(80, 46, glm::vec4(1, 0, 0, 1));
+	m_Tp->testAdd(96, 47, glm::vec4(1, 1, 0, 1));
+	m_Tp->testAdd(21, 31, glm::vec4(1, 1, 1, 1));
+	m_Tp->testAdd(67, 43, glm::vec4(1, 0, 1, 1));
+	m_Tp->testAdd(37, 18, glm::vec4(0, 1, 0, 1));
+	m_Tp->testAdd(36, 17, glm::vec4(0, 0, 1, 1));
+	m_Tp->testAdd(100, 17, glm::vec4(0, 0, 1, 1));
+	m_Tp->testAdd(17, 120, glm::vec4(0.5f, 0.5f, 1, 1));
+	m_Tp->testAdd(60, 34, glm::vec4(0, 1, 1, 1));
+	m_Tp->testAdd(34, 60, glm::vec4(1, 1, 1, 1));
+
+	for (int i = 0; i < 100; i++) {
+		m_Tp->testAdd(getRandomWithinRange(8, 150),
+					  getRandomWithinRange(8, 150),
 					  glm::vec4(getRandomWithinRange(0, 1),
 						getRandomWithinRange(0, 1),
 						getRandomWithinRange(0, 1), 1));
@@ -696,14 +708,14 @@ void SideShooter::draw() {
 		model = m_CameraMain->m_Transform;
 		model.translate(glm::vec3(-15, 0, -20), false);
 		model.rotate(glm::vec3(90, 0, 0));
-		model.setScale(3);
+		model.setScale(5);
 	
 		cameraPvm->setData(&m_CameraMain->getProjectionViewMatrix());
 		Shader::applyUniform(cameraPvm);
 		modelMatrix->setData(&model);
 		Shader::applyUniform(modelMatrix);
 	
-		m_FullScreenQuad->setTexture(m_Tp->m_PackedTexture);
+		m_FullScreenQuad->setTexture(m_StaticTerrainMesh->m_TexturePacked->m_PackedTexture);
 		m_FullScreenQuad->draw();
 	
 		Framebuffer::glCall(Framebuffer::GL_CALLS::DEPTH_TEST, true);
@@ -835,6 +847,7 @@ void SideShooter::drawObjectInstanced(IRenderable * a_Renderable, glm::mat4 * a_
 		glUniformMatrix4fv(loc, amountToRender, GL_FALSE, glm::value_ptr(a_Array[i * MAX_INSTANCES_PER_DRAW]));
 
 		for (int q = -1; q < 2; q++) {
+		//for (int q = 0; q < 1; q++) {
 			offset.x = SSConstants::GAME_WIDTH * 2 * q;
 			uniformOffset->setData(glm::value_ptr(offset));
 			Shader::applyUniform(uniformOffset);
@@ -917,6 +930,13 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 
 				}
 #endif // USE_ONE_TREE_MODEL
+
+				if (a_IncludeGround) {
+
+					drawObjectInstanced(m_Ground, &m_Ground->getGlobalMatrixCombined(), 1);
+
+				}
+
 			} else {
 				if (a_CloseOnly) {
 					m_StaticTerrainObject->m_Renderable = m_StaticTerrainMeshCloseOnly;
@@ -964,10 +984,6 @@ void SideShooter::sceneRender(bool a_CloseOnly, bool a_IncludeGround) {
 	{
 		drawObjectInstanced(m_Player, &m_Player->getGlobalMatrixCombined(), 1);
 
-		if (a_IncludeGround) {
 
-			drawObjectInstanced(m_Ground, &m_Ground->getGlobalMatrixCombined(), 1);
-
-		}
 	}
 }
