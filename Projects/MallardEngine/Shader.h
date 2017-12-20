@@ -2,6 +2,7 @@
 #include "DLLBuild.h"
 
 #include <vector>
+#include <map>
 #include <string>
 
 #include "ShaderUniformData.h"
@@ -73,6 +74,26 @@ public:
 	//and applys the if they have
 	static void checkUniformChanges();
 
+	///PREPROCESSOR FUNCTIONS
+
+	//sets a preprocessor string
+	//if a preprocessor with a_Name doesnt exist then it will create it
+	//will give the preprocessor a value of 0
+	//Note: You will have to load the shaders afterwards (can reload shader)
+	void setPreprocessor(std::string a_Name);
+	//sets a preprocessor string
+	//if a preprocessor with a_Name doesnt exist then it will create it
+	//will modify the preprocessor if it exists 
+	//Note: You will have to load the shaders afterwards (can reload shader)
+	void setPreprocessor(std::string a_Name, float a_Value);
+	//removes a preprocessor string
+	//if a preprocessor with a_Name doesnt exist then nothing will happen
+	//Note: You will have to load the shaders afterwards (can reload shader)
+	void removePreprocessor(std::string a_Name);
+	//returns the value of the preprocessor at a_Name
+	//if it doesnt exist then it will return -1
+	float getPreprocessorValue(std::string a_Name);
+
 	///PUBLIC DATA
 
 	//list of common uniforms for easy and quick access to them
@@ -125,7 +146,7 @@ private:
 
 	//Creates and compiles a shader using the type and code provided
 	//will print a error if there was a issue with the shader code provided
-	void createShader(ShaderTypes a_Type, const char* const* a_Code);
+	void createShader(ShaderTypes a_Type, std::string a_Code);
 
 	///ERRORS
 
@@ -176,4 +197,9 @@ private:
 
 	//shader data split up by it's shader type
 	std::vector<ShaderUniformData*> m_UniformData[SHADER_UNIFORMS_TYPES_SIZE];
+
+	///PREPROCESSOR 
+	//storage of all the preprocessors set in shader
+	//Does not find or modify preprocessors that are defined within the shader code
+	std::map<std::string, float> m_Preprocessors;
 };

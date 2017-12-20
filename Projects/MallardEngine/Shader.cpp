@@ -58,9 +58,7 @@ void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
 		return;
 	}
 
-	const GLchar* shaderCode = shaderText.c_str();
-
-	createShader(a_Type, &shaderCode);
+	createShader(a_Type, shaderText);
 }
 
 void Shader::setFromText(ShaderTypes a_Type, const char * a_ShaderText) {
@@ -69,7 +67,7 @@ void Shader::setFromText(ShaderTypes a_Type, const char * a_ShaderText) {
 	m_Shaders[(int) a_Type].m_LoadedFromText = a_ShaderText;
 
 
-	createShader(a_Type, &a_ShaderText);
+	createShader(a_Type, m_Shaders[(int) a_Type].m_LoadedFromText);
 }
 
 //some very basic shaders for a easy way to display and modify the environment
@@ -354,6 +352,25 @@ void Shader::checkUniformChanges() {
 	}
 }
 
+void Shader::setPreprocessor(std::string a_Name) {
+	m_Preprocessors[a_Name] = 0;
+}
+
+void Shader::setPreprocessor(std::string a_Name, float a_Value) {
+	m_Preprocessors[a_Name] = a_Value;
+}
+
+void Shader::removePreprocessor(std::string a_Name) {
+	m_Preprocessors.erase(a_Name);
+}
+
+float Shader::getPreprocessorValue(std::string a_Name) {
+	if (m_Preprocessors.find(a_Name) != m_Preprocessors.end()) {
+		return m_Preprocessors[a_Name];
+	}
+	return -1;
+}
+
 unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
 	switch (a_Type) {
 		case ShaderTypes::TYPE_VERTEX:
@@ -366,9 +383,35 @@ unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
 }
 
 //creates a shader for a_Type using the code from a_Code
-void Shader::createShader(ShaderTypes a_Type, const char * const * a_Code) {
+void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
+	//only run this if there is a preprocessor added to this shader
+	if (m_Preprocessors.size() != 0) {
+		//find the new line character after #version
+		size_t versionPoint = a_Code.find_first_of("#version") + 8;//8 is the length of #version
+		for (int i = versionPoint; i < a_Code.size(); i++) {
+			if (a_Code.at(i) == '\n') {
+				versionPoint = i + 1;
+				break;
+			}
+		}
+		//now add all the preprocessors into it's own string
+		//could calulate this part before hand??
+		std::string preprocessor;
+		std::map <std::string, float>::iterator it = m_Preprocessors.begin();
+		if (it != m_Preprocessors.end()) {
+			preprocessor += "#define " + it->first + " " + std::to_string(it->second) + "\n";
+		}
+		//finaly add the preprocessor string to the shader program code after the #version
+		a_Code.insert(versionPoint, preprocessor);
+	}
+
+	//glShaderSource takes a const char* cosnt*
+	//this is how
+	const char* shaderCode = a_Code.c_str();
+	const char* const * shaderCodePtr = &shaderCode;
+
 	unsigned int shaderIndex = glCreateShader(getOpenglShaderType(a_Type));
-	glShaderSource(shaderIndex, 1, a_Code, NULL);
+	glShaderSource(shaderIndex, 1, shaderCodePtr, 0);
 	glCompileShader(shaderIndex);
 
 	checkGlErrorShader(GL_COMPILE_STATUS, shaderIndex, "createShader::COMPILATION_FAILED");
