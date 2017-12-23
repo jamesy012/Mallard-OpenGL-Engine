@@ -14,12 +14,15 @@
 #include "Shader.h"
 #include "ShaderUniformData.h"
 
+Texture* Texture::m_White1x1Texture;
+
 Texture::Texture() {
 	m_TextureHeight = m_TextureWidth = 0;
 	m_TextureType = TextureType::NONE;
 	//todo this might need to change, if i allow texture id's to be set later
 	m_CreatedTexture = true;
 }
+
 
 Texture::Texture(unsigned int a_TextureID, unsigned int a_Width, unsigned int a_Height) {
 	m_TextureType = TextureType::NONE;
@@ -28,6 +31,7 @@ Texture::Texture(unsigned int a_TextureID, unsigned int a_Width, unsigned int a_
 	m_TextureHeight = a_Height;
 	m_CreatedTexture = false;
 }
+
 
 Texture::Texture(unsigned int a_Width, unsigned int a_Height, TextureType a_Type) {
 	m_TextureType = a_Type;
@@ -66,10 +70,12 @@ Texture::~Texture() {
 		}
 		m_TextureWidth = m_TextureHeight = 0;
 		stbi_image_free(m_TextureData);
+		m_TextureData = nullptr;
 	}
 }
 
-DLL_BUILD void Texture::load1x1Texture() {
+/*
+void Texture::load1x1Texture() {
 	//is there a better way to do this??
 	m_TextureData = new GLubyte[3];
 	DataFormat data[] = { 255,255,255 };
@@ -85,8 +91,9 @@ DLL_BUILD void Texture::load1x1Texture() {
 	m_Resource_LoadOveride = true;
 	//load("TEXTURE_1X1");
 }
+*/
 
-DLL_BUILD unsigned int Texture::getGLTypeFromTextureType(const TextureType a_Type) {
+unsigned int Texture::getGLTypeFromTextureType(const TextureType a_Type) {
 	switch (a_Type) {
 		case TextureType::RGB:
 			return GL_RGB;
@@ -97,7 +104,7 @@ DLL_BUILD unsigned int Texture::getGLTypeFromTextureType(const TextureType a_Typ
 	}
 }
 
-DLL_BUILD void Texture::bindTexture(const Texture * a_Texture, const int a_Slot) {
+void Texture::bindTexture(const Texture * a_Texture, const int a_Slot) {
 	glActiveTexture(GL_TEXTURE0 + a_Slot);
 	if (a_Texture == nullptr) {
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -117,7 +124,7 @@ DLL_BUILD void Texture::bindTexture(const Texture * a_Texture, const int a_Slot)
 	glBindTexture(GL_TEXTURE_2D, a_Texture->m_TextureId);
 }
 
-DLL_BUILD void Texture::bindAndApplyTexture(const Texture * a_Texture, const int a_Slot, ShaderUniformData * a_TextureUniform) {
+void Texture::bindAndApplyTexture(const Texture * a_Texture, const int a_Slot, ShaderUniformData * a_TextureUniform) {
 	//bind a_Texture to a_Slot in the current shader
 	bindTexture(a_Texture, a_Slot);
 
@@ -127,18 +134,30 @@ DLL_BUILD void Texture::bindAndApplyTexture(const Texture * a_Texture, const int
 	Shader::applyUniform(a_TextureUniform);
 }
 
-DLL_BUILD void Texture::setPixel(unsigned int a_X, unsigned int a_Y, glm::vec4 a_Color) {
+void Texture::setPixel(unsigned int a_X, unsigned int a_Y, glm::vec4 a_Color) {
 	int dataSize = getDataSize();
 	int pixelPos = (a_X + (a_Y * m_TextureWidth)) * dataSize;
 
 	//could replace with a memcpy
-	m_TextureData[pixelPos + 0] = a_Color.r * 255;
-	m_TextureData[pixelPos + 1] = a_Color.g * 255;
-	m_TextureData[pixelPos + 2] = a_Color.b * 255;
-	m_TextureData[pixelPos + 3] = a_Color.a * 255;
+	m_TextureData[pixelPos + 0] = (DataFormat)(a_Color.r * 255);
+	m_TextureData[pixelPos + 1] = (DataFormat)(a_Color.g * 255);
+	m_TextureData[pixelPos + 2] = (DataFormat)(a_Color.b * 255);
+	if (m_TextureType == TextureType::RGBA) {
+		m_TextureData[pixelPos + 3] = (DataFormat)(a_Color.a * 255);
+	}
 }
 
-DLL_BUILD glm::vec4 Texture::getPixel(unsigned int a_X, unsigned int a_Y) const {
+void Texture::setPixel(unsigned int a_X, unsigned int a_Y, glm::vec3 a_Color) {
+	int dataSize = getDataSize();
+	int pixelPos = (a_X + (a_Y * m_TextureWidth)) * dataSize;
+
+	//could replace with a memcpy
+	m_TextureData[pixelPos + 0] = (DataFormat)(a_Color.r * 255);
+	m_TextureData[pixelPos + 1] = (DataFormat)(a_Color.g * 255);
+	m_TextureData[pixelPos + 2] = (DataFormat)(a_Color.b * 255);
+}
+
+glm::vec4 Texture::getPixel(unsigned int a_X, unsigned int a_Y) const {
 
 	int dataSize = getDataSize();
 	int pixelPos = (a_X + (a_Y * m_TextureWidth)) * dataSize;
@@ -211,17 +230,17 @@ void Texture::resourceCopy(IResource * a_Resource) {
 	int totalSize = textureSize * dataSize;
 	m_TextureData = new DataFormat[totalSize];
 	memcpy(m_TextureData, tex->m_TextureData, totalSize * sizeof(DataFormat));
-	bindTexture();
+	bind();
 }
 
 void Texture::resourceUnload() {
 }
 
-DLL_BUILD IResource * Texture::resourceCreate() {
+IResource * Texture::resourceCreate() {
 	return new Texture();
 }
 
-void Texture::bindTexture() {
+void Texture::bind() {
 	if (m_TextureId != 0) {
 		//display warning?, overwriting data
 		glDeleteTextures(1, &m_TextureId);

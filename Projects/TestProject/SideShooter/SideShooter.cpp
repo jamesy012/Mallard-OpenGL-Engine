@@ -252,7 +252,7 @@ void SideShooter::startUp() {
 		m_StaticTerrainMeshCloseOnly->add(m_TreeModels[i%NUM_OF_TREE_MODELS], m_UniformTreesSorted[i]);
 	}
 	m_StaticTerrainMesh->setFromBatch(m_StaticTerrainMeshCloseOnly);
-	for (int i = 128u; i < m_NumofTreesGenerated; i++) {
+	for (size_t i = 128u; i < m_NumofTreesGenerated; i++) {
 		m_StaticTerrainMesh->add(m_TreeModels[i%NUM_OF_TREE_MODELS], m_UniformTreesSorted[i]);
 	}
 	m_StaticTerrainMesh->add(m_QuadMesh, m_Ground->getGlobalMatrixCombined());
@@ -283,8 +283,8 @@ void SideShooter::startUp() {
 	m_Tp->testAdd(34, 60, glm::vec4(1, 1, 1, 1));
 
 	for (int i = 0; i < 100; i++) {
-		m_Tp->testAdd(getRandomWithinRange(8, 150),
-					  getRandomWithinRange(8, 150),
+		m_Tp->testAdd((size_t)getRandomWithinRange(8, 150),
+					  (size_t)getRandomWithinRange(8, 150),
 					  glm::vec4(getRandomWithinRange(0, 1),
 						getRandomWithinRange(0, 1),
 						getRandomWithinRange(0, 1), 1));

@@ -10,8 +10,8 @@ class Texture;
 class DLL_BUILD TexturePacker {
 public:
 	struct TextureBox {
-		int x, y;
-		const int width, height;
+		unsigned int x, y;
+		const unsigned int width, height;
 		const Texture* texture;
 	};
 
@@ -21,7 +21,7 @@ public:
 	~TexturePacker();
 
 	TextureBox* addTexture(const Texture* a_Texture);
-	TextureBox* testAdd(const int a_Width, const int a_Height, const glm::vec4 a_Color);
+	TextureBox* testAdd(const unsigned int a_Width, const unsigned int a_Height, const glm::vec4 a_Color);
 	void bind();
 
 	unsigned int getWidth() const {
@@ -35,10 +35,10 @@ public:
 private:
 	//checks if two boxes collide
 	bool boxCollide(TextureBox* a_Box1, TextureBox* a_Box2) const;
-	TextureBox* getBoxInsidePoint(const int a_X, const int a_Y) const;
+	TextureBox* getBoxInsidePoint(const unsigned int a_X, const unsigned int a_Y) const;
 	TextureBox* getBoxInsideBox(TextureBox* a_Box) const;
 
-	TextureBox* createTextureBox(const int a_Width, const int a_Height, const Texture* a_Texture = nullptr);
+	TextureBox* createTextureBox(const unsigned int a_Width, const unsigned int a_Height, const Texture* a_Texture = nullptr);
 
 	bool findSpotForBox(TextureBox* a_Box);
 

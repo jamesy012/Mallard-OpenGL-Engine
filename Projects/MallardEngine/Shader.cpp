@@ -388,7 +388,7 @@ void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
 	if (m_Preprocessors.size() != 0) {
 		//find the new line character after #version
 		size_t versionPoint = a_Code.find_first_of("#version") + 8;//8 is the length of #version
-		for (int i = versionPoint; i < a_Code.size(); i++) {
+		for (size_t i = versionPoint; i < a_Code.size(); i++) {
 			if (a_Code.at(i) == '\n') {
 				versionPoint = i + 1;
 				break;

@@ -37,7 +37,7 @@ void EnemySider::normalUpdate() {
 	}
 
 	glm::vec3 offset;
-	offset.x = (m_RightSide ? 1 : -1) * 40;
+	offset.x = (m_RightSide ? 1 : -1) * 40.0f;
 	glm::vec3 pos;
 	pos = lerp(m_Transform.getLocalPosition(), m_Player->getPositionCombined() + offset, 3 * TimeHandler::getDeltaTime());
 	m_Transform.setPosition(pos);

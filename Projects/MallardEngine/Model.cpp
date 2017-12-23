@@ -20,7 +20,7 @@ Model::~Model() {
 			delete m_Meshs[i];
 		}
 		for (size_t i = 0; i < m_ModelMeshData.size(); i++) {
-			if (m_ModelMeshData[i]->m_Texture != nullptr) {
+			if (m_ModelMeshData[i]->m_Texture != nullptr && m_ModelMeshData[i]->m_Texture != Texture::m_White1x1Texture) {
 				m_ModelMeshData[i]->m_Texture->unload();
 			}
 			delete m_ModelMeshData[i];
@@ -102,9 +102,7 @@ void Model::loadTextures() {
 		} else {
 			//no textures were found, lets just add a empty texture
 			//since the assimp material index will still count this
-			Texture* tex = new Texture();
-			tex->load1x1Texture();
-			mmd->m_Texture = tex;
+			mmd->m_Texture = Texture::m_White1x1Texture;
 		}
 
 		//aiColor3D color(0.f, 0.f, 0.f);

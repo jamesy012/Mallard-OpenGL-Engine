@@ -57,7 +57,7 @@ void MeshBatch::add(Mesh * a_Mesh, glm::mat4 a_ModelMatrix) {
 	m_CombinedMesh->m_Indices.resize(m_CombinedMesh->m_Indices.size() + a_Mesh->m_Indices.size());
 
 	int combinedVertIndex = vertArraySize;
-	for (int i = 0; i < addVertArraySize; i++) {
+	for (size_t i = 0; i < addVertArraySize; i++) {
 		MeshVerticesType mv = a_Mesh->m_Vertices[i];
 		//position change
 		mv.position = a_ModelMatrix * mv.position;
@@ -71,7 +71,7 @@ void MeshBatch::add(Mesh * a_Mesh, glm::mat4 a_ModelMatrix) {
 
 	//this could be a memcpy
 	int combinedIndexIndex = indexArraySize;
-	for (int i = 0; i < addIndexArraySize; i++) {
+	for (size_t i = 0; i < addIndexArraySize; i++) {
 		m_CombinedMesh->m_Indices[combinedIndexIndex + i] = combinedVertIndex + a_Mesh->m_Indices[i];
 	}
 
@@ -85,7 +85,7 @@ void MeshBatch::add(Mesh * a_Mesh, glm::mat4 a_ModelMatrix) {
 void MeshBatch::add(Model * a_Model, glm::mat4 a_ModelMatrix) {
 	//will have to change how this works after implenting a model matrix for each model
 	//that will the case after adding in animation
-	for (int i = 0; i < a_Model->m_Meshs.size(); i++) {
+	for (size_t i = 0; i < a_Model->m_Meshs.size(); i++) {
 		add(a_Model->m_Meshs[i], a_ModelMatrix);
 	}
 }

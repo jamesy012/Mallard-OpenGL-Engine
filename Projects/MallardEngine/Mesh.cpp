@@ -274,9 +274,8 @@ void Mesh::bind() {
 	//this could also create lots of texture objects on the gpu,
 	//maybe create one 1x1 texture and keep using that instead
 	if (m_Texture == nullptr) {
-		m_Texture = new Texture();
-		m_Texture->load1x1Texture();
-		m_CreatedTexture = true;
+		m_Texture = Texture::m_White1x1Texture;
+		m_CreatedTexture = false;
 	}
 }
 
