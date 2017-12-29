@@ -10,6 +10,7 @@
 
 #include "TimeHandler.h"
 #include "Input.h"
+#include "Texture.h"
 #include "ResourceManager.h"
 #include "Transform.h"
 #include "Window.h"
@@ -94,6 +95,10 @@ void Application::run() {
 	m_CameraGame->setPerspective(60.0f, m_ApplicationWindow->getFramebufferWidth() / (float)m_ApplicationWindow->getFramebufferHeight(), 0.1f, 1000.0f);
 	m_CameraUi = new Camera();
 	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+
+	Texture::m_White1x1Texture = new Texture(1,1,TextureType::RGB);
+	Texture::m_White1x1Texture->setPixel(0, 0, glm::vec4(1, 1, 1, 1));
+	Texture::m_White1x1Texture->bind();
 
 	//gen frame buffers
 	{
@@ -390,6 +395,8 @@ void Application::run() {
 
 	delete m_ShaderText;
 	delete m_Font;
+
+	delete Texture::m_White1x1Texture;
 
 	//remove root transform
 	delete m_RootTransform;
