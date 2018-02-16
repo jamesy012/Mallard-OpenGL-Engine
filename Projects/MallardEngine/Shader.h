@@ -139,6 +139,9 @@ public:
 private:
 	///PRIVATE FUNCTIONS
 
+	//loads all the files from shader Include dir into a map
+	void loadIncludeFiles();
+
 	//Converts a ShaderTypes into the opengl version of that Shader
 	//input: ShaderTypes::TYPE_VERTEX 
 	//output: GL_VERTEX_SHADER define from opengl header

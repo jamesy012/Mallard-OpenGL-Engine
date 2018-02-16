@@ -7,6 +7,12 @@
 #include <sstream> //std::stringstream
 #include <string> //std::string
 
+#if _WINDLL
+#include <Windows.h>
+#include <tchar.h>
+#endif // _WINDLL
+
+
 //for auto assigning uniforms for shaders
 #include "TimeHandler.h"
 #include "Window.h"
@@ -14,12 +20,16 @@
 
 static const Shader* m_LastUsed = nullptr;
 
+static const char* m_IncludeShaderDir = "Shaders\\Include\\";
+static std::map<std::string, std::string> m_IncludeShaderData;
+
 Shader::Shader() {
 	m_Program = 0;
 	for (int i = 0; i < SHADER_TYPES_SIZE; i++) {
 		m_Shaders[i].m_ShaderID = 0;
 	}
 	m_Linked = false;
+	loadIncludeFiles();
 }
 
 
@@ -45,7 +55,7 @@ Shader::~Shader() {
 
 void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
 	//copy file path into our stored version
-	m_Shaders[(int) a_Type].m_FilePath = a_FilePath;
+	m_Shaders[(int)a_Type].m_FilePath = a_FilePath;
 
 
 	std::ifstream shaderFile(a_FilePath);
@@ -63,11 +73,11 @@ void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
 
 void Shader::setFromText(ShaderTypes a_Type, const char * a_ShaderText) {
 	//reset file path
-	m_Shaders[(int) a_Type].m_FilePath = "";
-	m_Shaders[(int) a_Type].m_LoadedFromText = a_ShaderText;
+	m_Shaders[(int)a_Type].m_FilePath = "";
+	m_Shaders[(int)a_Type].m_LoadedFromText = a_ShaderText;
 
 
-	createShader(a_Type, m_Shaders[(int) a_Type].m_LoadedFromText);
+	createShader(a_Type, m_Shaders[(int)a_Type].m_LoadedFromText);
 }
 
 //some very basic shaders for a easy way to display and modify the environment
@@ -150,9 +160,9 @@ void Shader::reloadShaders() {
 		}
 		//if loaded from text
 		if (sd->m_FilePath == "") {
-			setFromText((ShaderTypes) i, sd->m_LoadedFromText.c_str());
+			setFromText((ShaderTypes)i, sd->m_LoadedFromText.c_str());
 		} else {//else loaded from file
-			setFromPath((ShaderTypes) i, sd->m_FilePath.c_str());
+			setFromPath((ShaderTypes)i, sd->m_FilePath.c_str());
 		}
 	}
 
@@ -188,7 +198,7 @@ void Shader::createProgram() {
 //will delete all loaded shaders when complete
 //and gets uniforms
 void Shader::linkShader() {
-	printf("Linking Shader: %s, %s\n", m_Shaders[(int) ShaderTypes::TYPE_VERTEX].m_FilePath.c_str(), m_Shaders[(int) ShaderTypes::TYPE_FRAGMENT].m_FilePath.c_str());
+	printf("Linking Shader: %s, %s\n", m_Shaders[(int)ShaderTypes::TYPE_VERTEX].m_FilePath.c_str(), m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_FilePath.c_str());
 	if (m_Linked) {
 		printf("Shader already linked\n");
 		return;
@@ -255,11 +265,11 @@ void Shader::use(const Shader* a_Shader) {
 	if (a_Shader->m_CommonUniforms.m_Resolution != nullptr) {
 		Framebuffer* fb = Framebuffer::getCurrentFramebuffer();
 		if (fb != nullptr) {
-			float resulution[2] = { (float) fb->getFramebufferWidth(), (float) fb->getFramebufferHeight() };
+			float resulution[2] = { (float)fb->getFramebufferWidth(), (float)fb->getFramebufferHeight() };
 			a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);
 		} else {
 			Window* mainWin = Window::getMainWindow();
-			float resulution[2] = { (float) mainWin->getFramebufferWidth(), (float) mainWin->getFramebufferHeight() };
+			float resulution[2] = { (float)mainWin->getFramebufferWidth(), (float)mainWin->getFramebufferHeight() };
 			a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);
 		}
 		a_Shader->applyUniform(a_Shader->m_CommonUniforms.m_Resolution);
@@ -272,7 +282,7 @@ const Shader * Shader::getCurrentShader() {
 
 ShaderUniformData * Shader::getUniform(const ShaderUniformTypes a_Type, const char * a_Name) const {
 	ShaderUniformData* uniform = nullptr;
-	int uniformType = (int) a_Type;
+	int uniformType = (int)a_Type;
 
 	//go through each uniform of the given type
 	//and check if it's name matches the name supplied
@@ -312,22 +322,22 @@ void Shader::applyUniform(ShaderUniformData * a_Data) {
 		//switch case to find which glUniform... call to make
 		switch (a_Data->m_Type) {
 			case ShaderUniformTypes::MAT4:
-				glUniformMatrix4fv(loc, amount, GL_FALSE, (float*) a_Data->m_Data);
+				glUniformMatrix4fv(loc, amount, GL_FALSE, (float*)a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::VEC4:
-				glUniform4fv(loc, amount, (float*) a_Data->m_Data);
+				glUniform4fv(loc, amount, (float*)a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::VEC3:
-				glUniform3fv(loc, amount, (float*) a_Data->m_Data);
+				glUniform3fv(loc, amount, (float*)a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::VEC2:
-				glUniform2fv(loc, amount, (float*) a_Data->m_Data);
+				glUniform2fv(loc, amount, (float*)a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::FLOAT:
-				glUniform1fv(loc, amount, (float*) a_Data->m_Data);
+				glUniform1fv(loc, amount, (float*)a_Data->m_Data);
 				break;
 			case ShaderUniformTypes::SAMPLER2D:
-				glUniform1iv(loc, amount, (int*) a_Data->m_Data);
+				glUniform1iv(loc, amount, (int*)a_Data->m_Data);
 				break;
 			default:
 				printf("ERROR WITH SHADER, SETTING UNIFORM DATA %i, Name: %s\n", a_Data->m_Type, a_Data->m_Name.c_str());
@@ -369,6 +379,56 @@ float Shader::getPreprocessorValue(std::string a_Name) {
 		return m_Preprocessors[a_Name];
 	}
 	return -1;
+}
+
+void Shader::loadIncludeFiles() {
+#ifdef _WIN32
+	if (m_IncludeShaderData.size() != 0) {
+		return;
+	}
+	WIN32_FIND_DATA FindFileData;
+	HANDLE hFind;
+	std::string textTemp;
+
+	textTemp = (std::string(m_IncludeShaderDir) + "*.inc");
+	const char* includeText = textTemp.c_str();
+	hFind = FindFirstFile(includeText, &FindFileData);
+	if (hFind == INVALID_HANDLE_VALUE) {
+		printf("loadIncludeFiles() cant read/find include directory, FindFirstFile ErrorID #%d\n", GetLastError());
+		//add in fake data into the map, so we dont run this again
+		m_IncludeShaderData["ERROR"] = "ERROR Unable to read/find directory";
+		return;
+	} else {
+		do {
+			//ignore current and parent directories
+			if (_tcscmp(FindFileData.cFileName, TEXT(".")) == 0 || _tcscmp(FindFileData.cFileName, TEXT("..")) == 0)
+				continue;
+
+			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				//ignore directories
+			} else {
+				//load the text from the files
+				textTemp = (std::string(m_IncludeShaderDir) + FindFileData.cFileName);
+				const char* filePath = textTemp.c_str();
+
+				std::ifstream shaderFile(filePath);
+				std::stringstream fileBuffer;
+				fileBuffer << shaderFile.rdbuf();//get text from file into buffer
+				std::string shaderText = fileBuffer.str();
+
+				m_IncludeShaderData[FindFileData.cFileName] = shaderText;
+
+			}
+		} while (FindNextFile(hFind, &FindFileData));
+		FindClose(hFind);
+	}
+	if (m_IncludeShaderData.size() == 0) {
+		m_IncludeShaderData["ERROR"] = "ERROR Empty Dir";
+		return;
+	}
+#else
+	printf("Include only works on windows\n");
+#endif // _WIN32
 }
 
 unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
@@ -416,8 +476,8 @@ void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
 
 	checkGlErrorShader(GL_COMPILE_STATUS, shaderIndex, "createShader::COMPILATION_FAILED");
 
-	m_Shaders[(int) a_Type].m_ShaderID = shaderIndex;
-	m_Shaders[(int) a_Type].m_ShaderType = a_Type;
+	m_Shaders[(int)a_Type].m_ShaderID = shaderIndex;
+	m_Shaders[(int)a_Type].m_ShaderType = a_Type;
 }
 
 //Gets error message for shaders from opengl using a_ErrorType
@@ -469,7 +529,7 @@ void Shader::getShaderUniforms() {
 	//modification of uniforms
 	for (int i = 0; i < count; i++) {
 		//gets uniform name and type
-		glGetActiveUniform(m_Program, (GLuint) i, bufSize, &length, &size, &type, name);
+		glGetActiveUniform(m_Program, (GLuint)i, bufSize, &length, &size, &type, name);
 
 		//sets up a shaderUniformData object
 		ShaderUniformData* uniformData = new ShaderUniformData();
@@ -527,7 +587,7 @@ void Shader::getShaderUniforms() {
 		uniformData->m_ArraySize = size;
 
 		//add the uniform data to the full list
-		m_UniformData[(int) uniformData->m_Type].push_back(uniformData);
+		m_UniformData[(int)uniformData->m_Type].push_back(uniformData);
 
 		//setting up common uniforms
 		//todo move to array for easy setting/comparisons
@@ -551,10 +611,10 @@ void Shader::getShaderUniforms() {
 			case ShaderUniformTypes::VEC3:
 			case ShaderUniformTypes::VEC2:
 			case ShaderUniformTypes::FLOAT:
-				glGetUniformfv(m_Program, uniformData->m_UniformLocation, (GLfloat*) uniformData->m_Data);
+				glGetUniformfv(m_Program, uniformData->m_UniformLocation, (GLfloat*)uniformData->m_Data);
 				break;
 			case ShaderUniformTypes::SAMPLER2D:
-				glGetUniformiv(m_Program, uniformData->m_UniformLocation, (GLint*) uniformData->m_Data);
+				glGetUniformiv(m_Program, uniformData->m_UniformLocation, (GLint*)uniformData->m_Data);
 				break;
 			default:
 				printf("ERROR WITH SHADER, GETTING UNIFORM DEFAULT DATA %u, Name: %s\n", type, name);
