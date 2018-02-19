@@ -382,10 +382,10 @@ float Shader::getPreprocessorValue(std::string a_Name) {
 }
 
 void Shader::loadIncludeFiles() {
-#ifdef _WIN32
 	if (m_IncludeShaderData.size() != 0) {
 		return;
 	}
+#ifdef _WIN32
 	WIN32_FIND_DATA FindFileData;
 	HANDLE hFind;
 	std::string textTemp;
@@ -408,15 +408,16 @@ void Shader::loadIncludeFiles() {
 				//ignore directories
 			} else {
 				//load the text from the files
-				textTemp = (std::string(m_IncludeShaderDir) + FindFileData.cFileName);
+				std::string fileName = FindFileData.cFileName;
+				textTemp = std::string(m_IncludeShaderDir) + fileName;
 				const char* filePath = textTemp.c_str();
 
 				std::ifstream shaderFile(filePath);
 				std::stringstream fileBuffer;
 				fileBuffer << shaderFile.rdbuf();//get text from file into buffer
 				std::string shaderText = fileBuffer.str();
-
-				m_IncludeShaderData[FindFileData.cFileName] = shaderText;
+				
+				m_IncludeShaderData[fileName] = shaderText;
 
 			}
 		} while (FindNextFile(hFind, &FindFileData));
@@ -427,23 +428,12 @@ void Shader::loadIncludeFiles() {
 		return;
 	}
 #else
+	m_IncludeShaderData["ERROR"] = "ERROR Only works on Windows";
 	printf("Include only works on windows\n");
 #endif // _WIN32
 }
 
-unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
-	switch (a_Type) {
-		case ShaderTypes::TYPE_VERTEX:
-			return GL_VERTEX_SHADER;
-		case ShaderTypes::TYPE_FRAGMENT:
-			return GL_FRAGMENT_SHADER;
-		default:
-			return 0;
-	}
-}
-
-//creates a shader for a_Type using the code from a_Code
-void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
+void Shader::addPreprocessorToShader(std::string& a_Code) {
 	//only run this if there is a preprocessor added to this shader
 	if (m_Preprocessors.size() != 0) {
 		//find the new line character after #version
@@ -464,6 +454,72 @@ void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
 		//finaly add the preprocessor string to the shader program code after the #version
 		a_Code.insert(versionPoint, preprocessor);
 	}
+}
+
+void Shader::addIncludesToShader(std::string & a_Code) {
+	//scan file for #Include "
+	//read what's in the quotation marks
+	//check to see if it's in the include map
+	//if it is then replace the include
+	//else delete the include
+
+	//todo: check to see if the include has been commented out
+
+	//location of the start of the #include
+	size_t includePoint = 0;
+	//point of the start of the include file name
+	size_t includeFilePoint = 0;
+	//constant size of #include "
+	const size_t includeSize = 10;
+	//size of the file name
+	size_t includeFileNameSize;
+	while (true) {
+		//find the include
+		includePoint = a_Code.find("#include \"", includePoint);
+		//if no more/none in the file, then return
+		if (includePoint == a_Code.npos) {
+			return;
+		}
+		//text to replace it with
+		std::string includeFileData;
+		//set the pile name location
+		includeFilePoint = includePoint + includeSize;
+		//find the size of the file name
+		includeFileNameSize = a_Code.find('\"', includeFilePoint) - includeFilePoint;
+		//copy the name of the file
+		std::string includeFileName = a_Code.substr(includeFilePoint, includeFileNameSize);
+		//locate the file in the include map
+		auto includeIterator = m_IncludeShaderData.find(includeFileName);
+		//if that include exists
+		if (includeIterator != m_IncludeShaderData.end()) {
+			//copy the string
+			includeFileData = includeIterator->second;
+		} else {
+			printf("Include Failed. no include with name %s\n", includeFileName);
+			//this is fine to keep going, as the next part removes the #include "..."
+			//and then inserts a empty string
+		}
+		a_Code.erase(includePoint, includeFileNameSize + includeSize + 1);//+ 1 for the final "
+		a_Code.insert(includePoint, includeFileData);
+	}
+}
+
+unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
+	switch (a_Type) {
+		case ShaderTypes::TYPE_VERTEX:
+			return GL_VERTEX_SHADER;
+		case ShaderTypes::TYPE_FRAGMENT:
+			return GL_FRAGMENT_SHADER;
+		default:
+			return 0;
+	}
+}
+
+//creates a shader for a_Type using the code from a_Code
+void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
+	addPreprocessorToShader(a_Code);
+	addIncludesToShader(a_Code);
+
 
 	//glShaderSource takes a const char* cosnt*
 	//this is how

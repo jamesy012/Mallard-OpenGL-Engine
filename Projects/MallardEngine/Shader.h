@@ -141,6 +141,8 @@ private:
 
 	//loads all the files from shader Include dir into a map
 	void loadIncludeFiles();
+	void addPreprocessorToShader(std::string& a_Code);
+	void addIncludesToShader(std::string& a_Code);
 
 	//Converts a ShaderTypes into the opengl version of that Shader
 	//input: ShaderTypes::TYPE_VERTEX 
