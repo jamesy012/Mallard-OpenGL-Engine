@@ -448,7 +448,7 @@ void Shader::addPreprocessorToShader(std::string& a_Code) {
 		//could calulate this part before hand??
 		std::string preprocessor;
 		std::map <std::string, float>::iterator it = m_Preprocessors.begin();
-		if (it != m_Preprocessors.end()) {
+		for (; it != m_Preprocessors.end();it++) {
 			preprocessor += "#define " + it->first + " " + std::to_string(it->second) + "\n";
 		}
 		//finaly add the preprocessor string to the shader program code after the #version

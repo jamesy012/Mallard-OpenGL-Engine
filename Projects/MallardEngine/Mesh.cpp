@@ -155,8 +155,10 @@ void Mesh::drawInstance(unsigned int a_Amount) {
 	if (m_Texture != nullptr) {
 		//todo move this out of mesh
 		int slot = 0;
-		Texture::bindAndApplyTexture(m_Texture, slot, Shader::getCurrentShader()->m_CommonUniforms.m_Textures[0]);
-
+		ShaderUniformData* textureUniform = Shader::getCurrentShader()->m_CommonUniforms.m_Textures[0];
+		if (textureUniform != nullptr) {
+			Texture::bindAndApplyTexture(m_Texture, slot, textureUniform);
+		}
 	}
 
 	glBindVertexArray(m_Vao);

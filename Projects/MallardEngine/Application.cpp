@@ -51,17 +51,20 @@ void Application::run() {
 		//could not start glfw
 		return;
 	}
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);//requied Compat profile for Nsight
 	//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+#if _DEBUG
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif // _DEBUG
 
 	/* get a handle to the predefined STDOUT log stream and attach
 	it to the logging system. It remains active for all further
 	calls to aiImportFile(Ex) and aiApplyPostProcessing. */
-	struct aiLogStream stream;
-	stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
-	aiAttachLogStream(&stream);
+	//struct aiLogStream stream;
+	//stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+	//aiAttachLogStream(&stream);
 
 	//create window for app
 	m_ApplicationWindow = new Window();
@@ -82,6 +85,18 @@ void Application::run() {
 		return;
 	}
 
+	{
+		int glMajor, glMinor;
+		const  GLubyte* glVersion;
+		const  GLubyte* glVender;
+		const  GLubyte* glRenderer;
+		glGetIntegerv(GL_MAJOR_VERSION, &glMajor);
+		glGetIntegerv(GL_MINOR_VERSION, &glMinor);
+		glVersion = glGetString(GL_VERSION);
+		glVender = glGetString(GL_VENDOR);
+		glRenderer = glGetString(GL_RENDERER);
+		printf("OpenGL - %s\n(%i.%i) Vender: %s, Renderer: %s\n\n", glVersion, glMajor , glMinor, glVender, glRenderer);
+	}
 	/** SET UP PROGRAM FOR STARTUP */
 
 	//set up scene root transform
@@ -198,7 +213,7 @@ void Application::run() {
 	//note without this call Logging::quickTimePush and Logging::quickTimePop appear to get the wrong value,
 	//by including the time the program waits for the vsync
 	//the interval can be any other number, it just needs this call
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	Logging::newFrame();
 
