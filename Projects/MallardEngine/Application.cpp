@@ -21,6 +21,9 @@
 #include "Font.h"
 #include "Skybox.h"
 
+
+#include "GLDebug.h"
+
 /* assimp include files. These three are usually needed. */
 //these are needed for the logging system
 #include <assimp/cimport.h>
@@ -98,6 +101,19 @@ void Application::run() {
 		printf("OpenGL - %s\n(%i.%i) Vender: %s, Renderer: %s\n\n", glVersion, glMajor , glMinor, glVender, glRenderer);
 	}
 	/** SET UP PROGRAM FOR STARTUP */
+#ifdef _DEBUG
+	//other callbacks
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback((GLDEBUGPROC)GLDebug::openGLMessageCallback, 0);
+	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
+	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
+//131185 - Buffer detailed info : Buffer object _ID_ (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+	const GLsizei numOfIds = 1;
+	GLuint ids[numOfIds] = { 131185 };
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, numOfIds, ids, false);
+	GLenum error = glGetError();
+#endif // _DEBUG
 
 	//set up scene root transform
 	m_RootTransform = new Transform("Root Transform");
@@ -114,6 +130,7 @@ void Application::run() {
 	Texture::m_White1x1Texture = new Texture(1,1,TextureType::RGB);
 	Texture::m_White1x1Texture->setPixel(0, 0, glm::vec4(1, 1, 1, 1));
 	Texture::m_White1x1Texture->bind();
+	GLDebug_NAMEOBJ(GL_TEXTURE, Texture::m_White1x1Texture->getTextureId(), "White 1x1");
 
 	//gen frame buffers
 	{
@@ -135,6 +152,16 @@ void Application::run() {
 			}
 		}
 	}
+	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbGameFrame->getFramebufferId(), "Game Frame");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrame->getTexture(0)->getTextureId(), "Game Frame - RGBA");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrame->getTexture(1)->getTextureId(), "Game Frame - Depth");
+	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbGameFrameCopy->getFramebufferId(), "Last Game Frame");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrameCopy->getTexture(0)->getTextureId(), "Last Game Frame - RGBA");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrameCopy->getTexture(1)->getTextureId(), "Last Game Frame - Depth");
+	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbUIFrame->getFramebufferId(), "UI Frame");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbUIFrame->getTexture(0)->getTextureId(), "UI Frame - RGBA");
+	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbCombinedFrame->getFramebufferId(), "Combined Frame");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbCombinedFrame->getTexture(0)->getTextureId(), "Combined Frame - RGBA");
 
 	m_ShaderPPBasic = new Shader();
 	m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
@@ -213,13 +240,14 @@ void Application::run() {
 	//note without this call Logging::quickTimePush and Logging::quickTimePop appear to get the wrong value,
 	//by including the time the program waits for the vsync
 	//the interval can be any other number, it just needs this call
-	glfwSwapInterval(0);
+	glfwSwapInterval(1);
 
 	Logging::newFrame();
 
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
 		if (m_Flags.m_RunDebugTimers) {
+			//run them every second
 			m_DebugRunTimers = (TimeHandler::getCurrentTime() - m_LastDebugTimerRun) > 1;
 		} else {
 			m_DebugRunTimers = false;
@@ -291,8 +319,6 @@ void Application::run() {
 				Logging::quickTimePop(true);
 				Logging::quickTimePush("Draw Game");
 			}
-			//we want to include vertices drawn during the main draw
-			Logging::objectRenderedAllowAdditions(true);
 			//newFrame call is here because:
 			//When done before the UI draw, it removes the data that was gathered from the normal draw
 			Logging::newFrame();
@@ -308,6 +334,9 @@ void Application::run() {
 
 			//render skybox
 			m_SkyboxGame->draw();
+
+			//we want to include vertices drawn during the main draw
+			Logging::objectRenderedAllowAdditions(true);
 
 			//update to game camera
 			m_CameraMain = m_CameraGame;

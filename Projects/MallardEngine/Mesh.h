@@ -8,6 +8,7 @@
 
 struct aiMesh;
 struct aiMaterial;
+
 class Texture;
 class MeshBatch;
 
@@ -46,6 +47,8 @@ public:
 	void bind();
 
 	void setTexture(Texture* a_Texture);
+
+	void setDebugName(std::string a_Name);
 
 	Texture* getTexture() const;
 

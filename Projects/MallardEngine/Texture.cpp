@@ -13,14 +13,17 @@
 
 #include "Shader.h"
 #include "ShaderUniformData.h"
+#include "GLDebug.h"
 
 Texture* Texture::m_White1x1Texture;
+
 
 Texture::Texture() {
 	m_TextureHeight = m_TextureWidth = 0;
 	m_TextureType = TextureType::NONE;
 	//todo this might need to change, if i allow texture id's to be set later
 	m_CreatedTexture = true;
+	m_TextureId = 0;
 }
 
 
@@ -37,6 +40,7 @@ Texture::Texture(unsigned int a_Width, unsigned int a_Height, TextureType a_Type
 	m_TextureType = a_Type;
 	m_TextureWidth = a_Width;
 	m_TextureHeight = a_Height;
+	m_TextureId = 0;
 	int dataSize = getDataSize();
 	if (dataSize == 0) {
 		m_CreatedTexture = false;
@@ -52,6 +56,7 @@ Texture::Texture(const Texture & a_Texture) {
 	m_TextureType = a_Texture.m_TextureType;
 	m_TextureWidth = a_Texture.m_TextureWidth;
 	m_TextureHeight = a_Texture.m_TextureHeight;
+	m_TextureId = 0;
 
 	m_CreatedTexture = true;
 
@@ -258,6 +263,8 @@ void Texture::bind() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0f);
+
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_TextureId, ("Texture - " + m_Resource_FileName).c_str());
 }
 
 unsigned int Texture::getDataSize() const {

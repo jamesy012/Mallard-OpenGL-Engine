@@ -13,6 +13,8 @@
 #include "Shader.h"
 #include "Text.h"
 
+#include "GLDebug.h"
+
 struct {
 	const unsigned int textureWidth = 1024;
 	const unsigned int textureHeight = 1024;
@@ -85,12 +87,15 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8);
 
 	m_Texture = new Texture(m_TextureId, m_Font.textureWidth, m_Font.textureHeight);
+
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_TextureId, (std::string("Font ") + a_FontPath).c_str());
+
 }
 
 //uses stbtt to get the character's quad position

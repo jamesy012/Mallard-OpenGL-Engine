@@ -59,6 +59,12 @@ public:
 	void setPixel(unsigned int a_X, unsigned int a_Y, glm::vec3 a_Color);
 	glm::vec4 getPixel(unsigned int a_X, unsigned int a_Y) const;
 
+	//returns the current openGL id for this texture
+	//if texture hasent been bound, this will be 0
+	const unsigned int getTextureId() {
+		return m_TextureId;
+	}
+
 	///IResource
 	virtual unsigned int getResourceType() const override;
 

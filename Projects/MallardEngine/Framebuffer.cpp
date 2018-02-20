@@ -105,11 +105,11 @@ void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer 
 		glBlitFramebuffer(0, 0, a_From->m_Width, a_From->m_Height, 0, 0, a_To->m_Width, a_To->m_Height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	}
 
-	if (m_CurrentFramebuffer == nullptr) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	} else {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFramebuffer->m_Fbo);
-	}
+	//if (m_CurrentFramebuffer == nullptr) {
+	//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//} else {
+	//	glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFramebuffer->m_Fbo);
+	//}
 }
 
 void Framebuffer::resizeFramebuffer(unsigned int a_Width, unsigned int a_Height) {

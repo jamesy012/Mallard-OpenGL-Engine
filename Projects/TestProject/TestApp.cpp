@@ -78,10 +78,8 @@ void TestApp::draw() {
 	ShaderUniformData* uniformPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
 	ShaderUniformData* uniformModel = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
 
-	Transform model;
-
 	uniformPvm->setData(m_CameraGame);
-	uniformModel->setData(&model);
+	uniformModel->setData(&m_Model->m_Transform);
 
 	Shader::applyUniform(uniformPvm);
 	Shader::applyUniform(uniformModel);

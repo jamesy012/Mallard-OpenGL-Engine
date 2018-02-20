@@ -102,6 +102,8 @@ void Text::generateText(const std::string a_Text) {
 	m_TextMesh->setTexture(m_LinkedFont->getFontTexture());
 
 	m_TextMesh->bind();
+
+	m_TextMesh->setDebugName("Text Mesh");
 }
 
 void Text::draw() {

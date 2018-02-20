@@ -7,6 +7,8 @@
 #include "Shader.h"
 #include "Logging.h"
 
+#include "GLDebug.h"
+
 Mesh::Mesh() {
 	m_Vao = m_Vbo = m_Ebo = 0;
 
@@ -89,6 +91,7 @@ void Mesh::createBox() {
 		m_Indices.push_back(i / 3);
 	}
 	bind();
+	setDebugName("Mesh - Box");
 }
 
 void Mesh::createPlane(bool a_FlipYUV) {
@@ -129,6 +132,8 @@ void Mesh::createPlane(bool a_FlipYUV) {
 		m_Indices.push_back(i / 3);
 	}
 	bind();
+	setDebugName("Mesh - Plane");
+
 }
 
 void Mesh::draw() {
@@ -287,6 +292,12 @@ void Mesh::setTexture(Texture * a_Texture) {
 	}
 	m_CreatedTexture = false;
 	m_Texture = a_Texture;
+}
+
+void Mesh::setDebugName(std::string a_Name) {
+	GLDebug_NAMEOBJ(GL_VERTEX_ARRAY, m_Vao, a_Name.c_str());
+	GLDebug_NAMEOBJ(GL_BUFFER, m_Vbo, (a_Name + " - vbo").c_str());
+	GLDebug_NAMEOBJ(GL_BUFFER, m_Ebo, (a_Name + " - Index array").c_str());
 }
 
 Texture * Mesh::getTexture() const {

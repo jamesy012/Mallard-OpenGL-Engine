@@ -124,12 +124,6 @@ public:
 	//if no transform under then, will return nullptr
 	DLL_BUILD static Transform* findTransform(const char* a_TransformName);
 
-	//returns the last time in frame count this transform was updated
-	//todo: remove this infavour of just m_LastUpdateFrame
-	DLL_BUILD unsigned int getLastTransformUpdate() {
-		return m_LastUpdateFrame;
-	}
-
 	//goes through each parent till it finds a dirty parent
 	DLL_BUILD bool isParentDirty() const;
 

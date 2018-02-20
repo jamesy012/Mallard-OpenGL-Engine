@@ -5,8 +5,12 @@
 #include <GL\glew.h>
 #include <stb_image.h>
 
+#include <glm\ext.hpp>
+
 #include "Camera.h"
 #include "Shader.h"
+
+#include "GLDebug.h"
 
 Skybox::Skybox() {
 	m_VAO = m_VBO = m_TextureID = 0;
@@ -39,8 +43,9 @@ void Skybox::genSkybox(const std::string a_Front, const std::string a_Back, cons
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_TextureID, "Skybox");
 
 	genShader();
 }
@@ -59,20 +64,14 @@ void Skybox::assignCamera(Camera * a_AssignedCamera) {
 }
 
 void Skybox::draw() {
-	if (m_Camera->m_Transform.getLastTransformUpdate() != m_LastCameraUpdate || m_Camera->m_Transform.isParentDirty() || m_LastCameraUpdate == -1 || m_Camera->isDirty()) {
-		Transform cameraTransform = m_Camera->m_Transform;
-		glm::mat4 viewMatrix = glm::inverse(cameraTransform.getGlobalMatrix());
-		m_CameraPV = m_Camera->getProjectionMatrix() * viewMatrix;
-		m_LastCameraUpdate = m_Camera->m_Transform.getLastTransformUpdate();
+	if (m_Camera->m_Transform.m_LastUpdateFrame != m_LastCameraUpdate || m_Camera->m_Transform.isParentDirty() || m_LastCameraUpdate == -1 || m_Camera->isDirty()) {
+		m_CameraPV = m_Camera->getProjectionViewMatrix();
 
-		cameraTransform.setRotation(glm::quat());
-		cameraTransform.setScale(50);
-		cameraTransform.setPosition(glm::vec3(0, 0, 0));
+		//Transform cameraTransform;
+		//cameraTransform.setPosition(m_Camera->m_Transform.getGlobalPosition());
 
-		m_CameraPV *= cameraTransform.getLocalMatrix();
+		m_CameraPV *= glm::translate(glm::mat4(1), m_Camera->m_Transform.getGlobalPosition());
 
-		//just to update the dirty state
-		m_Camera->getViewMatrix();
 		m_LastCameraUpdate = m_Camera->m_Transform.m_LastUpdateFrame;
 	}
 
@@ -103,14 +102,7 @@ void Skybox::draw(Camera& a_Camera) {
 	m_LastCameraUpdate = -1;
 	m_Camera = &a_Camera;
 
-	ShaderUniformData* shaderPV = m_SkyboxShader->getUniform(ShaderUniformTypes::VEC3,"scale");
-	glm::vec3 scales[2] = { glm::vec3(1),glm::vec3(1,-1,1) };
-	shaderPV->setData(&scales[1]);
-
 	draw();
-
-	shaderPV->setData(&scales[0]);
-
 
 	m_LastCameraUpdate = lastCamUpdate;
 	m_Camera = referencedCam;
@@ -177,6 +169,9 @@ void Skybox::genMesh() {
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	GLDebug_NAMEOBJ(GL_VERTEX_ARRAY, m_VAO, "Skybox Vao");
+	GLDebug_NAMEOBJ(GL_BUFFER, m_VBO, "Skybox VBO");
 }
 
 void Skybox::genShader() {
@@ -194,16 +189,17 @@ void Skybox::genShader() {
 		#version 410
 		in vec3 texCoords;
 		uniform samplerCube cubeTexture;
-		uniform vec3 scale = vec3(1);
 		out vec4 fragColor;
 		void main() {
-			 fragColor = texture(cubeTexture, texCoords * scale);
+			 fragColor = texture(cubeTexture, texCoords);
 		}
 		)";
 	m_SkyboxShader = new Shader();
 	m_SkyboxShader->setFromText(ShaderTypes::TYPE_VERTEX, vertex);
 	m_SkyboxShader->setFromText(ShaderTypes::TYPE_FRAGMENT, fragment);
 	m_SkyboxShader->linkShader();
+
+	GLDebug_NAMEOBJ(GL_PROGRAM, m_SkyboxShader->getProgram(), "Skybox Shader");
 }
 
 void Skybox::addSkyboxSide(unsigned int a_SideTarget, const std::string a_FilePath) {

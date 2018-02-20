@@ -12,11 +12,12 @@
 #include <tchar.h>
 #endif // _WINDLL
 
-
 //for auto assigning uniforms for shaders
 #include "TimeHandler.h"
 #include "Window.h"
 #include "Framebuffer.h"
+
+#include "GLDebug.h"
 
 static const Shader* m_LastUsed = nullptr;
 
@@ -192,13 +193,22 @@ void Shader::createProgram() {
 		printf("shader already had a program");
 	}
 	m_Program = glCreateProgram();
+
+	std::string programName  = "Shader Program - ";
+	if (m_Shaders[(int)ShaderTypes::TYPE_VERTEX].m_ShaderID != 0) {
+		programName += std::to_string(m_Shaders[(int)ShaderTypes::TYPE_VERTEX].m_ShaderID) + " Vertex/";
+	}
+	if (m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_ShaderID != 0) {
+		programName += std::to_string(m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_ShaderID) + " Fragment/";
+	}
+	GLDebug_NAMEOBJ(GL_PROGRAM, m_Program, programName.c_str());
 }
 
 //combines all shaders into 1 program
 //will delete all loaded shaders when complete
 //and gets uniforms
 void Shader::linkShader() {
-	printf("Linking Shader: %s, %s\n", m_Shaders[(int)ShaderTypes::TYPE_VERTEX].m_FilePath.c_str(), m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_FilePath.c_str());
+	//printf("Linking Shader: %s, %s\n", m_Shaders[(int)ShaderTypes::TYPE_VERTEX].m_FilePath.c_str(), m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_FilePath.c_str());
 	if (m_Linked) {
 		printf("Shader already linked\n");
 		return;
@@ -237,7 +247,7 @@ void Shader::linkShader() {
 	//load all uniforms attached to the program
 	getShaderUniforms();
 
-	printf("Shader %u has been successfully linked!\n", m_Program);
+	//printf("Shader %u has been successfully linked!\n", m_Program);
 }
 
 unsigned int Shader::getProgram() const {
@@ -495,7 +505,7 @@ void Shader::addIncludesToShader(std::string & a_Code) {
 			//copy the string
 			includeFileData = includeIterator->second;
 		} else {
-			printf("Include Failed. no include with name %s\n", includeFileName);
+			printf("Include Failed. no include with name %s\n", includeFileName.c_str());
 			//this is fine to keep going, as the next part removes the #include "..."
 			//and then inserts a empty string
 		}
@@ -534,6 +544,15 @@ void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
 
 	m_Shaders[(int)a_Type].m_ShaderID = shaderIndex;
 	m_Shaders[(int)a_Type].m_ShaderType = a_Type;
+
+	switch (a_Type) {
+		case ShaderTypes::TYPE_VERTEX:
+			GLDebug_NAMEOBJ(GL_SHADER, shaderIndex, ("Shader/Vertex " + m_Shaders[(int)a_Type].m_FilePath).c_str());
+			break;
+		case ShaderTypes::TYPE_FRAGMENT:
+			GLDebug_NAMEOBJ(GL_SHADER, shaderIndex, ("Shader/Fragment " + m_Shaders[(int)a_Type].m_FilePath).c_str());
+			break;
+	}
 }
 
 //Gets error message for shaders from opengl using a_ErrorType

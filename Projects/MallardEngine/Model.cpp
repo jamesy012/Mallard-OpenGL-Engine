@@ -10,6 +10,8 @@
 #include "Mesh.h"
 #include "Texture.h"
 
+#include "GLDebug.h"
+
 Model::Model() {
 }
 
@@ -38,17 +40,19 @@ void Model::loadNode(aiNode * a_Node) {
 	const unsigned int childCount = a_Node->mNumChildren;
 	//const char* name = a_Node->mName.C_Str();
 
-	aiMatrix4x4 transform = a_Node->mTransformation;
-
-	aiQuaternion rotation;
-	aiVector3D scale,position;
-
-	transform.Decompose(scale, rotation, position);
-
-	std::cout << a_Node->mName.C_Str() << std::endl;
-	std::cout << "p: (" << position.x << ", " << position.y << ", " << position.z << ")\n";
-	std::cout << "r: (" << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << ")\n";
-
+	//this code here gets the mesh transform offsets
+	{
+		//aiMatrix4x4 transform = a_Node->mTransformation;
+		//
+		//aiQuaternion rotation;
+		//aiVector3D scale,position;
+		//
+		//transform.Decompose(scale, rotation, position);
+		//
+		//std::cout << a_Node->mName.C_Str() << std::endl;
+		//std::cout << "p: (" << position.x << ", " << position.y << ", " << position.z << ")\n";
+		//std::cout << "r: (" << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << ")\n";
+	}
 
 	//go through mesh's
 	for (size_t i = 0; i < meshCount; i++) {
@@ -65,6 +69,9 @@ void Model::loadNode(aiNode * a_Node) {
 		myMesh->m_TextureIndex = mesh->mMaterialIndex;
 
 		myMesh->bind();
+
+		std::string name = "Model - " + m_Resource_FileName + " - " + m_Scene->mMeshes[meshIndex]->mName.C_Str();
+		myMesh->setDebugName(name);
 	}
 
 	//go through children

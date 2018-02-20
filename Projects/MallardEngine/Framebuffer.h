@@ -83,6 +83,12 @@ public:
 	unsigned int getFramebufferHeight() const {
 		return m_Height;
 	}
+
+	//returns the current openGL id for this Framebuffer
+	//if texture hasent been bound, this will be 0
+	const unsigned int getFramebufferId() {
+		return m_Fbo;
+	}
 	
 	//TODO: Move this out of framebuffer OR intergrate it better
 	enum class GL_CALLS {
