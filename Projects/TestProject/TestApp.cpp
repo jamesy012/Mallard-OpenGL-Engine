@@ -25,7 +25,7 @@ void TestApp::startUp() {
 
 	m_TestText = new Text(m_Font);
 	m_TestText->generateText(R"(TEST APP
-		Move: WASDQE, Arrow keys)");
+		Move: WASDQE, Arrow keys)", 38);
 
 	m_Model = new Model();
 	m_Model->load("Models/Nanosuit/nanosuit.obj");
@@ -102,7 +102,7 @@ void TestApp::drawUi() {
 	uniformModel = m_ShaderText->m_CommonUniforms.m_ModelMatrix;
 
 	//move ui up one line to show the new line
-	model.translate(glm::vec3(0, Window::getMainWindow()->getWindowHeight() + -m_Font->getLineOffset(m_TestText->getNumberOfLines()-1), 0));
+	model.translate(glm::vec3(0, Window::getMainWindow()->getWindowHeight(), 0));
 
 	uniformPVM->setData(&m_CameraMain->getProjectionViewMatrix());
 
@@ -125,7 +125,7 @@ void TestApp::drawUi() {
 		//quick text draw, not as efficient as using a Text object to render
 		quickText = "FPS: ";
 		quickText += std::to_string(TimeHandler::getFps());
-		float offset = m_Font->drawText(quickText.c_str());
+		float offset = m_Font->drawText(quickText.c_str(),20);
 		model.translate(glm::vec3(0, -offset, 0));
 	}
 	//vert info
@@ -136,7 +136,7 @@ void TestApp::drawUi() {
 		//quick text draw, not as efficient as using a Text object to render
 		quickText = "Info: Vertices Rendered: ";
 		quickText += std::to_string(Logging::getNumVerticesRendered());
-		float offset = m_Font->drawText(quickText.c_str());
+		float offset = m_Font->drawText(quickText.c_str(),20);
 		model.translate(glm::vec3(0, offset, 0));
 	}
 }

@@ -58,7 +58,7 @@ public:
 	//it uses whatever shader is currently in use
 	//and creates a new text object to generate and render the text
 	//returns the line offset * number of lines
-	float drawText(const char* a_Text) const;
+	float drawText(const char* a_Text,const float a_FontSize = 0) const;
 
 	//will apply a basic text rendering shader to the Vertex and Fragment Shaders
 	//does not link the shader, or check if the shader has already been linked
@@ -73,7 +73,7 @@ public:
 
 	//returns the size of a line of font multiplied by the number of lines
 	float getLineOffset(int a_NumOfLines) const {
-		return (m_FontSize * a_NumOfLines) * 0.8f;
+		return (m_FontSize * a_NumOfLines) * 0.75f;
 	}
 
 	//returns the font texture of this Font

@@ -31,14 +31,17 @@ void Text::linkFont(const Font * a_Font) {
 }
 
 
-void Text::generateText(const std::string a_Text) {
+void Text::generateText(const std::string a_Text, const int a_FontSize) {
+	m_FontSizeRatio = a_FontSize == 0 ? 1.0f : (float)a_FontSize / m_LinkedFont->getFontSize();
+	const float lineYOffset = m_LinkedFont->getLineOffset(1) * m_FontSizeRatio;
+
 	m_Text = a_Text;
 	//reset the text mesh
 	if (m_TextMesh != nullptr) {
 		//perhaps don't delete, but release the data instead
 		delete m_TextMesh;
 	}
-		m_TextMesh = new Mesh();
+	m_TextMesh = new Mesh();
 
 	//data storage types from Mesh
 	std::vector<MeshVerticesType> vertices;
@@ -61,7 +64,7 @@ void Text::generateText(const std::string a_Text) {
 		//check if the letter is a new line
 		if (letter == '\n') {
 			m_NumberOfLines++;
-			offsetY += m_LinkedFont->getLineOffset(1);
+			offsetY -= lineYOffset;
 			offsetX = 0;
 			continue;
 		}
@@ -72,14 +75,18 @@ void Text::generateText(const std::string a_Text) {
 
 		//get character info
 		Font::GlyphData glyphInfo = m_LinkedFont->getGlyphInfo(letter, offsetX, offsetY);
-		//add character size offsets
-		offsetX = glyphInfo.offsetX;
-		offsetY = glyphInfo.offsetY;
-		
+
+		float xSize = glyphInfo.offsetX - offsetX;
+		float ySize = glyphInfo.offsetY - offsetY;
+
 		//set positions and uvs
 		for (int q = 0; q < 4; q++) {
-			vertices[(i * 4) + q].position.x = glyphInfo.positions[q].x;
-			vertices[(i * 4) + q].position.y = glyphInfo.positions[q].y;
+			// * (q%2==1? fontScale : 1)
+			float posOffset = 0;//(q % 2 == 1 ? glyphInfo.positions[q].x - offsetX : 0);
+			float posX = offsetX + (glyphInfo.positions[q].x - offsetX)* (q % 2 == 1 ? m_FontSizeRatio : 1)+ posOffset;
+			float posY = offsetY + (glyphInfo.positions[q].y - -offsetY)* (q >=2 ? m_FontSizeRatio : 1) - lineYOffset;
+			vertices[(i * 4) + q].position.x = posX;
+			vertices[(i * 4) + q].position.y = posY;
 			vertices[(i * 4) + q].position.z = glyphInfo.positions[q].z;
 			vertices[(i * 4) + q].position.w = 1.0f;
 			vertices[(i * 4) + q].texCoord.x = glyphInfo.uvs[q].u;
@@ -93,6 +100,11 @@ void Text::generateText(const std::string a_Text) {
 		indexes[(i * 6) + 3] = ((i * 4) + 0);
 		indexes[(i * 6) + 4] = ((i * 4) + 3);
 		indexes[(i * 6) + 5] = ((i * 4) + 2);
+
+
+		//update offset
+		offsetX = offsetX + (xSize*m_FontSizeRatio);
+		offsetY = offsetY + (ySize*m_FontSizeRatio);
 	}
 
 	//finally apply and bind that data
@@ -118,5 +130,5 @@ void Text::drawInstance(unsigned int a_Amount) {
 }
 
 float Text::getLineOffset() const {
-	return m_LinkedFont->getLineOffset(m_NumberOfLines);
+	return m_LinkedFont->getLineOffset(m_NumberOfLines) * m_FontSizeRatio;
 }

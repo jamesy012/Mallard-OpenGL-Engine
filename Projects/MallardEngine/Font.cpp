@@ -86,11 +86,10 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8);
 
 	m_Texture = new Texture(m_TextureId, m_Font.textureWidth, m_Font.textureHeight);
 
@@ -134,11 +133,11 @@ Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_Off
 	return gd;
 }
 
-float Font::drawText(const char * a_Text) const {
+float Font::drawText(const char * a_Text, const float a_FontSize) const {
 	//create text with a reference to this font
 	Text text(this);
 	//gen mesh using a_Text
-	text.generateText(a_Text);
+	text.generateText(a_Text,a_FontSize);
 	//render it
 	text.draw();
 
@@ -169,7 +168,7 @@ void Font::generateShaderCode(Shader * a_ShaderRef) {
 	        out vec4 fragColor;
             void main()
 	        {
-                vec4 c = texture(TexDiffuse1, uv0);
+                vec4 c = texture(TexDiffuse1, uv0) * 1.5f;
     	        fragColor = c.rrrr * color;
 	        }
 	    )";

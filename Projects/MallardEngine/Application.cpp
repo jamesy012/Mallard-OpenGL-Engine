@@ -182,7 +182,7 @@ void Application::run() {
 	m_SkyboxGame = new Skybox();
 
 	m_Font = new Font();
-	m_Font->loadFont("c:/windows/fonts/comic.ttf", 48);
+	m_Font->loadFont("c:/windows/fonts/comic.ttf", 32);
 
 	m_ShaderText = new Shader();
 	Font::generateShaderCode(m_ShaderText);
@@ -310,8 +310,13 @@ void Application::run() {
 			//update to ui camera
 			m_CameraMain = m_CameraUi;
 
+			//glEnable(GL_BLEND);
+			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 			//draw the ui
 			drawUi();
+
+			//glDisable(GL_BLEND);
 
 			//end UI Draw
 			Logging::quickGpuDebugGroupPop();

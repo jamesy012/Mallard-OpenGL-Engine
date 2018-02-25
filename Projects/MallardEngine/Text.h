@@ -24,7 +24,7 @@ public:
 	//goes left to right
 	//can handle new lines
 	//will cause a error if a_Font has not been linked or is invalid
-	void generateText(const std::string a_Text);
+	void generateText(const std::string a_Text, const int a_FontSize = 0);
 
 	// Inherited via IRenderable
 	virtual void draw() override;
@@ -55,5 +55,8 @@ private:
 	const Font* m_LinkedFont = nullptr;
 
 	unsigned int m_NumberOfLines = 0;
+
+	//the ratio compared to the linked font size
+	float m_FontSizeRatio = 1.0f;
 };
 
