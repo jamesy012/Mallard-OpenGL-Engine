@@ -146,30 +146,33 @@ float Font::drawText(const char * a_Text, const float a_FontSize) const {
 
 void Font::generateShaderCode(Shader * a_ShaderRef) {
 	const char* textVertex = R"(
-            #version 330 core
-			layout(location = 0) in vec4 position;
-			layout(location = 2) in vec2 texCoord0;
+            #version 410
+			#include "defaultLayout.inc"
 
-					uniform mat4 projectionViewMatrix;
-			uniform mat4 model = mat4(1);
+			out vec2 uv0;
+			out vec4 vertColor;
 
-					        out vec2 uv0;
             void main()
 	        {
 	            gl_Position = projectionViewMatrix * model * position;
-	            uv0 = texCoord0;
+	            uv0 = texCoord;
+				vertColor = vertexColor;
 	        }
         )";
 	const char* textFragment = R"(
-	        #version 330 core
+	        #version 410
             uniform sampler2D TexDiffuse1;
 			uniform vec4 color = vec4(1,1,1,1);
+
             in vec2 uv0;
+			in vec4 vertColor;
+
 	        out vec4 fragColor;
+
             void main()
 	        {
                 vec4 c = texture(TexDiffuse1, uv0) * 1.5f;
-    	        fragColor = c.rrrr * color;
+    	        fragColor = c.rrrr * color * vertColor;
 	        }
 	    )";
 

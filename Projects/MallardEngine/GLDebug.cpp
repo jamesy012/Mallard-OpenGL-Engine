@@ -73,7 +73,3 @@ void GLDebug::openGLMessageCallback(GLenum source, GLenum type, GLuint id, GLenu
 	//	(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 	//	   type, severity, message);
 }
-
-void GLDebug::nameGLObject(GLenum a_Type, GLuint a_Id, const char* a_Name) {
-	glObjectLabel(a_Type, a_Id, -1, a_Name);
-}

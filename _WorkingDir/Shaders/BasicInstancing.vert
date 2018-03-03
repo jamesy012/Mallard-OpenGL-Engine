@@ -1,9 +1,7 @@
 #version 410
 
-#include "defaultLayout.inc"
+#include "defaultLayout_Instance.inc"
 
-uniform mat4 projectionViewMatrix;
-uniform mat4 models[128];
 uniform vec4 offset;
 
 out vec2 vTexCoord;

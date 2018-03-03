@@ -24,7 +24,9 @@ public:
 	//goes left to right
 	//can handle new lines
 	//will cause a error if a_Font has not been linked or is invalid
-	void generateText(const std::string a_Text, const int a_FontSize = 0);
+	//a_FontSize can be 0, if it's 0 then the default size from the linked font will be used
+	//a_Color's value should between 0 and 1
+	void generateText(const std::string a_Text, const int a_FontSize = 0, const glm::vec4 a_Color = glm::vec4(1));
 
 	// Inherited via IRenderable
 	virtual void draw() override;
@@ -58,5 +60,11 @@ private:
 
 	//the ratio compared to the linked font size
 	float m_FontSizeRatio = 1.0f;
+	float m_MaxFontSizeRatio = 1.0f;
+
+	const static unsigned int NUM_OF_BBCODES = 2;
+	const struct {
+		const char* m_Name;
+	} m_BBCodes[NUM_OF_BBCODES] = { {"Size"}, {"Color"} };
 };
 

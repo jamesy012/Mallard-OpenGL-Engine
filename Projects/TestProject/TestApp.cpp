@@ -25,10 +25,13 @@ void TestApp::startUp() {
 
 	m_TestText = new Text(m_Font);
 	m_TestText->generateText(R"(TEST APP
-		Move: WASDQE, Arrow keys)", 38);
+		Move: WASDQE, Arrow keys
+		Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
+		[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72,190,32,255)/255.0f);
+
 
 	m_Model = new Model();
-	m_Model->load("Models/Nanosuit/nanosuit.obj");
+	//m_Model->load("Models/Nanosuit/nanosuit.obj");
 }
 
 void TestApp::shutDown() {
