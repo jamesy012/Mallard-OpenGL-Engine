@@ -21,7 +21,8 @@ I had an Android port made, It had everything execpt file loading due to me not 
     * Easliy edit uniforms and apply them to the shader
     * Local storage of uniform data
   * Add preprocessor Define's into the shader code
-    * Hope to extend this to be able to include seperate files (like Three.js)
+  * Include other files when building shaders
+    * Such as lighting code or common data between shaders.
 * Framebuffer system
   * Add only what you need to the Framebuffer
   * Stores the last frame that was rendered to be used 
