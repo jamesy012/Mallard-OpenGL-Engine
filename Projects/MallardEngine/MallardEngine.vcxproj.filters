@@ -108,6 +108,9 @@
     <ClInclude Include="GLDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PostEffects\DepthOfField.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -183,6 +186,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GLDebug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PostEffects\DepthOfField.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

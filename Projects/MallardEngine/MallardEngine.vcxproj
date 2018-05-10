@@ -34,6 +34,7 @@
     <ClInclude Include="MeshBatch.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="PostEffects\DepthOfField.h" />
     <ClInclude Include="Renderer\RenderMFnPtr.h" />
     <ClInclude Include="Renderer\RenderMFwdDec.h" />
     <ClInclude Include="Renderer\RenderMIncludeAll.h" />
@@ -63,6 +64,7 @@
     <ClCompile Include="MeshBatch.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="PostEffects\DepthOfField.cpp" />
     <ClCompile Include="Renderer\RenderMInstanced.cpp" />
     <ClCompile Include="Renderer\RenderMShader.cpp" />
     <ClCompile Include="Renderer\RenderMList.cpp" />
