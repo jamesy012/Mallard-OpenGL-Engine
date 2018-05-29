@@ -7,7 +7,7 @@
 #include "Window.h"
 
 static Framebuffer* m_DefaultFramebuffer = nullptr;
-static Framebuffer* m_CurrentFramebuffer = nullptr;
+static const Framebuffer* m_CurrentFramebuffer = nullptr;
 
 Framebuffer::Framebuffer() {
 	m_Fbo = 0;
@@ -52,7 +52,7 @@ void Framebuffer::setSize(const unsigned int a_Width, const unsigned int a_Heigh
 	}
 }
 
-void Framebuffer::use(Framebuffer * a_Framebuffer) {
+void Framebuffer::use(const Framebuffer * a_Framebuffer) {
 	//if we are setting the current framebuffer to nullprt or 0
 	if (a_Framebuffer == nullptr || a_Framebuffer->m_Fbo == 0) {
 		//then check what if the default framebuffer is null or 0
@@ -89,7 +89,7 @@ void Framebuffer::setDefaultFramebuffer(Framebuffer * a_Framebuffer) {
 	use(a_Framebuffer);
 }
 
-Framebuffer * Framebuffer::getCurrentFramebuffer() {
+const Framebuffer * Framebuffer::getCurrentFramebuffer() {
 	return m_CurrentFramebuffer;
 }
 

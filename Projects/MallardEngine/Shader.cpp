@@ -273,7 +273,7 @@ void Shader::use(const Shader* a_Shader) {
 	//assign the resolution 
 	//(could make this a common uniform between all shaders and only change when window it resized)
 	if (a_Shader->m_CommonUniforms.m_Resolution != nullptr) {
-		Framebuffer* fb = Framebuffer::getCurrentFramebuffer();
+		const Framebuffer* fb = Framebuffer::getCurrentFramebuffer();
 		if (fb != nullptr) {
 			float resulution[2] = { (float)fb->getFramebufferWidth(), (float)fb->getFramebufferHeight() };
 			a_Shader->m_CommonUniforms.m_Resolution->setData(resulution);

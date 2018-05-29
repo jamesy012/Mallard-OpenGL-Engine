@@ -32,7 +32,7 @@ public:
 
 	void setSize(const unsigned int a_Width, const unsigned int a_Height);
 
-	static void use(Framebuffer* a_Framebuffer);
+	static void use(const Framebuffer* a_Framebuffer);
 
 	//TODO, allow choice between which bits
 	static void clearCurrentBuffer(bool a_ColorBit = true, bool a_DepthBit = true);
@@ -41,7 +41,7 @@ public:
 	//The default frame buffer is used
 	static void setDefaultFramebuffer(Framebuffer* a_Framebuffer);
 
-	static Framebuffer* getCurrentFramebuffer();
+	static const Framebuffer* getCurrentFramebuffer();
 
 	//copys the texture from a_From to a_To
 	//Keeps the same binded framebuffer as before
