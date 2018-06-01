@@ -5,53 +5,41 @@ in vec2 vTexCoord;
 
 out vec4 fragColor;
 
-uniform vec2 resolution;
-
 //depth texture
 uniform sampler2D TexDiffuse1;
 
-uniform float focusDistance = 95f;
-uniform float farDof = 6f;
-uniform float nearDof = 6f;
-uniform float falloff = 2.7f;
+uniform float focusDistance =  15f;
+uniform float farDof = 1.0f;
+uniform float nearDof = 0.0f;
+//how quick does it fade to nothing, higher is quicker
+uniform float falloff = 5.0f;
+
+//note results vary wildly when you change these
+uniform float nearPlane = 0.1f;
+uniform float farPlane = 100.0f;
 
 void main() {
-    vec2 uvOffset = 5/resolution;
-    float average;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(-uvOffset.x, -uvOffset.y)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(0,           -uvOffset.y)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(uvOffset.x,  -uvOffset.y)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(-uvOffset.x, 0)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(0,           0)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(uvOffset.x,  0)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(-uvOffset.x, uvOffset.y)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(0,           uvOffset.y)).x;
-    //average += texture2D(TexDiffuse1, vTexCoord + vec2(uvOffset.x,  uvOffset.y)).x;
-    //average /= 9;
-    average = texture2D(TexDiffuse1, vTexCoord + vec2(0,0)).x;
-    float f= 1000.0;
-    float n = 0.1;
-    float z = (2 * n) / (f + n - average * (f - n));
+    float distance = texture2D(TexDiffuse1, vTexCoord).x;
+
+    float z = (2 * nearPlane) / (farPlane + nearPlane - distance * (farPlane - nearPlane));
     
     float dofStrength = 0;
     
-    float sFocusDistance = focusDistance/f;
-    float sFarDof = farDof/f;
-    float sNearDof = nearDof/f;
+    //float sFocusDistance = focusDistance/farPlane;
+    float sFarDof = (focusDistance+farDof)/farPlane;
+    float sNearDof = (focusDistance-nearDof)/farPlane;
 
+    
      
-    if(z > sFocusDistance){
-       dofStrength = 1-((sFocusDistance+sFarDof)/(z));
-    }else{
-       dofStrength = 1-((z)/(sFocusDistance-sNearDof));
+    if(z > sFarDof){
+       dofStrength = ((sFarDof)/(z));
+    }else if (z < sNearDof) {
+       dofStrength = ((z)/(sNearDof));
     }
     
-    dofStrength = clamp(dofStrength,0.0f,0.99f);
+    dofStrength = clamp(1-dofStrength,0.0f,1.0f);
     dofStrength *= falloff;
+    //dofStrength = pow(dofStrength,0.5);
     
-    //if(z > focusDistance + farDof){
-    //    dofStrength = 1;
-    //}
     fragColor = vec4(dofStrength,dofStrength,dofStrength,1);
-     
 }

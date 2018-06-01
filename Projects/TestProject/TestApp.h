@@ -3,9 +3,13 @@
 #include "Application.h"
 
 class Model;
+class Mesh;
 class Text;
 
-class TestApp :
+#include "PostEffects/DepthOfField.h"
+#include "Renderer/RenderMList.h"
+
+class  TestApp :
 	public Application {
 public:
 	// Inherited via Application
@@ -19,6 +23,12 @@ private:
 
 	Model* m_Model;
 
+	//small quad
+	Mesh* m_QuadMesh;
+
 	Text* m_TestText;
+
+	DepthOfField m_DOFTest;
+	RenderMList m_RenderList;
 };
 

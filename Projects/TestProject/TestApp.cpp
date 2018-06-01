@@ -13,6 +13,7 @@
 #include "Keys.h"
 
 #include "Model.h"
+#include "Mesh.h"
 #include "Shader.h"
 
 #include "Font.h"
@@ -20,6 +21,8 @@
 
 #include "Camera.h"
 #include "Logging.h"
+
+#include "Framebuffer.h"
 
 void TestApp::startUp() {
 
@@ -31,16 +34,40 @@ void TestApp::startUp() {
 
 
 	m_Model = new Model();
-	//m_Model->load("Models/Nanosuit/nanosuit.obj");
+	m_Model->load("Models/Nanosuit/nanosuit.obj");
+
+	m_QuadMesh = new Mesh();
+	m_QuadMesh->createPlane(false);
+
+
+	m_QuadMesh->m_Transform.setParent(&m_CameraGame->m_Transform);
+	m_QuadMesh->m_Transform.translate(glm::vec3(-5, 0, -20), false);
+	m_QuadMesh->m_Transform.rotate(glm::vec3(90, 0, 0));
+	m_QuadMesh->m_Transform.setScale(5);
+
+	m_DOFTest.create();
+	m_DOFTest.m_ReadBuffer = m_FbGameFrame;
+
+	m_QuadMesh->setTexture(m_DOFTest.m_DOF->getTexture());
+
+	m_RenderList.addObject(m_Model);
+
 }
 
 void TestApp::shutDown() {
 	m_Model->unload();
 
+	delete m_QuadMesh;
 	delete m_TestText;
 }
 
 void TestApp::update() {
+	if (Input::isKeyDown(KEY_R)) {
+		m_DOFTest.m_DOFGenShader->reloadShaders();
+	}
+	if (Input::isKeyDown(KEY_T)) {
+		m_DOFTest.m_DOFDrawShader->reloadShaders();
+	}
 	float cameraMoveSpeed = 10.0f;
 	float cameraRotateRpeed = 40.0f;
 	if (Input::isKeyDown(KEY_E)) {
@@ -76,18 +103,29 @@ void TestApp::update() {
 }
 
 void TestApp::draw() {
+
+
 	Shader::use(m_ShaderBasic);
 
 	ShaderUniformData* uniformPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
 	ShaderUniformData* uniformModel = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
 
 	uniformPvm->setData(m_CameraGame);
-	uniformModel->setData(&m_Model->m_Transform);
+	//uniformModel->setData(&m_Model->m_Transform);
 
 	Shader::applyUniform(uniformPvm);
+	//Shader::applyUniform(uniformModel);
+
+	m_RenderList.draw();
+
+	m_DOFTest.use(m_CameraGame, &m_RenderList);
+	Framebuffer::framebufferBlit(m_DOFTest.m_DOF, m_FbGameFrame);
+
+	uniformModel->setData(&m_QuadMesh->m_Transform);
 	Shader::applyUniform(uniformModel);
 
-	m_Model->draw();
+
+	m_QuadMesh->draw();
 }
 
 void TestApp::drawUi() {
