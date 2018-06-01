@@ -117,7 +117,7 @@ void Texture::bindTexture(const Texture * a_Texture, const int a_Slot) {
 	}
 
 #if _DEBUG
-	Framebuffer* m_Fb = Framebuffer::getCurrentFramebuffer();
+	const Framebuffer* m_Fb = Framebuffer::getCurrentFramebuffer();
 	if (m_Fb != nullptr) {
 		Texture* framebufferTexture = m_Fb->getTexture();
 		if (framebufferTexture != nullptr && framebufferTexture->m_TextureId == a_Texture->m_TextureId) {

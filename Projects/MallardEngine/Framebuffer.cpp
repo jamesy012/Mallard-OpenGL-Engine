@@ -7,7 +7,9 @@
 #include "Window.h"
 
 static Framebuffer* m_DefaultFramebuffer = nullptr;
-static Framebuffer* m_CurrentFramebuffer = nullptr;
+static const Framebuffer* m_CurrentFramebuffer = nullptr;
+static std::vector<Framebuffer*> m_UsingPercent;
+
 
 Framebuffer::Framebuffer() {
 	m_Fbo = 0;
@@ -44,15 +46,40 @@ Framebuffer::~Framebuffer() {
 }
 
 void Framebuffer::setSize(const unsigned int a_Width, const unsigned int a_Height) {
+	if (m_IsUsingPercent) {
+		auto pos = std::find(m_UsingPercent.begin(), m_UsingPercent.end(), this);
+		_ASSERT_EXPR(pos == m_UsingPercent.end(), L"Function was not in list");
+		m_UsingPercent.erase(pos);
+		m_IsUsingPercent = false;
+	}
+
+	m_Width = a_Width;
+	m_Height = a_Height;
 	if (m_Fbo != 0) {
-		resizeFramebuffer(a_Width, a_Height);
-	} else {
-		m_Width = a_Width;
-		m_Height = a_Height;
+		resizeFramebuffer();
 	}
 }
 
-void Framebuffer::use(Framebuffer * a_Framebuffer) {
+void Framebuffer::setSizePercent(const float a_Width, const float a_Height) {
+	if (!m_IsUsingPercent) {
+		_ASSERT_EXPR(std::find(m_UsingPercent.begin(), m_UsingPercent.end(), this) == m_UsingPercent.end(), L"Function already in callback");
+		m_UsingPercent.push_back(this);
+		m_IsUsingPercent = true;
+	}
+
+	m_WidthPercent = a_Width;
+	m_HeightPercent = a_Height;
+
+	const float winWidth = Window::getMainWindow()->getFramebufferWidth();
+	const float winHeight = Window::getMainWindow()->getFramebufferHeight();
+	updateFromWindowResize(winWidth, winHeight);
+
+	if (m_Fbo != 0) {
+		resizeFramebuffer();
+	}	
+}
+
+void Framebuffer::use(const Framebuffer * a_Framebuffer) {
 	//if we are setting the current framebuffer to nullprt or 0
 	if (a_Framebuffer == nullptr || a_Framebuffer->m_Fbo == 0) {
 		//then check what if the default framebuffer is null or 0
@@ -89,12 +116,12 @@ void Framebuffer::setDefaultFramebuffer(Framebuffer * a_Framebuffer) {
 	use(a_Framebuffer);
 }
 
-Framebuffer * Framebuffer::getCurrentFramebuffer() {
+const Framebuffer * Framebuffer::getCurrentFramebuffer() {
 	return m_CurrentFramebuffer;
 }
 
 void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer * a_To) {
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, a_From->m_Fbo);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, a_From->m_Fbo);
 	if (a_To == nullptr) {
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
@@ -112,9 +139,7 @@ void Framebuffer::framebufferBlit(const Framebuffer * a_From, const Framebuffer 
 	//}
 }
 
-void Framebuffer::resizeFramebuffer(unsigned int a_Width, unsigned int a_Height) {
-	m_Width = a_Width;
-	m_Height = a_Height;
+void Framebuffer::resizeFramebuffer() {
 	for (unsigned int i = 0; i < m_AttachedComponents.size(); i++) {
 		Component* component = m_AttachedComponents[i];
 		unsigned int glFormat = getGLFormatSize(component->m_Format, component->m_FormatSize);
@@ -129,7 +154,7 @@ void Framebuffer::resizeFramebuffer(unsigned int a_Width, unsigned int a_Height)
 				break;
 			case FramebufferBufferTypes::RENDERBUFFER:
 				{
-					FramebufferRenderbuffer* fr = (FramebufferRenderbuffer*) component;
+					FramebufferRenderbuffer* fr = (FramebufferRenderbuffer*)component;
 					glBindRenderbuffer(GL_RENDERBUFFER, fr->m_RenderbufferID);
 					glRenderbufferStorage(GL_RENDERBUFFER, glFormat, m_Width, m_Height);
 					glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -137,6 +162,12 @@ void Framebuffer::resizeFramebuffer(unsigned int a_Width, unsigned int a_Height)
 				break;
 		}
 	}
+}
+
+void Framebuffer::updateFromWindowResize(int a_Width, int a_Height) {
+	m_Width = m_WidthPercent * a_Width;
+	m_Height = m_HeightPercent * a_Height;
+	resizeFramebuffer();
 }
 
 void Framebuffer::genFramebuffer() {
@@ -206,59 +237,59 @@ void Framebuffer::addBuffer(FramebufferBufferTypes a_Type, FramebufferBufferForm
 	Component* component = nullptr;
 	switch (a_Type) {
 		case FramebufferBufferTypes::TEXTURE:
-		{
-			unsigned int baseGLFormat = getGLFormat(a_Format);
-			unsigned int textureID = 0;
-			//create texture
-			glGenTextures(1, &textureID);
-			glBindTexture(GL_TEXTURE_2D, textureID);
+			{
+				unsigned int baseGLFormat = getGLFormat(a_Format);
+				unsigned int textureID = 0;
+				//create texture
+				glGenTextures(1, &textureID);
+				glBindTexture(GL_TEXTURE_2D, textureID);
 
-			//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
-			glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, baseGLFormat, GL_UNSIGNED_BYTE, 0);
+				//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_Width, m_Height);
+				glTexImage2D(GL_TEXTURE_2D, 0, glFormat, m_Width, m_Height, 0, baseGLFormat, GL_UNSIGNED_BYTE, 0);
 
-			//basic texture filters
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			GLfloat borderColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+				//basic texture filters
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+				GLfloat borderColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-			//unbind texture
-			glBindTexture(GL_TEXTURE_2D, 0);
+				//unbind texture
+				glBindTexture(GL_TEXTURE_2D, 0);
 
-			//create TextureObject
-			Texture* textureObject = new Texture(textureID, m_Width, m_Height);
+				//create TextureObject
+				Texture* textureObject = new Texture(textureID, m_Width, m_Height);
 
-			//set up component
-			component = new FramebufferTexture();
-			((FramebufferTexture*)component)->m_TextureID = textureID;
-			((FramebufferTexture*)component)->m_TextureObject = textureObject;
-			((FramebufferTexture*)component)->m_BaseGLFormat = baseGLFormat;
+				//set up component
+				component = new FramebufferTexture();
+				((FramebufferTexture*)component)->m_TextureID = textureID;
+				((FramebufferTexture*)component)->m_TextureObject = textureObject;
+				((FramebufferTexture*)component)->m_BaseGLFormat = baseGLFormat;
 
-			m_Textures.push_back(textureObject);
-			break;
-		}
+				m_Textures.push_back(textureObject);
+				break;
+			}
 
 		case FramebufferBufferTypes::RENDERBUFFER:
-		{
-			unsigned int renderBuffer = 0;
+			{
+				unsigned int renderBuffer = 0;
 
-			//create renderbuffer
-			glGenRenderbuffers(1, &renderBuffer);
-			glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-			//set up renderbuffer
-			glRenderbufferStorage(GL_RENDERBUFFER, glFormat, m_Width, m_Height);
+				//create renderbuffer
+				glGenRenderbuffers(1, &renderBuffer);
+				glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+				//set up renderbuffer
+				glRenderbufferStorage(GL_RENDERBUFFER, glFormat, m_Width, m_Height);
 
-			//unbind renderbuffer
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+				//unbind renderbuffer
+				glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-			//set up component
-			component = new FramebufferRenderbuffer();
-			((FramebufferRenderbuffer*)component)->m_RenderbufferID = renderBuffer;
+				//set up component
+				component = new FramebufferRenderbuffer();
+				((FramebufferRenderbuffer*)component)->m_RenderbufferID = renderBuffer;
 
-			break;
-		}
+				break;
+			}
 		default:
 			return;
 	}
@@ -332,77 +363,83 @@ void Framebuffer::glCall(GL_CALLS a_Call, bool a_Enabled) {
 	}
 }
 
+void Framebuffer::windowFramebufferResize(int a_Width, int a_Height) {
+	for (unsigned int i = 0; i < m_UsingPercent.size(); i++) {
+		m_UsingPercent[i]->updateFromWindowResize(a_Width, a_Height);
+	}
+}
+
 //converts a_Format and a_FormatSize into their opengl counterparts
 //eg a_Format = RGB, a_FormatSize = 16
 //result GL_RGB16 (0x8054)
 unsigned int Framebuffer::getGLFormatSize(FramebufferBufferFormats a_Format, unsigned int a_FormatSize) {
 	switch (a_Format) {
 		case FramebufferBufferFormats::R:
-		{
-			switch (a_FormatSize) {
-				case 8:
-					return GL_R8;
-				case 16:
-					return GL_R16;
+			{
+				switch (a_FormatSize) {
+					case 8:
+						return GL_R8;
+					case 16:
+						return GL_R16;
+				}
+				_ASSERT_EXPR(false, L"FramebufferBufferFormats::R does not have a_FormatSize");
 			}
-			_ASSERT_EXPR(false, L"FramebufferBufferFormats::R does not have a_FormatSize");
-		}
 		case FramebufferBufferFormats::RG:
-		{
-			switch (a_FormatSize) {
-				case 8:
-					return GL_RG8;
-				case 16:
-					return GL_RG16;
+			{
+				switch (a_FormatSize) {
+					case 8:
+						return GL_RG8;
+					case 16:
+						return GL_RG16;
+				}
+				_ASSERT_EXPR(false, L"FramebufferBufferFormats::RG does not have a_FormatSize");
 			}
-			_ASSERT_EXPR(false, L"FramebufferBufferFormats::RG does not have a_FormatSize");
-		}
 		case FramebufferBufferFormats::RGB:
-		{
-			switch (a_FormatSize) {
-				case 4:
-					return GL_RGB4;
-				case 5:
-					return GL_RGB5;
-				case 8:
-					return GL_RGB8;
-				case 10:
-					return GL_RGB10;
-				case 12:
-					return GL_RGB12;
-				case 16:
-					return GL_RGB16;
+			{
+				switch (a_FormatSize) {
+					case 4:
+						return GL_RGB4;
+					case 5:
+						return GL_RGB5;
+					case 8:
+						return GL_RGB8;
+					case 10:
+						return GL_RGB10;
+					case 12:
+						return GL_RGB12;
+					case 16:
+						return GL_RGB16;
+				}
+				_ASSERT_EXPR(false, L"FramebufferBufferFormats::RGB does not have a_FormatSize");
 			}
-			_ASSERT_EXPR(false, L"FramebufferBufferFormats::RGB does not have a_FormatSize");
-		}
 		case FramebufferBufferFormats::RGBA:
-		{
-			switch (a_FormatSize) {
-				case 2:
-					return GL_RGBA2;
-				case 4:
-					return GL_RGBA4;
-				case 8:
-					return GL_RGBA8;
-				case 12:
-					return GL_RGBA12;
-				case 16:
-					return GL_RGBA16;
+			{
+				switch (a_FormatSize) {
+					case 2:
+						return GL_RGBA2;
+					case 4:
+						return GL_RGBA4;
+					case 8:
+						return GL_RGBA8;
+					case 12:
+						return GL_RGBA12;
+					case 16:
+						return GL_RGBA16;
+				}
+				_ASSERT_EXPR(false, L"FramebufferBufferFormats::RGBA does not have a_FormatSize");
 			}
-			_ASSERT_EXPR(false, L"FramebufferBufferFormats::RGBA does not have a_FormatSize");
-		}
 		case FramebufferBufferFormats::DEPTH:
-		{
-			switch (a_FormatSize) {
-				case 16:
-					return GL_DEPTH_COMPONENT16;
-				case 24:
-					return GL_DEPTH_COMPONENT24;
-				case 32:
-					return GL_DEPTH_COMPONENT32;
+			{
+				switch (a_FormatSize) {
+					case 16:
+						return GL_DEPTH_COMPONENT16;
+					case 24:
+						return GL_DEPTH_COMPONENT24;
+					case 32:
+						return GL_DEPTH_COMPONENT32;
+				}
+				_ASSERT_EXPR(false, L"FramebufferBufferFormats::DEPTH does not have a_FormatSize");
 			}
-			_ASSERT_EXPR(false, L"FramebufferBufferFormats::DEPTH does not have a_FormatSize");
-		}
 		case FramebufferBufferFormats::STENCIL:
 			return GL_STENCIL;
 		case FramebufferBufferFormats::DEPTH_STENCIL:

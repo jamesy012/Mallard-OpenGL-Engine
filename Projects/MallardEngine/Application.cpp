@@ -75,7 +75,8 @@ void Application::run() {
 	m_ApplicationWindow->makeContextCurrent();//make context so we can render to it
 
 	m_ApplicationWindow->m_WindowResizeCallback = windowResize;
-	m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
+	//m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
+	m_ApplicationWindow->addFramebufferResize(windowFramebufferResize);
 
 	//set up callbacks for window
 	setCallbacksForWindow(m_ApplicationWindow);
@@ -248,11 +249,11 @@ void Application::run() {
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
 		if (m_Flags.m_RunDebugTimers) {
 			//run them every second
-			m_DebugRunTimers = (TimeHandler::getCurrentTime() - m_LastDebugTimerRun) > 1;
+			m_DebugRunningTimersThisFrame = (TimeHandler::getCurrentTime() - m_LastDebugTimerRun) > 1;
 		} else {
-			m_DebugRunTimers = false;
+			m_DebugRunningTimersThisFrame = false;
 		}
-		if (m_DebugRunTimers) {
+		if (m_DebugRunningTimersThisFrame) {
 			//update the last run variable time for the debug timer
 			m_LastDebugTimerRun = TimeHandler::getCurrentTime();
 			printf("-- Frame %i timing debugs\n", TimeHandler::getCurrentFrameNumber());
@@ -270,14 +271,14 @@ void Application::run() {
 		//check application flags
 		checkHandles();
 
-		if (m_DebugRunTimers) {
+		if (m_DebugRunningTimersThisFrame) {
 			Logging::quickTimePop(true);
 			Logging::quickTimePush("Frame");
 		}
 
 		//call virtual functions
 		{
-			if (m_DebugRunTimers) {
+			if (m_DebugRunningTimersThisFrame) {
 				Logging::quickTimePush("Update");
 			}
 			Logging::quickGpuDebugGroupPush("Frame Render: " + std::to_string(TimeHandler::getCurrentFrameNumber()));
@@ -292,7 +293,7 @@ void Application::run() {
 			update();
 
 			Logging::quickGpuDebugGroupPop();
-			if (m_DebugRunTimers) {
+			if (m_DebugRunningTimersThisFrame) {
 				Logging::quickTimePop(true);
 				Logging::quickTimePush("Draw");
 				Logging::quickTimePush("Draw UI");
@@ -320,7 +321,7 @@ void Application::run() {
 
 			//end UI Draw
 			Logging::quickGpuDebugGroupPop();
-			if (m_DebugRunTimers) {
+			if (m_DebugRunningTimersThisFrame) {
 				Logging::quickTimePop(true);
 				Logging::quickTimePush("Draw Game");
 			}
@@ -354,7 +355,7 @@ void Application::run() {
 			glDisable(GL_DEPTH_TEST);
 
 			Logging::quickGpuDebugGroupPop();
-			if (m_DebugRunTimers) {
+			if (m_DebugRunningTimersThisFrame) {
 				Logging::quickTimePop(true);
 				Logging::quickTimePush("Frame Combine");
 			}
@@ -363,7 +364,7 @@ void Application::run() {
 			Logging::objectRenderedAllowAdditions(false);
 
 			if (Input::wasKeyPressed(GLFW_KEY_U)) {
-				m_FbGameFrame->resizeFramebuffer(256, 256);
+				m_FbGameFrame->setSize(256, 256);
 			}
 
 			//set up combined frame framebuffer
@@ -407,7 +408,7 @@ void Application::run() {
 
 
 			Logging::quickGpuDebugGroupPop();
-			if (m_DebugRunTimers) {
+			if (m_DebugRunningTimersThisFrame) {
 				Logging::quickTimePop(true);
 				Logging::quickTimePop(true);
 			}
@@ -415,7 +416,7 @@ void Application::run() {
 
 		}
 
-		if (m_DebugRunTimers) {
+		if (m_DebugRunningTimersThisFrame) {
 			Logging::quickTimePop(true);
 		}
 
@@ -460,6 +461,8 @@ void Application::run() {
 
 void Application::setCallbacksForWindow(Window * a_Window) {
 	a_Window->setCallbacks();
+
+	a_Window->addFramebufferResize(Framebuffer::windowFramebufferResize);
 
 }
 

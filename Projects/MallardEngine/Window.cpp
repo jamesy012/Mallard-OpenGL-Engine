@@ -191,6 +191,17 @@ void Window::makeContextCurrent() const {
 	glfwMakeContextCurrent(m_ThisWindow);
 }
 
+void Window::addFramebufferResize(WindowResizeFn a_Function) {
+	_ASSERT_EXPR(std::find(m_WindowResizeFramebufferCallback.begin(), m_WindowResizeFramebufferCallback.end(), a_Function) == m_WindowResizeFramebufferCallback.end(), L"Function already in callback");
+	m_WindowResizeFramebufferCallback.push_back(a_Function);
+}
+
+void Window::removeFramebufferResize(WindowResizeFn a_Function) {
+	auto pos = std::find(m_WindowResizeFramebufferCallback.begin(), m_WindowResizeFramebufferCallback.end(), a_Function);
+	_ASSERT_EXPR(pos == m_WindowResizeFramebufferCallback.end(), L"Function was not in list");
+	m_WindowResizeFramebufferCallback.erase(pos);
+}
+
 void Window::windowSizeCallback(GLFWwindow * a_Window, int a_Width, int a_Height) {
 	Window* window = getWindowFromGlfwWindow(a_Window);
 	window->m_Width = a_Width;
@@ -206,7 +217,9 @@ void Window::windowFramebufferSizeCallback(GLFWwindow * a_Window, int a_Width, i
 	glViewport(0, 0, a_Width, a_Height);
 	//hacky fix, make a callback function pointer so application.cpp can do this
 
-	window->m_WindowResizeFramebufferCallback(a_Width, a_Height);
+	for (unsigned int i = 0; i < window->m_WindowResizeFramebufferCallback.size(); i++) {
+		window->m_WindowResizeFramebufferCallback[i](a_Width, a_Height);
+	}
 }
 
 void Window::windowFocusCallback(GLFWwindow * a_Window, int a_Focused) {

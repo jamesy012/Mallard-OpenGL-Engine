@@ -13,6 +13,7 @@
 #include "Keys.h"
 
 #include "Model.h"
+#include "Mesh.h"
 #include "Shader.h"
 
 #include "Font.h"
@@ -20,6 +21,9 @@
 
 #include "Camera.h"
 #include "Logging.h"
+
+#include "Framebuffer.h"
+
 
 void TestApp::startUp() {
 
@@ -30,17 +34,75 @@ void TestApp::startUp() {
 		[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72,190,32,255)/255.0f);
 
 
+	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
+	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
+
 	m_Model = new Model();
-	//m_Model->load("Models/Nanosuit/nanosuit.obj");
+	m_Model->load("Models/Nanosuit/nanosuit.obj");
+
+	m_QuadMesh = new Mesh();
+	m_QuadMesh->createPlane(false);
+
+
+	m_QuadMesh->m_Transform.setParent(&m_CameraGame->m_Transform);
+	m_QuadMesh->m_Transform.translate(glm::vec3(-5, 0, -20), false);
+	m_QuadMesh->m_Transform.rotate(glm::vec3(90, 0, 0));
+	m_QuadMesh->m_Transform.setScale(5);
+
+	m_DOFTest.create();
+
+
+	m_RenderList.addObject(m_Model);
 }
 
 void TestApp::shutDown() {
 	m_Model->unload();
 
+	delete m_QuadMesh;
 	delete m_TestText;
 }
 
 void TestApp::update() {
+	if (Input::wasKeyPressed(KEY_F1)) {
+		m_Flags.m_RunDebugTimers ^= 1;
+	}
+
+	if (Input::wasKeyPressed(KEY_KP_1)) {
+		m_RenderDOF ^= 1;
+	}
+
+	if (Input::wasKeyPressed(KEY_R)) {
+		m_RunningFocalDistanceChange = true;
+		m_FocalDistanceDirection = !m_FocalDistanceDirection;
+		m_FocalDistanceTimer = 0;
+	}
+
+	if (Input::wasKeyPressed(KEY_T)) {
+		static bool val = true;
+		m_DOFTest.setValue("falloff", (val = !val)?2.0f:20.0f);
+
+	}
+
+	if (m_RunningFocalDistanceChange) {
+		const float maxTime = 1.0f;
+
+		m_FocalDistanceTimer += TimeHandler::getDeltaTime();
+		if (m_FocalDistanceTimer >= maxTime) {
+			m_RunningFocalDistanceChange = false;
+			m_FocalDistanceTimer = maxTime;
+		}
+
+		float timer = m_FocalDistanceTimer / maxTime;
+
+		if (m_FocalDistanceDirection) {
+			timer = 1 - timer;
+		}
+
+		float newVal = glm::lerp(5.0f, 16.0f,timer);
+		m_DOFTest.setValue("focusDistance", newVal);
+
+	}
+
 	float cameraMoveSpeed = 10.0f;
 	float cameraRotateRpeed = 40.0f;
 	if (Input::isKeyDown(KEY_E)) {
@@ -76,18 +138,35 @@ void TestApp::update() {
 }
 
 void TestApp::draw() {
+	glm::vec3 rot = m_CameraGame->m_Transform.getGlobalRotationEulers();
+
 	Shader::use(m_ShaderBasic);
 
 	ShaderUniformData* uniformPvm = m_ShaderBasic->m_CommonUniforms.m_ProjectionViewMatrix;
 	ShaderUniformData* uniformModel = m_ShaderBasic->m_CommonUniforms.m_ModelMatrix;
 
 	uniformPvm->setData(m_CameraGame);
-	uniformModel->setData(&m_Model->m_Transform);
+	//uniformModel->setData(&m_Model->m_Transform);
 
 	Shader::applyUniform(uniformPvm);
+	//Shader::applyUniform(uniformModel);
+
+	m_RenderList.draw();
+
+	if(m_RenderDOF) {
+		Logging::quickGpuDebugGroupPush("Depth of field");
+		Logging::quickTimePush("Depth of field");
+		m_DOFTest.use(m_FbGameFrame);
+		Framebuffer::framebufferBlit(m_DOFTest.getDOFFramebuffer(), m_FbGameFrame);
+		Logging::quickTimePop(m_DebugRunningTimersThisFrame);
+		Logging::quickGpuDebugGroupPop();
+	}
+
+	uniformModel->setData(&m_QuadMesh->m_Transform);
 	Shader::applyUniform(uniformModel);
 
-	m_Model->draw();
+
+	//m_QuadMesh->draw();
 }
 
 void TestApp::drawUi() {
