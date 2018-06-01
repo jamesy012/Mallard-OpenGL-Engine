@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DLLBuild.h"
+#include <vector>
 
 struct GLFWwindow;
 class Input;
@@ -16,7 +17,6 @@ public:
 	//temporary function pointer for window sizes
 	typedef void (*WindowResizeFn) (int a_Width, int a_Height);
 	WindowResizeFn m_WindowResizeCallback;
-	WindowResizeFn m_WindowResizeFramebufferCallback;
 
 	void destroyWindow();
 
@@ -58,6 +58,9 @@ public:
 
 	void makeContextCurrent() const;
 
+	void addFramebufferResize(WindowResizeFn a_Function);
+	void removeFramebufferResize(WindowResizeFn a_Function);
+
 protected:
 	static Window* getWindowFromGlfwWindow(GLFWwindow* a_Window);
 private:
@@ -85,5 +88,9 @@ private:
 	bool m_IsVisable = false;
 
 	bool m_IsWindowCreated = false;
+
+	//callback lists
+	std::vector<WindowResizeFn> m_WindowResizeFramebufferCallback;
+
 };
 

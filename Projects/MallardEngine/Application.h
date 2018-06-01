@@ -39,7 +39,7 @@ protected:
 		bool m_UpdateGameCameraToScreenSize = true;
 		//when the window is resized should we also resize the framebuffers
 		bool m_AllowInternalFramebufferResizes = true;
-		//allow the debug timer to run every second, when it does run m_DebugRunTimers will be true
+		//allow the debug timer to run every second, when it does run m_DebugRunningTimersThisFrame will be true
 		bool m_RunDebugTimers = false;
 	} m_Flags;
 
@@ -72,6 +72,9 @@ protected:
 	Shader* m_ShaderText;
 	//reference to a precreated font object
 	Font* m_Font;
+
+	//bool to store if application is printing out it's timer this frame
+	bool m_DebugRunningTimersThisFrame = false;
 private:
 	void setCallbacksForWindow(Window* a_Window);
 	static void windowResize(int a_Width, int a_Height);
@@ -84,8 +87,6 @@ private:
 
 	float m_LastDebugTimerRun = 0;
 
-	//bool to store if application is printing out it's timer this frame
-	bool m_DebugRunTimers = false;
 
 };
 
