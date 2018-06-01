@@ -3,9 +3,12 @@
 
 class Framebuffer;
 class Shader;
+class ShaderUniformData;
 
-class RenderMList;
-class Camera;
+class Texture;
+
+#include <map>
+#include <string>
 
 class Mesh;
 
@@ -16,25 +19,30 @@ public:
 
 	void create();
 
-	void use(Camera* a_Camera, RenderMList* a_List);
+	//runs the depth of field code.
+	//diffuse on texture 0
+	//depth on texture 1
+	void use(Framebuffer* a_ReadBuffers);
 
-	float m_ScaledSize = 3;
-	unsigned int m_Width = 1024;
-	unsigned int m_Height = 1024;
+	void setValue(const std::string a_UniformName, float a_NewValue);
 
-	Framebuffer* m_ReadBuffer;
+	unsigned int getDOFTexture();
+	Framebuffer* getDOFFramebuffer();
 
-//private:
+	const float m_ScaledSize = 3;
+private:
 	//Depth of field
 	Framebuffer * m_DOF = nullptr;
 	Framebuffer* m_DOFScaled = nullptr;
 	Framebuffer* m_DOFScaledBlurred = nullptr;
 
-	Shader* m_DOFGenShader = nullptr;
-	Shader* m_DOFDrawShader = nullptr;
-
+	Shader* m_DOFShader = nullptr;
 	Shader* m_BlurShader;
 
 	Mesh* m_FullScreenQuad;
+
+	std::map<const std::string, ShaderUniformData*> m_ValueMap;
+	static const unsigned int m_ValueCount = 3;
+	const std::string m_ValueNames[m_ValueCount] = { "focusDistance", "falloff", "minStrength" };
 };
 

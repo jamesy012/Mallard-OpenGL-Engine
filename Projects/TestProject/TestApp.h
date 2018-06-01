@@ -30,5 +30,11 @@ private:
 
 	DepthOfField m_DOFTest;
 	RenderMList m_RenderList;
+
+	bool m_RenderDOF = true;
+
+	bool m_FocalDistanceDirection = true;
+	bool m_RunningFocalDistanceChange = false;
+	float m_FocalDistanceTimer = 0.0f;
 };
 

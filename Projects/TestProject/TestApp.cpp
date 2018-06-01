@@ -24,6 +24,7 @@
 
 #include "Framebuffer.h"
 
+
 void TestApp::startUp() {
 
 	m_TestText = new Text(m_Font);
@@ -32,6 +33,9 @@ void TestApp::startUp() {
 		Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
 		[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72,190,32,255)/255.0f);
 
+
+	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
+	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
 
 	m_Model = new Model();
 	m_Model->load("Models/Nanosuit/nanosuit.obj");
@@ -46,12 +50,9 @@ void TestApp::startUp() {
 	m_QuadMesh->m_Transform.setScale(5);
 
 	m_DOFTest.create();
-	m_DOFTest.m_ReadBuffer = m_FbGameFrame;
 
-	m_QuadMesh->setTexture(m_DOFTest.m_DOF->getTexture());
 
 	m_RenderList.addObject(m_Model);
-
 }
 
 void TestApp::shutDown() {
@@ -62,12 +63,46 @@ void TestApp::shutDown() {
 }
 
 void TestApp::update() {
-	if (Input::isKeyDown(KEY_R)) {
-		m_DOFTest.m_DOFGenShader->reloadShaders();
+	if (Input::wasKeyPressed(KEY_F1)) {
+		m_Flags.m_RunDebugTimers ^= 1;
 	}
-	if (Input::isKeyDown(KEY_T)) {
-		m_DOFTest.m_DOFDrawShader->reloadShaders();
+
+	if (Input::wasKeyPressed(KEY_KP_1)) {
+		m_RenderDOF ^= 1;
 	}
+
+	if (Input::wasKeyPressed(KEY_R)) {
+		m_RunningFocalDistanceChange = true;
+		m_FocalDistanceDirection = !m_FocalDistanceDirection;
+		m_FocalDistanceTimer = 0;
+	}
+
+	if (Input::wasKeyPressed(KEY_T)) {
+		static bool val = true;
+		m_DOFTest.setValue("falloff", (val = !val)?2.0f:20.0f);
+
+	}
+
+	if (m_RunningFocalDistanceChange) {
+		const float maxTime = 1.0f;
+
+		m_FocalDistanceTimer += TimeHandler::getDeltaTime();
+		if (m_FocalDistanceTimer >= maxTime) {
+			m_RunningFocalDistanceChange = false;
+			m_FocalDistanceTimer = maxTime;
+		}
+
+		float timer = m_FocalDistanceTimer / maxTime;
+
+		if (m_FocalDistanceDirection) {
+			timer = 1 - timer;
+		}
+
+		float newVal = glm::lerp(5.0f, 16.0f,timer);
+		m_DOFTest.setValue("focusDistance", newVal);
+
+	}
+
 	float cameraMoveSpeed = 10.0f;
 	float cameraRotateRpeed = 40.0f;
 	if (Input::isKeyDown(KEY_E)) {
@@ -103,7 +138,7 @@ void TestApp::update() {
 }
 
 void TestApp::draw() {
-
+	glm::vec3 rot = m_CameraGame->m_Transform.getGlobalRotationEulers();
 
 	Shader::use(m_ShaderBasic);
 
@@ -118,14 +153,20 @@ void TestApp::draw() {
 
 	m_RenderList.draw();
 
-	m_DOFTest.use(m_CameraGame, &m_RenderList);
-	Framebuffer::framebufferBlit(m_DOFTest.m_DOF, m_FbGameFrame);
+	if(m_RenderDOF) {
+		Logging::quickGpuDebugGroupPush("Depth of field");
+		Logging::quickTimePush("Depth of field");
+		m_DOFTest.use(m_FbGameFrame);
+		Framebuffer::framebufferBlit(m_DOFTest.getDOFFramebuffer(), m_FbGameFrame);
+		Logging::quickTimePop(m_DebugRunningTimersThisFrame);
+		Logging::quickGpuDebugGroupPop();
+	}
 
 	uniformModel->setData(&m_QuadMesh->m_Transform);
 	Shader::applyUniform(uniformModel);
 
 
-	m_QuadMesh->draw();
+	//m_QuadMesh->draw();
 }
 
 void TestApp::drawUi() {
