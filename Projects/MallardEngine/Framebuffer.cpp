@@ -70,8 +70,8 @@ void Framebuffer::setSizePercent(const float a_Width, const float a_Height) {
 	m_WidthPercent = a_Width;
 	m_HeightPercent = a_Height;
 
-	const float winWidth = Window::getMainWindow()->getFramebufferWidth();
-	const float winHeight = Window::getMainWindow()->getFramebufferHeight();
+	const int winWidth = Window::getMainWindow()->getFramebufferWidth();
+	const int winHeight = Window::getMainWindow()->getFramebufferHeight();
 	updateFromWindowResize(winWidth, winHeight);
 
 	if (m_Fbo != 0) {
@@ -165,8 +165,8 @@ void Framebuffer::resizeFramebuffer() {
 }
 
 void Framebuffer::updateFromWindowResize(int a_Width, int a_Height) {
-	m_Width = m_WidthPercent * a_Width;
-	m_Height = m_HeightPercent * a_Height;
+	m_Width = (int)(m_WidthPercent * a_Width);
+	m_Height = (int)(m_HeightPercent * a_Height);
 	resizeFramebuffer();
 }
 

@@ -29,7 +29,7 @@ public:
 	unsigned int getDOFTexture();
 	Framebuffer* getDOFFramebuffer();
 
-	const float m_ScaledSize = 3;
+	float m_ScaledSize = 3;
 private:
 	//Depth of field
 	Framebuffer * m_DOF = nullptr;

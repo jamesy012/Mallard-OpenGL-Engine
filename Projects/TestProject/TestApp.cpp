@@ -6,6 +6,8 @@
 #include <glm\glm.hpp>
 #include <glm\ext.hpp>
 
+#include "Logging.h"
+
 #include "TimeHandler.h"
 #include "Window.h"
 #include "Transform.h"
@@ -14,15 +16,18 @@
 
 #include "Model.h"
 #include "Mesh.h"
-#include "Shader.h"
+#include "MeshBatch.h"
+#include "Renderer/RenderMList.h"
 
 #include "Font.h"
 #include "Text.h"
 
-#include "Camera.h"
-#include "Logging.h"
-
 #include "Framebuffer.h"
+#include "Shader.h"
+#include "PostEffects/DepthOfField.h"
+
+#include "Object.h"
+#include "Camera.h"
 
 
 void TestApp::startUp() {
@@ -37,28 +42,67 @@ void TestApp::startUp() {
 	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
 	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
 
+	m_DOFTest = new DepthOfField();
+	m_DOFTest->create();
+
 	m_Model = new Model();
 	m_Model->load("Models/Nanosuit/nanosuit.obj");
+	m_Ground = new Model();
+	m_Ground->load("Models/test/Ground.obj");
+	m_GrassModel = new Model();
+	m_GrassModel->load("Models/test/GrassPack/Grass_02.obj");
 
-	m_QuadMesh = new Mesh();
-	m_QuadMesh->createPlane(false);
+	printf("grass gen Start\n");
+	m_GrassBatch = new MeshBatch();
+	{
+		const unsigned int NumOfGrass = 2000;
+		const unsigned int sizeOfGround = 50;
+		for (int i = 0; i < NumOfGrass; i++) {
+		glm::mat4 position;
+			glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
 
+			pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround*2))-sizeOfGround;
+			pos.y = 1;
+			pos.z =  (((rand() % 10000) / 10000.0f) * (sizeOfGround*2))-sizeOfGround;
 
-	m_QuadMesh->m_Transform.setParent(&m_CameraGame->m_Transform);
-	m_QuadMesh->m_Transform.translate(glm::vec3(-5, 0, -20), false);
-	m_QuadMesh->m_Transform.rotate(glm::vec3(90, 0, 0));
-	m_QuadMesh->m_Transform.setScale(5);
+			//printf("Pos %i (%f,%f,%f) ---- ", i, pos.x, pos.y, pos.z);
+			glm::vec3 height = m_Ground->m_Meshs[0]->getClosestPosition(pos);
+			pos.y = height.y;
+			//pos = height;
+			//printf("Pos %i (%f,%f,%f)\n", i, pos.x, pos.y, pos.z);
+			//const glm::vec3 posOnGround = glm::vec3(i,0,0);
+			position = glm::translate(glm::mat4(1), pos);
+			position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
+			position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f)*3));
+			m_GrassBatch->add(m_GrassModel, position);
+		}
+		m_GrassBatch->bind();
+	}
+	printf("grass gen Finished\n");
 
-	m_DOFTest.create();
+	m_ModelObject = new Object(m_Model);
+	m_GroundObject = new Object(m_Ground);
+	m_GrassBatchObject = new Object(m_GrassBatch);
 
-
-	m_RenderList.addObject(m_Model);
+	m_RenderList = new RenderMList();
+	m_RenderList->addObject(m_ModelObject);
+	m_RenderList->addObject(m_GroundObject);
+	m_RenderList->addObject(m_GrassBatchObject);
 }
 
 void TestApp::shutDown() {
 	m_Model->unload();
+	m_Ground->unload();
+	m_GrassModel->unload();
 
-	delete m_QuadMesh;
+	delete m_GrassBatch;
+	delete m_GrassBatchObject;
+
+	delete m_ModelObject;
+	delete m_GroundObject;
+	delete m_DOFTest;
+	delete m_RenderList;
+
 	delete m_TestText;
 }
 
@@ -79,7 +123,7 @@ void TestApp::update() {
 
 	if (Input::wasKeyPressed(KEY_T)) {
 		static bool val = true;
-		m_DOFTest.setValue("falloff", (val = !val)?2.0f:20.0f);
+		m_DOFTest->setValue("falloff", (val = !val)?2.0f:20.0f);
 
 	}
 
@@ -99,9 +143,11 @@ void TestApp::update() {
 		}
 
 		float newVal = glm::lerp(5.0f, 16.0f,timer);
-		m_DOFTest.setValue("focusDistance", newVal);
+		m_DOFTest->setValue("focusDistance", newVal);
 
 	}
+
+	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
 	float cameraMoveSpeed = 10.0f;
 	float cameraRotateRpeed = 40.0f;
@@ -151,22 +197,16 @@ void TestApp::draw() {
 	Shader::applyUniform(uniformPvm);
 	//Shader::applyUniform(uniformModel);
 
-	m_RenderList.draw();
+	m_RenderList->draw();
 
 	if(m_RenderDOF) {
 		Logging::quickGpuDebugGroupPush("Depth of field");
 		Logging::quickTimePush("Depth of field");
-		m_DOFTest.use(m_FbGameFrame);
-		Framebuffer::framebufferBlit(m_DOFTest.getDOFFramebuffer(), m_FbGameFrame);
+		m_DOFTest->use(m_FbGameFrame);
+		Framebuffer::framebufferBlit(m_DOFTest->getDOFFramebuffer(), m_FbGameFrame);
 		Logging::quickTimePop(m_DebugRunningTimersThisFrame);
 		Logging::quickGpuDebugGroupPop();
 	}
-
-	uniformModel->setData(&m_QuadMesh->m_Transform);
-	Shader::applyUniform(uniformModel);
-
-
-	//m_QuadMesh->draw();
 }
 
 void TestApp::drawUi() {
@@ -218,7 +258,25 @@ void TestApp::drawUi() {
 		//quick text draw, not as efficient as using a Text object to render
 		quickText = "Info: Vertices Rendered: ";
 		quickText += std::to_string(Logging::getNumVerticesRendered());
-		float offset = m_Font->drawText(quickText.c_str(),20);
-		model.translate(glm::vec3(0, offset, 0));
+		float offset = m_Font->drawText(quickText.c_str(), 20);
+		model.translate(glm::vec3(0, -offset, 0));
+	}
+
+	//camera info
+	{
+		uniformModel->setData(&model);
+		Shader::applyUniform(uniformModel);
+
+		//quick text draw, not as efficient as using a Text object to render
+		quickText = "Camera:---- Pos: (";
+		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalPosition().x) + ", ";
+		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalPosition().y) + ", ";
+		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalPosition().z) + ") ";
+		quickText += "Rot (";
+		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalRotationEulers().x) + ", ";
+		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalRotationEulers().y) + ", ";
+		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalRotationEulers().z) + ")";
+		float offset = m_Font->drawText(quickText.c_str(), 26);
+		model.translate(glm::vec3(0, -offset, 0));
 	}
 }

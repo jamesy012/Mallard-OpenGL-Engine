@@ -4,7 +4,7 @@
 //perspective/ortho
 #include <glm\ext.hpp>
 
-Camera::Camera() : Object("BaseCamera") {
+Camera::Camera() : Object(nullptr,"BaseCamera") {
 }
 
 

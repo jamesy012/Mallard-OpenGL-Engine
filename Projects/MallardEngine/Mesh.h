@@ -50,6 +50,10 @@ public:
 
 	void setDebugName(std::string a_Name);
 
+	unsigned int getVerticesCount();
+	glm::vec3 getVertexPosition(const unsigned int a_Index);
+	glm::vec3 getClosestPosition(const glm::vec3 a_Position, const float a_MinDist = -1);
+
 	Texture* getTexture() const;
 
 	//temporary fix 

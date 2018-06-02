@@ -99,7 +99,7 @@ void Application::run() {
 		glVersion = glGetString(GL_VERSION);
 		glVender = glGetString(GL_VENDOR);
 		glRenderer = glGetString(GL_RENDERER);
-		printf("OpenGL - %s\n(%i.%i) Vender: %s, Renderer: %s\n\n", glVersion, glMajor , glMinor, glVender, glRenderer);
+		printf("OpenGL - %s\n(%i.%i) Vender: %s, Renderer: %s\n\n", glVersion, glMajor, glMinor, glVender, glRenderer);
 	}
 	/** SET UP PROGRAM FOR STARTUP */
 #ifdef _DEBUG
@@ -109,7 +109,7 @@ void Application::run() {
 	glDebugMessageCallback((GLDEBUGPROC)GLDebug::openGLMessageCallback, 0);
 	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
 	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
-//131185 - Buffer detailed info : Buffer object _ID_ (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+	//131185 - Buffer detailed info : Buffer object _ID_ (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
 	const GLsizei numOfIds = 1;
 	GLuint ids[numOfIds] = { 131185 };
 	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, numOfIds, ids, false);
@@ -128,7 +128,7 @@ void Application::run() {
 	m_CameraUi = new Camera();
 	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
-	Texture::m_White1x1Texture = new Texture(1,1,TextureType::RGB);
+	Texture::m_White1x1Texture = new Texture(1, 1, TextureType::RGB);
 	Texture::m_White1x1Texture->setPixel(0, 0, glm::vec4(1, 1, 1, 1));
 	Texture::m_White1x1Texture->bind();
 	GLDebug_NAMEOBJ(GL_TEXTURE, Texture::m_White1x1Texture->getTextureId(), "White 1x1");
@@ -139,20 +139,21 @@ void Application::run() {
 		Framebuffer** frame[numOfFames] = { &m_FbGameFrame,&m_FbGameFrameCopy, &m_FbUIFrame, &m_FbCombinedFrame };
 		for (int i = 0; i < numOfFames; i++) {
 			(*frame[i]) = new Framebuffer();
-			(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
+			//(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
+			(*frame[i])->setSizePercent(1.0f, 1.0f);
 			if (i <= 1) {
 				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
 				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
 				(*frame[i])->genFramebuffer();
-			}else if (i >= 2) {
+			} else if (i >= 2) {
 				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
 				(*frame[i])->genFramebuffer();
-			}
-			else {
+			} else {
 				(*frame[i])->createRenderTarget();
 			}
 		}
 	}
+
 	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbGameFrame->getFramebufferId(), "Game Frame");
 	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrame->getTexture(0)->getTextureId(), "Game Frame - RGBA");
 	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrame->getTexture(1)->getTextureId(), "Game Frame - Depth");
@@ -183,7 +184,8 @@ void Application::run() {
 	m_SkyboxGame = new Skybox();
 
 	m_Font = new Font();
-	m_Font->loadFont("c:/windows/fonts/comic.ttf", 32);
+	//m_Font->loadFont("c:/windows/fonts/comic.ttf", 32);
+	m_Font->loadFont("c:/windows/fonts/arial.ttf", 26);
 
 	m_ShaderText = new Shader();
 	Font::generateShaderCode(m_ShaderText);
@@ -214,7 +216,7 @@ void Application::run() {
 		uniformModel->setData(&model);
 		Shader::applyUniform(uniformModel);
 
-		m_Font->drawText("Loading");
+		m_Font->drawText("--Loading--");
 
 		//have the window show something while we load the game
 		glfwSwapBuffers(m_ApplicationWindow->getWindow());
@@ -473,12 +475,6 @@ void Application::windowResize(int a_Width, int a_Height) {
 void Application::windowFramebufferResize(int a_Width, int a_Height) {
 	if (a_Width == 0 || a_Height == 0) {
 		return;
-	}
-	if (m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
-		m_Application->m_FbCombinedFrame->setSize(a_Width, a_Height);
-		m_Application->m_FbGameFrame->setSize(a_Width, a_Height);
-		m_Application->m_FbGameFrameCopy->setSize(a_Width, a_Height);
-		m_Application->m_FbUIFrame->setSize(a_Width, a_Height);
 	}
 	if (m_Application->m_Flags.m_UpdateUICameraToScreenSize) {
 		m_Application->m_CameraUi->setOrthographic(0.0f, (float)a_Width, 0.0f, (float)a_Height, -1000.0f, 1000.0f);

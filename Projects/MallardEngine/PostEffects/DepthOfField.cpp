@@ -71,7 +71,7 @@ void DepthOfField::create() {
 		ShaderUniformData* sud;
 		sud = m_DOFShader->getUniform(ShaderUniformTypes::FLOAT, m_ValueNames[i].c_str());
 		if (sud == nullptr) {
-			printf("DOF m_ValueNames %i not in shader (%s)\n", i, m_ValueNames[i]);
+			printf("DOF m_ValueNames %i not in shader (%s)\n", i, m_ValueNames[i].c_str());
 		} else {
 			m_ValueMap[m_ValueNames[i]] = sud;
 		}
@@ -96,7 +96,7 @@ void DepthOfField::use(Framebuffer* a_ReadBuffers) {
 		ShaderUniformData* dirUniform = m_BlurShader->getUniform(ShaderUniformTypes::VEC2, "dir");
 
 		glm::vec2 dir[2] = { glm::vec2(1,0),glm::vec2(0,1) };
-		float radius[2] = { .3f, .3f };
+		float radius[2] = { .2f, .2f };
 
 		//run 1
 		Framebuffer::use(m_DOFScaledBlurred);
@@ -160,7 +160,7 @@ void DepthOfField::setValue(const std::string a_UniformName, float a_NewValue) {
 	if (pos != m_ValueMap.end()) {
 		(*pos).second->setData(&a_NewValue);
 	} else {
-		printf("Depth of field: cant setValue because uniform %s does not exist.\n", a_UniformName);
+		printf("Depth of field: cant setValue because uniform %s does not exist.\n", a_UniformName.c_str());
 	}
 }
 

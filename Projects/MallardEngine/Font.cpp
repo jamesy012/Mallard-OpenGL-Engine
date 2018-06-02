@@ -133,7 +133,7 @@ Font::GlyphData Font::getGlyphInfo(int a_Character, float a_OffsetX, float a_Off
 	return gd;
 }
 
-float Font::drawText(const char * a_Text, const float a_FontSize) const {
+float Font::drawText(const char * a_Text, const int a_FontSize) const {
 	//create text with a reference to this font
 	Text text(this);
 	//gen mesh using a_Text

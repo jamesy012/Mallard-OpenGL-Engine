@@ -2,37 +2,12 @@
 
 #include "Shader.h"
 
-Object::Object() {}
+Object::Object(IRenderable* a_Renderable) {
+	m_Renderable = a_Renderable;
+}
 
-Object::Object(const char * a_TransformName) {
+Object::Object(IRenderable* a_Renderable, const char * a_TransformName) : Object(a_Renderable) {
 	m_Transform.m_Name = a_TransformName;
 }
 
 Object::~Object() {}
-
-void Object::draw() {
-	if (m_Renderable != nullptr) {
-		ShaderUniformData* modelUniform = Shader::getCurrentShader()->m_CommonUniforms.m_ModelMatrix;
-		if (modelUniform != nullptr) {
-			glm::mat4 modelRot = m_Transform.getGlobalMatrix() * m_Renderable->getTransformMatrix();
-			modelUniform->setData(&modelRot);
-			Shader::applyUniform(modelUniform);
-		}
-		m_Renderable->draw();
-	}
-}
-
-void Object::drawInstance(unsigned int a_Amount) {
-	m_Renderable->drawInstance(a_Amount);
-}
-
-glm::vec3 Object::getPositionCombined() {
-	return m_Transform.getGlobalPosition() + m_Renderable->m_Transform.getLocalPosition();
-}
-
-glm::mat4 Object::getGlobalMatrixCombined() {
-	if (m_Renderable == nullptr) {
-		return m_Transform.getGlobalMatrix();
-	}
-	return  m_Transform.getGlobalMatrix() * m_Renderable->getTransformMatrix();
-}

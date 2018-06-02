@@ -6,8 +6,10 @@ class Model;
 class Mesh;
 class Text;
 
-#include "PostEffects/DepthOfField.h"
-#include "Renderer/RenderMList.h"
+class DepthOfField;
+class RenderMList;
+class Object;
+class MeshBatch;
 
 class  TestApp :
 	public Application {
@@ -22,14 +24,18 @@ public:
 private:
 
 	Model* m_Model;
+	Model* m_Ground;
+	Model* m_GrassModel;
+	MeshBatch* m_GrassBatch;
 
-	//small quad
-	Mesh* m_QuadMesh;
+	Object* m_ModelObject;
+	Object* m_GroundObject;
+	Object* m_GrassBatchObject;
 
 	Text* m_TestText;
 
-	DepthOfField m_DOFTest;
-	RenderMList m_RenderList;
+	DepthOfField* m_DOFTest;
+	RenderMList* m_RenderList;
 
 	bool m_RenderDOF = true;
 

@@ -11,7 +11,7 @@ uniform float radius = .2;
 uniform vec2 dir = vec2(0);
 
 vec4 addSum(vec2 a_UV){
-    a_UV = clamp(a_UV,vec2(0),vec2(1));
+    a_UV = clamp(a_UV,vec2(0),vec2(0.99));
     return texture2D(TexDiffuse1, a_UV);
 }
 

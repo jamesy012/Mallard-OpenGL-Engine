@@ -2,8 +2,10 @@
 #include "DLLBuild.h"
 
 #include "../IRenderable.h"
+class Object;
 
 #include <vector>
+
 
 class DLL_BUILD RenderMList : public IRenderable {
 public:
@@ -11,8 +13,8 @@ public:
 	virtual void draw() override;
 	virtual void drawInstance(unsigned int a_Amount) override;
 
-	void addObject(IRenderable* a_Renderable);
+	void addObject(Object* a_Renderable);
 
-	std::vector<IRenderable*> m_RenderList;
+	std::vector<Object*> m_RenderList;
 };
 

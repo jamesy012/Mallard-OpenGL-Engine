@@ -20,7 +20,7 @@ uniform float falloff = 15.0f;
 uniform float nearPlane = 0.1f;
 uniform float farPlane = 100.0f;
 
-uniform float minStrength = 0.2f;
+uniform float minStrength = 0.05f;
 
 float pingpong(const float a_Value,const float a_Max){
     float newVal = mod(a_Value, (a_Max*2));

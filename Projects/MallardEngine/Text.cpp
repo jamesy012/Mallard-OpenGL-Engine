@@ -181,6 +181,7 @@ void Text::generateText(const std::string a_Text, const int a_FontSize, const gl
 			// * (q%2==1? fontScale : 1)
 			float posOffset = 0;//(q % 2 == 1 ? glyphInfo.positions[q].x - offsetX : 0);
 			float posX = offsetX + (glyphInfo.positions[q].x - offsetX)* (q % 2 == 1 ? m_FontSizeRatio : 1) + posOffset;
+			//Note: This can produce wrong results (using - while using a different fontSizeRatio)
 			float posY = offsetY + (glyphInfo.positions[q].y - -offsetY)* (q >= 2 ? m_FontSizeRatio : 1) - lineYOffset;
 			vertices[(i * 4) + q].position.x = posX;
 			vertices[(i * 4) + q].position.y = posY;

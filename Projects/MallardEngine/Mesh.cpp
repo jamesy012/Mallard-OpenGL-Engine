@@ -300,6 +300,45 @@ void Mesh::setDebugName(std::string a_Name) {
 	GLDebug_NAMEOBJ(GL_BUFFER, m_Ebo, (a_Name + " - Index array").c_str());
 }
 
+unsigned int Mesh::getVerticesCount() {
+	return m_Vertices.size();
+}
+
+glm::vec3 Mesh::getVertexPosition(const unsigned int a_Index) {
+	return m_Vertices[a_Index].position;
+}
+
+glm::vec3 Mesh::getClosestPosition(const glm::vec3 a_Position, const float a_MinDist) {
+	float closestDist = 999;
+	int indexGroup = -1;
+	const glm::vec4 aPosVec4 = glm::vec4(a_Position,0);
+	for (unsigned int i = 0; i < m_Indices.size()/3; i+=3) {
+		glm::vec4 pos = m_Vertices[m_Indices[i + 1]].position;
+		//pos += m_Vertices[m_Indices[i]].position + m_Vertices[m_Indices[i + 1]].position + m_Vertices[m_Indices[i+2]].position;
+		//pos /= glm::vec4(3);
+		float dist = glm::distance(aPosVec4, pos);
+		if (dist < closestDist) {
+			closestDist = dist;
+			indexGroup = i;
+		}
+	}
+	if (indexGroup == -1) {
+		return glm::vec3();
+	}
+	glm::vec4 finalPos;
+	float dist1[2],dist2[2],dist3[2];
+	dist1[0] = glm::distance(m_Vertices[m_Indices[indexGroup + 0]].position, m_Vertices[m_Indices[indexGroup + 1]].position);
+	dist3[0] = glm::distance(m_Vertices[m_Indices[indexGroup + 1]].position, m_Vertices[m_Indices[indexGroup + 2]].position);
+	dist2[0] = glm::distance(m_Vertices[m_Indices[indexGroup + 2]].position, m_Vertices[m_Indices[indexGroup + 0]].position);
+	dist1[1] = glm::distance(m_Vertices[m_Indices[indexGroup + 0]].position, aPosVec4);
+	dist3[1] = glm::distance(m_Vertices[m_Indices[indexGroup + 1]].position, aPosVec4);
+	dist2[1] = glm::distance(m_Vertices[m_Indices[indexGroup + 2]].position, aPosVec4);
+	finalPos += glm::mix(m_Vertices[m_Indices[indexGroup + 0]].position, m_Vertices[m_Indices[indexGroup + 1]].position, 1-(dist1[0] / dist1[1]));
+	finalPos += glm::mix(m_Vertices[m_Indices[indexGroup + 1]].position, m_Vertices[m_Indices[indexGroup + 2]].position, 1-(dist3[0] / dist3[1]));
+	finalPos += glm::mix(m_Vertices[m_Indices[indexGroup + 2]].position, m_Vertices[m_Indices[indexGroup + 0]].position, 1-(dist2[0] / dist2[1]));
+	return finalPos / glm::vec4(3);
+}
+
 Texture * Mesh::getTexture() const {
 	return m_Texture;
 }
