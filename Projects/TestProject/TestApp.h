@@ -39,6 +39,10 @@ private:
 
 	bool m_RenderDOF = true;
 
+	bool m_AutoDepth = false;
+	float m_CurrentDepth = 0;
+	const float m_MaxDist = 35.0f;
+
 	bool m_FocalDistanceDirection = true;
 	bool m_RunningFocalDistanceChange = false;
 	float m_FocalDistanceTimer = 0.0f;

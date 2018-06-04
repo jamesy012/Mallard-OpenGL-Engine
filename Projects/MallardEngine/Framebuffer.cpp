@@ -343,6 +343,27 @@ Texture * Framebuffer::getTexture(const unsigned int a_TextureIndex) const {
 	return m_Textures[a_TextureIndex];
 }
 
+float Framebuffer::getDepthAtPoint(const float a_WidthPercent, const float a_HeightPercent) {
+	//https://www.opengl.org/discussion_boards/showthread.php/145308-Depth-Buffer-How-do-I-get-the-pixel-s-Z-coord?p=1042655&viewfull=1#post1042655
+	float depth_comp;
+	const int width = m_Width * a_WidthPercent;
+	const int height = m_Height * a_HeightPercent;
+	//todo: dont hardcode near and farplane distances
+	float nearZ = 0.1f;
+	float farZ = 1000.0f;
+
+	//might need to change the glViewPort to be updated for this
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_Fbo);
+	glReadPixels(width, height, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_comp);
+
+	float clip_z = (depth_comp - 0.5f) * 2.0f;
+	float world_z = 2 * farZ*nearZ / (clip_z*(farZ - nearZ) - (farZ + nearZ));
+	return -world_z * 2.0f;
+
+	Framebuffer::use(m_CurrentFramebuffer);
+
+}
+
 unsigned int Framebuffer::getGLCallFromEnum(GL_CALLS a_Call) {
 	switch (a_Call) {
 		case Framebuffer::GL_CALLS::DEPTH_TEST:

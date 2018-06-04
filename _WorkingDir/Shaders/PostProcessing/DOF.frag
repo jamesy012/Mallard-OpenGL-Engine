@@ -18,7 +18,7 @@ uniform float falloff = 15.0f;
 
 //note results vary wildly when you change these
 uniform float nearPlane = 0.1f;
-uniform float farPlane = 100.0f;
+uniform float farPlane = 1000.0f;
 
 uniform float minStrength = 0.05f;
 
@@ -34,6 +34,8 @@ float depthStrength(){
     float distance = texture2D(depthTex, vTexCoord).x;
 
     float z = (2 * nearPlane) / (farPlane + nearPlane - distance * (farPlane - nearPlane));
+    //float clipZ = (distance - 0.5f) * 2.0f;
+    //float z = 2 * (nearPlane*farPlane) / (clipZ*(farPlane-nearPlane) - (farPlane + nearPlane));
     
     float dofStrength = 1;
     

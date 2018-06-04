@@ -34,18 +34,24 @@ void DepthOfField::create() {
 	m_DOF->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
 	m_DOF->genFramebuffer();
 	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_DOF->getFramebufferId(), "Depth of field result");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_DOF->getTexture(0)->getTextureId(), "Depth of field result - RGB");
+
 
 	m_DOFScaled = new Framebuffer();
 	m_DOFScaled->setSizePercent(1 / m_ScaledSize, 1 / m_ScaledSize);
 	m_DOFScaled->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
 	m_DOFScaled->genFramebuffer();
-	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_DOF->getFramebufferId(), "Depth of field Scaled 2(final)");
+	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_DOFScaled->getFramebufferId(), "Depth of field Scaled 2(final)");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_DOFScaled->getTexture(0)->getTextureId(), "Depth of field Scaled 2(final) - RGB");
+
 
 	m_DOFScaledBlurred = new Framebuffer();
 	m_DOFScaledBlurred->setSizePercent(1 / m_ScaledSize, 1 / m_ScaledSize);
 	m_DOFScaledBlurred->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGB, 16);
 	m_DOFScaledBlurred->genFramebuffer();
-	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_DOF->getFramebufferId(), "Depth of field Scaled 1");
+	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_DOFScaledBlurred->getFramebufferId(), "Depth of field Scaled 1");
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_DOFScaledBlurred->getTexture(0)->getTextureId(), "Depth of field Scaled 1 - RGB");
+
 
 
 	m_BlurShader = new Shader();
@@ -161,6 +167,15 @@ void DepthOfField::setValue(const std::string a_UniformName, float a_NewValue) {
 		(*pos).second->setData(&a_NewValue);
 	} else {
 		printf("Depth of field: cant setValue because uniform %s does not exist.\n", a_UniformName.c_str());
+	}
+}
+
+float DepthOfField::getValue(const std::string a_UniformName) {
+	auto pos = m_ValueMap.find(a_UniformName);
+	if (pos != m_ValueMap.end()) {
+		return *(float*)((*pos).second->getDataVoid());
+	} else {
+		printf("Depth of field: cant getValue because uniform %s does not exist.\n", a_UniformName.c_str());
 	}
 }
 

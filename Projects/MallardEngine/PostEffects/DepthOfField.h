@@ -25,6 +25,7 @@ public:
 	void use(Framebuffer* a_ReadBuffers);
 
 	void setValue(const std::string a_UniformName, float a_NewValue);
+	float getValue(const std::string a_UniformName);
 
 	unsigned int getDOFTexture();
 	Framebuffer* getDOFFramebuffer();

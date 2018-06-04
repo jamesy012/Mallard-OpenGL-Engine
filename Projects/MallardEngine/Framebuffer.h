@@ -75,6 +75,11 @@ public:
 	//will be nullptr if no framebuffer has been generated
 	Texture* getTexture(const unsigned int a_TextureIndex = 0) const;
 
+
+	//this is slow! prefer using a raycast instead
+	//uses glReadPixels
+	float getDepthAtPoint(const float a_WidthPercent, const float a_HeightPercent);
+
 	//returns the width of this framebuffer
 	unsigned int getFramebufferWidth() const {
 		return m_Width;

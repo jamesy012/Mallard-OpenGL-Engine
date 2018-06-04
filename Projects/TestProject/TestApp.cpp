@@ -23,6 +23,7 @@
 #include "Text.h"
 
 #include "Framebuffer.h"
+#include "Texture.h"
 #include "Shader.h"
 #include "PostEffects/DepthOfField.h"
 
@@ -33,11 +34,12 @@
 void TestApp::startUp() {
 
 	m_TestText = new Text(m_Font);
+	//m_TestText->generateText(R"(TEST APP
+	//	Move: WASDQE, Arrow keys
+	//	Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
+	//	[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72, 190, 32, 255) / 255.0f);
 	m_TestText->generateText(R"(TEST APP
-		Move: WASDQE, Arrow keys
-		Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
-		[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72,190,32,255)/255.0f);
-
+		Move: WASDQE, Arrow keys)", 20);
 
 	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
 	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
@@ -58,12 +60,12 @@ void TestApp::startUp() {
 		const unsigned int NumOfGrass = 2000;
 		const unsigned int sizeOfGround = 50;
 		for (int i = 0; i < NumOfGrass; i++) {
-		glm::mat4 position;
+			glm::mat4 position;
 			glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
 
-			pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround*2))-sizeOfGround;
+			pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
 			pos.y = 1;
-			pos.z =  (((rand() % 10000) / 10000.0f) * (sizeOfGround*2))-sizeOfGround;
+			pos.z = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
 
 			//printf("Pos %i (%f,%f,%f) ---- ", i, pos.x, pos.y, pos.z);
 			glm::vec3 height = m_Ground->m_Meshs[0]->getClosestPosition(pos);
@@ -73,7 +75,7 @@ void TestApp::startUp() {
 			//const glm::vec3 posOnGround = glm::vec3(i,0,0);
 			position = glm::translate(glm::mat4(1), pos);
 			position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
-			position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f)*3));
+			position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f) * 3));
 			m_GrassBatch->add(m_GrassModel, position);
 		}
 		m_GrassBatch->bind();
@@ -115,37 +117,69 @@ void TestApp::update() {
 		m_RenderDOF ^= 1;
 	}
 
-	if (Input::wasKeyPressed(KEY_R)) {
-		m_RunningFocalDistanceChange = true;
-		m_FocalDistanceDirection = !m_FocalDistanceDirection;
-		m_FocalDistanceTimer = 0;
-	}
 
 	if (Input::wasKeyPressed(KEY_T)) {
-		static bool val = true;
-		m_DOFTest->setValue("falloff", (val = !val)?2.0f:20.0f);
+		static int val = 0;
+		static const float values[] = { 2.0f,20.0f,0,100.0f };
+		m_DOFTest->setValue("falloff", values[(val++) % 4]);
 
 	}
 
-	if (m_RunningFocalDistanceChange) {
-		const float maxTime = 1.0f;
-
-		m_FocalDistanceTimer += TimeHandler::getDeltaTime();
-		if (m_FocalDistanceTimer >= maxTime) {
-			m_RunningFocalDistanceChange = false;
-			m_FocalDistanceTimer = maxTime;
-		}
-
-		float timer = m_FocalDistanceTimer / maxTime;
-
-		if (m_FocalDistanceDirection) {
-			timer = 1 - timer;
-		}
-
-		float newVal = glm::lerp(5.0f, 16.0f,timer);
-		m_DOFTest->setValue("focusDistance", newVal);
-
+	if (Input::wasKeyPressed(KEY_KP_2)) {
+		m_AutoDepth ^= 1;
+		m_RunningFocalDistanceChange = true;
 	}
+
+	if (m_AutoDepth) {
+		//run 3 times a second, because it's slow
+		if (TimeHandler::getCurrentFrameNumber() % 20 == 0) {
+			printf("update\n");
+			m_CurrentDepth = m_FbGameFrameCopy->getDepthAtPoint(0.5f, 0.5f);
+		}
+		if (m_CurrentDepth > m_MaxDist) {
+			float falloffVal = glm::lerp(m_DOFTest->getValue("falloff"), 0.0f, TimeHandler::getDeltaTime() * 5);
+			m_DOFTest->setValue("falloff", falloffVal);
+		} else {
+			float percentage = m_CurrentDepth / m_MaxDist;
+			percentage = -glm::log(percentage)/10.5f;
+			percentage = glm::clamp(percentage, 0.0f, 1.0f);
+			//printf("%f\n", percentage*20.0f);
+			float falloffVal = glm::lerp(m_DOFTest->getValue("falloff"), percentage * 20.0f, TimeHandler::getDeltaTime()*3);
+			m_DOFTest->setValue("falloff", falloffVal);
+			float setVal = glm::lerp(m_DOFTest->getValue("focusDistance"), m_CurrentDepth, TimeHandler::getDeltaTime()*3);
+			m_DOFTest->setValue("focusDistance", setVal);
+		}
+	} else {
+
+		if (Input::wasKeyPressed(KEY_R)) {
+			m_RunningFocalDistanceChange = true;
+			m_FocalDistanceDirection = !m_FocalDistanceDirection;
+			m_FocalDistanceTimer = 0;
+		}
+
+
+		if (m_RunningFocalDistanceChange) {
+			const float maxTime = 1.0f;
+
+			m_FocalDistanceTimer += TimeHandler::getDeltaTime();
+			if (m_FocalDistanceTimer >= maxTime) {
+				m_RunningFocalDistanceChange = false;
+				m_FocalDistanceTimer = maxTime;
+			}
+
+			float timer = m_FocalDistanceTimer / maxTime;
+
+			if (m_FocalDistanceDirection) {
+				timer = 1 - timer;
+			}
+
+			float newVal = glm::lerp(5.0f, 16.0f, timer);
+			m_DOFTest->setValue("focusDistance", newVal);
+
+		}
+	}
+
+
 
 	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
@@ -199,7 +233,7 @@ void TestApp::draw() {
 
 	m_RenderList->draw();
 
-	if(m_RenderDOF) {
+	if (m_RenderDOF) {
 		Logging::quickGpuDebugGroupPush("Depth of field");
 		Logging::quickTimePush("Depth of field");
 		m_DOFTest->use(m_FbGameFrame);
@@ -224,7 +258,7 @@ void TestApp::drawUi() {
 	uniformModel = m_ShaderText->m_CommonUniforms.m_ModelMatrix;
 
 	//move ui up one line to show the new line
-	model.translate(glm::vec3(0, Window::getMainWindow()->getWindowHeight(), 0));
+	model.translate(glm::vec3(10, Window::getMainWindow()->getWindowHeight() - 10, 0));
 
 	uniformPVM->setData(&m_CameraMain->getProjectionViewMatrix());
 
@@ -247,7 +281,7 @@ void TestApp::drawUi() {
 		//quick text draw, not as efficient as using a Text object to render
 		quickText = "FPS: ";
 		quickText += std::to_string(TimeHandler::getFps());
-		float offset = m_Font->drawText(quickText.c_str(),20);
+		float offset = m_Font->drawText(quickText.c_str(), 20);
 		model.translate(glm::vec3(0, -offset, 0));
 	}
 	//vert info
@@ -277,6 +311,34 @@ void TestApp::drawUi() {
 		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalRotationEulers().y) + ", ";
 		quickText += std::to_string(m_CameraGame->m_Transform.getGlobalRotationEulers().z) + ")";
 		float offset = m_Font->drawText(quickText.c_str(), 26);
+		model.translate(glm::vec3(0, -offset, 0));
+	}
+
+	{
+		uniformModel->setData(&model);
+		Shader::applyUniform(uniformModel);
+
+		quickText = "DOF NUM_1 " + std::string(m_RenderDOF ? "on" : "Off");
+		if (m_RenderDOF) {
+			quickText += " (Auto Depth NUM_2 " + std::string(m_AutoDepth ? "On" : "Off") + ")\n";
+			if (m_AutoDepth) {
+				quickText += " Distance: ";
+				quickText += std::to_string(m_CurrentDepth);
+				quickText += " Current:";
+				quickText += std::to_string(m_DOFTest->getValue("focusDistance"));
+				quickText += "\n falloff: ";
+				quickText += std::to_string(m_DOFTest->getValue("falloff"));
+			} else {
+				quickText += " R Change Focus Distance ";
+				quickText += std::to_string(m_DOFTest->getValue("focusDistance"));
+				quickText += "\n T Change Falloff Distance ";
+				quickText += std::to_string(m_DOFTest->getValue("falloff"));
+			}
+			//quick text draw, not as efficient as using a Text object to render
+
+		}
+
+		float offset = m_Font->drawText(quickText.c_str(), 20);
 		model.translate(glm::vec3(0, -offset, 0));
 	}
 }
