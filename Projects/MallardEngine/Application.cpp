@@ -247,6 +247,8 @@ void Application::run() {
 
 	Logging::newFrame();
 
+	TimeHandler::update();
+
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
 		if (m_Flags.m_RunDebugTimers) {

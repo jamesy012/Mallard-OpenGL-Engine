@@ -84,8 +84,8 @@
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)IntermediateDir\$(projectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
-    <LibraryPath>$(SolutionDir)Builds\MallardEngine\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Builds\MallardEngine\$(Configuration)\;$(SolutionDir)Dependencies\glew-2.0.0\libary\Release\$(platform)\;$(SolutionDir)Dependencies\bullet3\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\glew-2.0.0\include;$(SolutionDir)Dependencies\bullet3\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Builds\$(projectName)\$(Configuration)\</OutDir>
@@ -116,7 +116,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;$(SolutionDir)Projects\MallardEngine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;MallardEngine_$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;MallardEngine_$(Platform).lib;BulletCollision_$(Configuration).lib;BulletDynamics_$(Configuration).lib;LinearMath_$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@echo off

@@ -56,7 +56,7 @@ void TestApp::startUp() {
 
 	printf("grass gen Start\n");
 	m_GrassBatch = new MeshBatch();
-	{
+	if (false) {
 		const unsigned int NumOfGrass = 2000;
 		const unsigned int sizeOfGround = 50;
 		for (int i = 0; i < NumOfGrass; i++) {
@@ -90,6 +90,53 @@ void TestApp::startUp() {
 	m_RenderList->addObject(m_ModelObject);
 	m_RenderList->addObject(m_GroundObject);
 	m_RenderList->addObject(m_GrassBatchObject);
+
+
+	//setup physics
+	broadphase = new btDbvtBroadphase();
+	collisionConfig = new btDefaultCollisionConfiguration();
+	dispatcher = new btCollisionDispatcher(collisionConfig);
+	solver = new btSequentialImpulseConstraintSolver();
+	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+
+	dynamicsWorld->setGravity(btVector3(0, -10, 0));
+
+	//objects
+	m_SphereModel = new Mesh();
+	m_SphereModel->createBox();
+
+	m_SphereObject[0] = new Object(m_SphereModel, "Physics Object 1!");
+	m_SphereObject[1] = new Object(m_SphereModel, "Physics Object 2!");
+
+	m_RenderList->addObject(m_SphereObject[0]);
+	m_RenderList->addObject(m_SphereObject[1]);
+
+	groundPlane = new btStaticPlaneShape(btVector3(0, 1, 0), 1);
+
+	groundPlaneMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+	btRigidBody::btRigidBodyConstructionInfo groundPlaneRigidBodyCI(0, groundPlaneMotionState, groundPlane, btVector3(0, 0, 0));
+	groundPlaneRigidBodyCI.m_restitution = 0.75f;
+	groundPlaneRigidBody = new btRigidBody(groundPlaneRigidBodyCI);
+
+	//fallSphere = new btSphereShape(1);
+	fallSphere = new btBoxShape(btVector3(1, 1, 1));
+	btScalar mass = 1;
+	btVector3 fallInertia(0, 0, 0);
+	fallSphere->calculateLocalInertia(mass, fallInertia);
+
+	fallSphereMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 1, 0)));
+	btRigidBody::btRigidBodyConstructionInfo fallSphereRigidBodyCI(mass, fallSphereMotionState, fallSphere, fallInertia);
+	fallSphereRigidBodyCI.m_restitution = 0.75f;
+
+	fallSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
+	fallSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 50, 0)));
+
+	groundSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
+	groundSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(1.5f, 1, 0)));
+
+	dynamicsWorld->addRigidBody(groundPlaneRigidBody);
+	dynamicsWorld->addRigidBody(fallSphereRigidBody);
+	dynamicsWorld->addRigidBody(groundSphereRigidBody);
 }
 
 void TestApp::shutDown() {
@@ -141,12 +188,12 @@ void TestApp::update() {
 			m_DOFTest->setValue("falloff", falloffVal);
 		} else {
 			float percentage = m_CurrentDepth / m_MaxDist;
-			percentage = -glm::log(percentage)/10.5f;
+			percentage = -glm::log(percentage) / 10.5f;
 			percentage = glm::clamp(percentage, 0.0f, 1.0f);
 			//printf("%f\n", percentage*20.0f);
-			float falloffVal = glm::lerp(m_DOFTest->getValue("falloff"), percentage * 20.0f, TimeHandler::getDeltaTime()*3);
+			float falloffVal = glm::lerp(m_DOFTest->getValue("falloff"), percentage * 20.0f, TimeHandler::getDeltaTime() * 3);
 			m_DOFTest->setValue("falloff", falloffVal);
-			float setVal = glm::lerp(m_DOFTest->getValue("focusDistance"), m_CurrentDepth, TimeHandler::getDeltaTime()*3);
+			float setVal = glm::lerp(m_DOFTest->getValue("focusDistance"), m_CurrentDepth, TimeHandler::getDeltaTime() * 3);
 			m_DOFTest->setValue("focusDistance", setVal);
 		}
 	} else {
@@ -214,6 +261,19 @@ void TestApp::update() {
 	}
 	if (Input::isKeyDown(KEY_DOWN)) {
 		m_CameraGame->m_Transform.rotate(glm::vec3(-cameraRotateRpeed, 0, 0)*TimeHandler::getDeltaTime());
+	}
+
+	//physics
+	dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
+	{
+		btTransform trans;
+		trans = fallSphereRigidBody->getWorldTransform();
+		m_SphereObject[0]->m_Transform.setPosition(glm::vec3(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ()));
+		m_SphereObject[0]->m_Transform.setRotation(glm::quat(trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ(), trans.getRotation().getW()));
+
+		trans = groundSphereRigidBody->getWorldTransform();
+		m_SphereObject[1]->m_Transform.setPosition(glm::vec3(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ()));
+		m_SphereObject[1]->m_Transform.setRotation(glm::quat(trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ(), trans.getRotation().getW()));
 	}
 }
 
