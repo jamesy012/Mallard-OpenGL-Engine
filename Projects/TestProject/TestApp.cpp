@@ -31,6 +31,9 @@
 #include "Camera.h"
 #include "CameraFly.h"
 
+#include <BulletCollision/CollisionShapes/btStridingMeshInterface.h>
+#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+#include "Conversions.h"
 
 void TestApp::startUp() {
 
@@ -138,9 +141,38 @@ void TestApp::startUp() {
 	groundSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
 	groundSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(1.5f, 1, 0)));
 
-	dynamicsWorld->addRigidBody(groundPlaneRigidBody);
+	//dynamicsWorld->addRigidBody(groundPlaneRigidBody);
 	dynamicsWorld->addRigidBody(fallSphereRigidBody);
 	dynamicsWorld->addRigidBody(groundSphereRigidBody);
+
+	{
+		//memory leak's everywhere!
+		btTriangleMesh* mesh = new btTriangleMesh();
+		mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
+		mesh->preallocateVertices(m_Ground->m_Meshs[0]->m_Vertices.size());
+		for (unsigned int i = 0; i < m_Ground->m_Meshs[0]->m_Indices.size(); i += 3) {
+			glm::vec3 pos0 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 0]].position;
+			glm::vec3 pos1 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 1]].position;
+			glm::vec3 pos2 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 2]].position;
+			mesh->addTriangle(
+				btVector3(pos0.x, pos0.y, pos0.z),
+				btVector3(pos1.x, pos1.y, pos1.z),
+				btVector3(pos2.x, pos2.y, pos2.z));
+		}
+
+		//btCollisionShape* groundMesh = new btTriangleMeshShape(smi);
+		btCollisionShape* groundMesh = new btBvhTriangleMeshShape(mesh, true);
+
+		//btCollisionShape* groundMesh = new btConvexHullShape(points[0].m_floats, points.size(),16);
+		btDefaultMotionState* groundMeshMS = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+		btRigidBody::btRigidBodyConstructionInfo groundMeshRBCI(0, groundMeshMS, groundMesh, btVector3(0, 0, 0));
+		groundMeshRBCI.m_restitution = 0.75f;
+		btRigidBody* groundMeshRB = new btRigidBody(groundMeshRBCI);
+
+		dynamicsWorld->addRigidBody(groundMeshRB);
+	}
+	
+
 }
 
 void TestApp::shutDown() {
@@ -230,22 +262,20 @@ void TestApp::update() {
 		}
 	}
 
-
-
+	//rotate model
 	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
-
 	//physics
-	dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
 	{
-		btTransform trans;
-		trans = fallSphereRigidBody->getWorldTransform();
-		m_SphereObject[0]->m_Transform.setPosition(glm::vec3(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ()));
-		m_SphereObject[0]->m_Transform.setRotation(glm::quat(trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ(), trans.getRotation().getW()));
+		dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
+		{
+			btTransform trans;
+			trans = fallSphereRigidBody->getWorldTransform();
+			bulletToTransform(m_SphereObject[0]->m_Transform, trans);
 
-		trans = groundSphereRigidBody->getWorldTransform();
-		m_SphereObject[1]->m_Transform.setPosition(glm::vec3(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ()));
-		m_SphereObject[1]->m_Transform.setRotation(glm::quat(trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ(), trans.getRotation().getW()));
+			trans = groundSphereRigidBody->getWorldTransform();
+			bulletToTransform(m_SphereObject[1]->m_Transform, trans);
+		}
 	}
 }
 

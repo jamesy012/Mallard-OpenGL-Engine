@@ -62,9 +62,10 @@ public:
 
 	//TODO: Move this back to private, temp change for instance rendering
 	unsigned int m_Vao;
-private:
+
 	std::vector<MeshVerticesType> m_Vertices;
 	std::vector<MeshIndicesType> m_Indices;
+private:
 	
 	//todo change to material
 	//test Texture

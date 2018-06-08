@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\_Common\Conversions.h" />
     <ClInclude Include="..\_Common\DLLBuild.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
