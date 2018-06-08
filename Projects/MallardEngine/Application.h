@@ -41,6 +41,7 @@ protected:
 		bool m_AllowInternalFramebufferResizes = true;
 		//allow the debug timer to run every second, when it does run m_DebugRunningTimersThisFrame will be true
 		bool m_RunDebugTimers = false;
+		bool m_RunCameraUpdate = true;
 	} m_Flags;
 
 	Window* m_ApplicationWindow = nullptr;

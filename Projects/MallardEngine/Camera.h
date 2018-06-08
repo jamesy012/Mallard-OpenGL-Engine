@@ -43,6 +43,11 @@ public:
 	// do nothing
 	virtual void update() override {}
 
+protected:
+	//a check to see if this camera is dirty
+	//this will be true if the perspective, orthographic or m_Transform was changed
+	//and false again after updatePV is called
+	bool m_IsDirty = false;
 private:
 	//uses the Transform to update the ViewMatrix
 	void updateView();
@@ -62,10 +67,7 @@ private:
 	//number relating to the last frame the View matrix was updated
 	unsigned int m_LastViewMatrixUpdateFrame = -1;
 
-	//a check to see if this camera is dirty
-	//this will be true if the perspective, orthographic or m_Transform was changed
-	//and false again after updatePV is called
-	bool m_IsDirty = false;
+
 
 
 

@@ -29,6 +29,7 @@
 
 #include "Object.h"
 #include "Camera.h"
+#include "CameraFly.h"
 
 
 void TestApp::startUp() {
@@ -41,8 +42,11 @@ void TestApp::startUp() {
 	m_TestText->generateText(R"(TEST APP
 		Move: WASDQE, Arrow keys)", 20);
 
+	m_CameraGame = new CameraFly();
 	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
 	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
+	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveUp = KEY_E;
+	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveDown = KEY_Q;
 
 	m_DOFTest = new DepthOfField();
 	m_DOFTest->create();
@@ -230,38 +234,6 @@ void TestApp::update() {
 
 	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
-	float cameraMoveSpeed = 10.0f;
-	float cameraRotateRpeed = 40.0f;
-	if (Input::isKeyDown(KEY_E)) {
-		m_CameraGame->m_Transform.translate(glm::vec3(0, cameraMoveSpeed, 0)*TimeHandler::getDeltaTime(), false);
-	}
-	if (Input::isKeyDown(KEY_Q)) {
-		m_CameraGame->m_Transform.translate(glm::vec3(0, -cameraMoveSpeed, 0)*TimeHandler::getDeltaTime(), false);
-	}
-	if (Input::isKeyDown(KEY_S)) {
-		m_CameraGame->m_Transform.translate(glm::vec3(0, 0, cameraMoveSpeed)*TimeHandler::getDeltaTime(), false);
-	}
-	if (Input::isKeyDown(KEY_W)) {
-		m_CameraGame->m_Transform.translate(glm::vec3(0, 0, -cameraMoveSpeed)*TimeHandler::getDeltaTime(), false);
-	}
-	if (Input::isKeyDown(KEY_D)) {
-		m_CameraGame->m_Transform.translate(glm::vec3(cameraMoveSpeed, 0, 0)*TimeHandler::getDeltaTime(), false);
-	}
-	if (Input::isKeyDown(KEY_A)) {
-		m_CameraGame->m_Transform.translate(glm::vec3(-cameraMoveSpeed, 0, 0)*TimeHandler::getDeltaTime(), false);
-	}
-	if (Input::isKeyDown(KEY_LEFT)) {
-		m_CameraGame->m_Transform.rotate(glm::vec3(0, cameraRotateRpeed, 0)*TimeHandler::getDeltaTime());
-	}
-	if (Input::isKeyDown(KEY_RIGHT)) {
-		m_CameraGame->m_Transform.rotate(glm::vec3(0, -cameraRotateRpeed, 0)*TimeHandler::getDeltaTime());
-	}
-	if (Input::isKeyDown(KEY_UP)) {
-		m_CameraGame->m_Transform.rotate(glm::vec3(cameraRotateRpeed, 0, 0)*TimeHandler::getDeltaTime());
-	}
-	if (Input::isKeyDown(KEY_DOWN)) {
-		m_CameraGame->m_Transform.rotate(glm::vec3(-cameraRotateRpeed, 0, 0)*TimeHandler::getDeltaTime());
-	}
 
 	//physics
 	dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
