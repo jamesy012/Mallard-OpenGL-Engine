@@ -122,11 +122,7 @@ void Application::run() {
 
 	Logging::newFrame();
 
-	//set up cameras
-	m_CameraGame = new Camera();
-	m_CameraGame->setPerspective(60.0f, m_ApplicationWindow->getFramebufferWidth() / (float)m_ApplicationWindow->getFramebufferHeight(), 0.1f, 1000.0f);
-	m_CameraUi = new Camera();
-	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+
 
 	Texture::m_White1x1Texture = new Texture(1, 1, TextureType::RGB);
 	Texture::m_White1x1Texture->setPixel(0, 0, glm::vec4(1, 1, 1, 1));
@@ -193,6 +189,10 @@ void Application::run() {
 
 	/** SET UP PROGRAM FOR STARTUP LOADING SCREEN */
 
+	//set up UI camera
+	m_CameraUi = new Camera();
+	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
+
 	//set up default clear color
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,6 +226,16 @@ void Application::run() {
 	//program startup/load models
 	startUp();
 
+	//set up Game camera
+
+	if (m_CameraGame == nullptr) {
+		m_CameraGame = new Camera();
+	}
+	if (m_CameraGame->getProjectionMatrix()[3][3] == 1) {
+		m_CameraGame->setPerspective(60.0f, m_ApplicationWindow->getFramebufferWidth() / (float)m_ApplicationWindow->getFramebufferHeight(), 0.1f, 1000.0f);
+	}
+
+
 	/** SET UP PROGRAM FOR RENDERING */
 	glEnable(GL_DEPTH_TEST);
 
@@ -246,6 +256,8 @@ void Application::run() {
 	glfwSwapInterval(1);
 
 	Logging::newFrame();
+
+	TimeHandler::update();
 
 	//game loop
 	while (!glfwWindowShouldClose(m_ApplicationWindow->getWindow()) && !m_Quit) {
@@ -276,6 +288,10 @@ void Application::run() {
 		if (m_DebugRunningTimersThisFrame) {
 			Logging::quickTimePop(true);
 			Logging::quickTimePush("Frame");
+		}
+
+		if (m_Flags.m_RunCameraUpdate) {
+			m_CameraGame->update();
 		}
 
 		//call virtual functions
