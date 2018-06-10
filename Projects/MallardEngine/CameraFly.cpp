@@ -12,21 +12,23 @@ CameraFly::~CameraFly() {
 }
 
 void CameraFly::update() {
-	//check if we should move the camera?
-	bool mouseMovement = true;
 	//is the flag for only moving while locked on?
 	//if (m_CameraRotationOnlyWhileMouseLocked) {
 	//	//set mouse movement bool to if the mouse is locked
 	//	mouseMovement = Window::isMouseLocked();
 	//}
-	//if we should move the mouse
-	if (m_RotationMode != 0) {
-		//move mouse
+	
+	//if one of the rotation modes are turned on 
+	if (m_RotationMode != RotationModes::OFF) {
+		//rotate via mouse
 		glm::vec2 movement;
-		if (m_RotationMode & CameraFlyRoationModes::MOUSE) {
+		if (m_RotationMode & RotationModes::MOUSE) {
+			//might need to scale speed based on screen size!
 			movement = -glm::vec2(Input::getMouseDeltaX(), Input::getMouseDeltaY());
+			movement /= glm::vec2(Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight());
+			movement *= m_MouseRotationSpeed;
 		} 
-		if (m_RotationMode & CameraFlyRoationModes::KEYS) {
+		if (m_RotationMode & RotationModes::KEYS) {
 			if (Input::isKeyDown(m_KeyboardKeys.RotateLeft)) {
 				movement.x += m_KeyRotationSpeed;
 			}
@@ -40,10 +42,13 @@ void CameraFly::update() {
 				movement.y += -m_KeyRotationSpeed;
 			}
 		}
-		if (movement != glm::vec2(0)) {
-			m_IsDirty = true;
 
+		//check to see if there was any movement
+		if (movement != glm::vec2(0)) {
+			//scale by deltaTime
+			movement *= TimeHandler::getDeltaTime();
 #ifdef USE_QUATERNIONS
+			//Not needed???
 			movement *= 0.0025f;//sensitivity
 
 			//rotate Up and down
@@ -73,57 +78,61 @@ void CameraFly::update() {
 #endif // USE_QUATERNIONS
 
 		}
-		//scroll
-		//if (m_AllowChangeOfFovByScroll) {
-		//	float scrollDelta = -Input::getMouseScrollY();//scroll is backwards for what we want
-		//	if (scrollDelta != 0) {
-		//		scrollDelta *= 0.1f;//sensitivity
-		//		float fov = m_FieldOfView + scrollDelta;
-		//		fov = fov < 0.1f ? 0.1f : fov > 2 ? 2 : fov;//clamp
-		//		setPerspective(fov, m_Aspect, m_NearPlane, m_FarPlane);
-		//	}
-		//}
 	}
 
-	//bool keyMovement = true;
+
+	//scroll
+	//if (m_AllowChangeOfFovByScroll) {
+	//	float scrollDelta = -Input::getMouseScrollY();//scroll is backwards for what we want
+	//	if (scrollDelta != 0) {
+	//		scrollDelta *= 0.1f;//sensitivity
+	//		float fov = m_FieldOfView + scrollDelta;
+	//		fov = fov < 0.1f ? 0.1f : fov > 2 ? 2 : fov;//clamp
+	//		setPerspective(fov, m_Aspect, m_NearPlane, m_FarPlane);
+	//	}
+	//}
+
+	//check to see if the window is focused, and if we should only listen to movment input if it is focused
 	//if (m_MovementOnlyWhileMouseLocked) {
 	//	keyMovement = Window::isMouseLocked();
 	//}
-	//if (!keyMovement) {
-	//	return;
-	//}
+	
+	if (m_AllowMovement) {
 
-	//z will center view to (0,0,0)
-	//if (Input::isKeyDown(GLFW_KEY_Z)) {
-	//	setLookAt(m_Position, glm::vec3(0));
-	//	//return;
-	//}
+		//how much to move in each direction
+		glm::vec3 movement;
+		if (Input::isKeyDown(m_KeyboardKeys.MoveForward)) {
+			movement.z -= m_MovementSpeed;
+		}
+		if (Input::isKeyDown(m_KeyboardKeys.MoveBackwards)) {
+			movement.z += m_MovementSpeed;
+		}
+		if (Input::isKeyDown(m_KeyboardKeys.MoveLeft)) {
+			movement.x -= m_MovementSpeed;
+		}
+		if (Input::isKeyDown(m_KeyboardKeys.MoveRight)) {
+			movement.x += m_MovementSpeed;
+		}
+		if (Input::isKeyDown(m_KeyboardKeys.MoveUp)) {
+			movement.y += m_MovementSpeed;
+		}
+		if (Input::isKeyDown(m_KeyboardKeys.MoveDown)) {
+			movement.y -= m_MovementSpeed;
+		}
 
-	//how much to move in each direction
-	glm::vec3 movement;
-	if (Input::isKeyDown(m_KeyboardKeys.MoveForward)) {
-		movement.z -= m_Speed;
-	}
-	if (Input::isKeyDown(m_KeyboardKeys.MoveBackwards)) {
-		movement.z += m_Speed;
-	}
-	if (Input::isKeyDown(m_KeyboardKeys.MoveLeft)) {
-		movement.x -= m_Speed;
-	}
-	if (Input::isKeyDown(m_KeyboardKeys.MoveRight)) {
-		movement.x += m_Speed;
-	}
-	if (Input::isKeyDown(m_KeyboardKeys.MoveUp)) {
-		movement.y += m_Speed;
-	}
-	if (Input::isKeyDown(m_KeyboardKeys.MoveDown)) {
-		movement.y -= m_Speed;
-	}
+		//limit speed when holding both forward and right to not be quicker than normal
+		//not necessary but could be helpful in the end
+		//float length = movement.length();
+		//if (length > m_MovementSpeed) {
+		//	m_MovementSpeed = m_MovementSpeed * (m_MovementSpeed/length);
+		//}
 
-	if (movement == glm::vec3(0)) {
-		return;
-	}
+		//check to see if there was any movement
+		if (movement == glm::vec3(0)) {
+			return;
+		}
 
-	m_Transform.translate(movement * TimeHandler::getDeltaTime(), false);
+		m_Transform.translate(movement * TimeHandler::getDeltaTime(), false);
+	}
 
 }

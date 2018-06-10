@@ -47,6 +47,7 @@ void TestApp::startUp() {
 	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
 	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveUp = KEY_E;
 	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveDown = KEY_Q;
+	((CameraFly*)m_CameraGame)->m_RotationMode |= CameraFly::RotationModes::MOUSE;
 
 	m_DOFTest = new DepthOfField();
 	m_DOFTest->create();

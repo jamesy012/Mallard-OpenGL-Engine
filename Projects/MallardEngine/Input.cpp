@@ -131,6 +131,7 @@ void Input::cursorPositionCallback(GLFWwindow * a_Window, double a_XPos, double 
 	glm::vec2 oldPos = m_MousePos;
 	m_MousePos = glm::vec2(a_XPos, a_YPos);
 
+	//todo: might need to reset MouseDelta after mouse has left the window
 	//if not first frame, perhaps get a better test
 	if (oldPos != glm::vec2(0, 0)) {
 		m_MouseDelta += m_MousePos - oldPos;
