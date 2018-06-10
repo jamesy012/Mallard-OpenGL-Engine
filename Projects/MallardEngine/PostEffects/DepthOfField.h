@@ -44,7 +44,6 @@ private:
 
 	//todo change std::string here to be a int (string hashing)
 	std::map<const std::string, ShaderUniformData*> m_ValueMap;
-	static const unsigned int m_ValueCount = 7;
-	static const std::string m_ValueNames[m_ValueCount] = { "focusDistance", "falloff", "minStrength", "farDof", "nearDof", "farPlane", "nearPlane" };
+
 };
 

@@ -11,6 +11,8 @@
 
 #include "GLDebug.h"
 
+const unsigned int m_ValueCount = 7;
+const std::string m_ValueNames[m_ValueCount] = { "focusDistance", "falloff", "minStrength", "farDof", "nearDof", "farPlane", "nearPlane" };
 
 DepthOfField::DepthOfField() {
 
