@@ -21,15 +21,15 @@
 #include "Font.h"
 #include "Skybox.h"
 
-
 #include "GLDebug.h"
+
+#include "Multithreading/MultithreadManager.h"
 
 /* assimp include files. These three are usually needed. */
 //these are needed for the logging system
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
 
 static Application* m_Application = nullptr;
 
@@ -222,9 +222,36 @@ void Application::run() {
 		glfwSwapBuffers(m_ApplicationWindow->getWindow());
 	}
 
+	//** Thread TESTING START
+	std::cout << "Thead testing Starting" << std::endl;
+	MultithreadManager mtm;
+	mtm.startThread();
+
+	static bool loaded = false;
+
+	mtm.queueMethod([]() {
+		char value = 0;
+		while (!loaded) {
+			char text[4] = { '\0' };
+			std::fill_n(text, ((value++)%3)+1, '.');
+			std::cout << "Loading" << text << std::endl;
+			Sleep(300);
+		}
+	});
+
+	mtm.queueMethod([]() {
+		std::cout << "Loading Finished" << std::endl;
+	});
 
 	//program startup/load models
 	startUp();
+
+	loaded = true;
+
+	mtm.closeThread();
+
+	std::cout << "Thead testing Finished" << std::endl;
+	//** Thread TESTING END
 
 	//set up Game camera
 

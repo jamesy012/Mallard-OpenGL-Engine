@@ -34,6 +34,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshBatch.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Multithreading\MultithreadManager.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PostEffects\DepthOfField.h" />
     <ClInclude Include="Renderer\RenderMFnPtr.h" />
@@ -65,6 +66,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshBatch.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Multithreading\MultithreadManager.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PostEffects\DepthOfField.cpp" />
     <ClCompile Include="Renderer\RenderMInstanced.cpp" />
