@@ -12,6 +12,8 @@
 
 #include "GLDebug.h"
 
+#include "Multithreading/MultithreadManager.h"
+
 Model::Model() {
 }
 
@@ -68,11 +70,9 @@ void Model::loadNode(aiNode * a_Node) {
 		myMesh->setTexture(m_ModelMeshData[mesh->mMaterialIndex]->m_Texture);
 		myMesh->m_TextureIndex = mesh->mMaterialIndex;
 
-		myMesh->bind();
-
-		std::string name = "Model - " + m_Resource_FileName + " - " + m_Scene->mMeshes[meshIndex]->mName.C_Str();
-		myMesh->setDebugName(name);
 	}
+
+
 
 	//go through children
 	for (size_t i = 0; i < childCount; i++) {
@@ -156,6 +156,17 @@ bool Model::resourceLoad() {
 	loadTextures();
 
 	loadNode(m_Scene->mRootNode);
+
+	MultithreadManager::queueMethod(this, [](void* a_Model) {
+		Model* model = (Model*)a_Model;
+		for (size_t i = 0; i < model->m_Meshs.size(); i++) {
+			model->m_Meshs[i]->bind();
+
+			std::string name = "Model - " + model->m_Resource_FileName + " - " + model->m_Scene->mMeshes[i]->mName.C_Str();
+			model->m_Meshs[i]->setDebugName(name);
+		}
+	});
+
 	return true;
 }
 

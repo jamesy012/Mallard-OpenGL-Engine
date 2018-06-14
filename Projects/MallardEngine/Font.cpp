@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <fstream>
 
-#include <memory>
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
@@ -54,13 +53,14 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 	//create the image data
 	m_Data->m_Info = std::make_unique<stbtt_packedchar[]>(charCount);
 
-	auto atlasData = std::make_unique<uint8_t[]>(m_Font.textureWidth * m_Font.textureHeight);
+	//auto atlasData = std::make_unique<uint8_t[]>(m_Font.textureWidth * m_Font.textureHeight);
+	m_AtlasData = std::make_unique<uint8_t[]>(m_Font.textureWidth * m_Font.textureHeight);
 
 	stbtt_pack_context context;
 	int result;
 
 	//create the texture
-	result = stbtt_PackBegin(&context, atlasData.get(), m_Font.textureWidth, m_Font.textureHeight, 0, 1, nullptr);
+	result = stbtt_PackBegin(&context, m_AtlasData.get(), m_Font.textureWidth, m_Font.textureHeight, 0, 1, nullptr);
 	if (!result) {
 		printf("ERROR LOADING FONT _UNKNOWN ERROR_%i,%s\n", __LINE__, __FUNCTION__);
 		return;//error
@@ -78,11 +78,15 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 
 	stbtt_PackEnd(&context);
 
+	m_TexturePath = a_FontPath;
+}
+
+void Font::bind() {
 	//convert into Texture class
 	glGenTextures(1, &m_TextureId);
 	glBindTexture(GL_TEXTURE_2D, m_TextureId);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Font.textureWidth, m_Font.textureHeight, 0, GL_RED, GL_UNSIGNED_BYTE, atlasData.get());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Font.textureWidth, m_Font.textureHeight, 0, GL_RED, GL_UNSIGNED_BYTE, m_AtlasData.get());
 	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -93,8 +97,7 @@ void Font::loadFont(const char * a_FontPath, float a_FontSize) {
 
 	m_Texture = new Texture(m_TextureId, m_Font.textureWidth, m_Font.textureHeight);
 
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_TextureId, (std::string("Font ") + a_FontPath).c_str());
-
+	GLDebug_NAMEOBJ(GL_TEXTURE, m_TextureId, ("Font " + m_TexturePath).c_str());
 }
 
 //uses stbtt to get the character's quad position

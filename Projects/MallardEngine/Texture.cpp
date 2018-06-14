@@ -15,6 +15,9 @@
 #include "ShaderUniformData.h"
 #include "GLDebug.h"
 
+#include "Multithreading/MultithreadManager.h"
+
+
 Texture* Texture::m_White1x1Texture;
 
 
@@ -235,7 +238,9 @@ void Texture::resourceCopy(IResource * a_Resource) {
 	int totalSize = textureSize * dataSize;
 	m_TextureData = new DataFormat[totalSize];
 	memcpy(m_TextureData, tex->m_TextureData, totalSize * sizeof(DataFormat));
-	bind();
+	MultithreadManager::queueMethod(this,[](void* a_Texture) {
+		((Texture*)a_Texture)->bind();
+	});
 }
 
 void Texture::resourceUnload() {

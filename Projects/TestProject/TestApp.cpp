@@ -31,6 +31,7 @@
 #include "Camera.h"
 #include "CameraFly.h"
 
+#include "Multithreading/MultithreadManager.h"
 
 void TestApp::startUp() {
 
@@ -39,8 +40,10 @@ void TestApp::startUp() {
 	//	Move: WASDQE, Arrow keys
 	//	Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
 	//	[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72, 190, 32, 255) / 255.0f);
-	m_TestText->generateText(R"(TEST APP
+	m_mtm->queueMethod(this,[](void* tp){
+		((TestApp*)tp)->m_TestText->generateText(R"(TEST APP
 		Move: WASDQE, Arrow keys)", 20);
+	});
 
 	m_CameraGame = new CameraFly();
 	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
@@ -50,7 +53,9 @@ void TestApp::startUp() {
 	((CameraFly*)m_CameraGame)->m_RotationMode |= CameraFly::RotationModes::MOUSE;
 
 	m_DOFTest = new DepthOfField();
-	m_DOFTest->create();
+	m_mtm->queueMethod(this, [](void* tp) {
+		((TestApp*)tp)->m_DOFTest->create();
+	});
 
 	m_Model = new Model();
 	m_Model->load("Models/Nanosuit/nanosuit.obj");
@@ -87,6 +92,7 @@ void TestApp::startUp() {
 	}
 	printf("grass gen Finished\n");
 
+
 	m_ModelObject = new Object(m_Model);
 	m_GroundObject = new Object(m_Ground);
 	m_GrassBatchObject = new Object(m_GrassBatch);
@@ -108,8 +114,9 @@ void TestApp::startUp() {
 
 	//objects
 	m_SphereModel = new Mesh();
-	m_SphereModel->createBox();
-
+	m_mtm->queueMethod(this, [](void* tp) {
+		((TestApp*)tp)->m_SphereModel->createBox();
+	});
 	m_SphereObject[0] = new Object(m_SphereModel, "Physics Object 1!");
 	m_SphereObject[1] = new Object(m_SphereModel, "Physics Object 2!");
 
@@ -142,6 +149,7 @@ void TestApp::startUp() {
 	dynamicsWorld->addRigidBody(groundPlaneRigidBody);
 	dynamicsWorld->addRigidBody(fallSphereRigidBody);
 	dynamicsWorld->addRigidBody(groundSphereRigidBody);
+
 }
 
 void TestApp::shutDown() {

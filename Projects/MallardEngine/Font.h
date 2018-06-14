@@ -3,6 +3,8 @@
 #include "DLLBuild.h"
 
 #include <vector>
+#include <memory>
+
 
 class Texture;
 struct FontCppData;
@@ -51,6 +53,8 @@ public:
 	//will not load font if it has already been loaded
 	void loadFont(const char* a_FontPath, float a_FontSize);
 
+	void bind();
+
 	//gets the character size, uv coords and how far to offset it
 	GlyphData getGlyphInfo(int a_Character, float a_OffsetX, float a_OffsetY) const;
 
@@ -94,6 +98,9 @@ private:
 
 	Texture* m_Texture = nullptr;
 	unsigned int m_TextureId = 0;
+
+	std::string m_TexturePath;
+	std::unique_ptr<uint8_t[]> m_AtlasData;
 
 	//size of the font that was loaded
 	float m_FontSize = 0;

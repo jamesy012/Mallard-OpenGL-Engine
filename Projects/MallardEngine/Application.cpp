@@ -33,6 +33,14 @@
 
 static Application* m_Application = nullptr;
 
+static bool loaded;
+static char value;
+static time_t lastTime;
+static MultithreadManager::QueueObj thisObj;
+
+//true is much slower, but allows the window to be moved during loading
+#define RUN_GLFW_ON_OPENGL_THREAD true
+
 Application::Application() {
 }
 
@@ -49,11 +57,21 @@ void Application::run() {
 
 	m_Application = this;
 
-	//start glfw
-	if (!glfwInit()) {
-		//could not start glfw
-		return;
-	}
+	m_mtm = new MultithreadManager();
+	m_mtm->startThread();
+
+#if RUN_GLFW_ON_OPENGL_THREAD
+	m_mtm->queueMethod([](void*) {
+#endif
+		//start glfw
+		if (!glfwInit()) {
+			//could not start glfw
+			return;
+		}
+
+
+	glfwSetErrorCallback(Application::GLFWErrorCallback);
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);//requied Compat profile for Nsight
@@ -61,60 +79,75 @@ void Application::run() {
 #if _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif // _DEBUG
-
-	/* get a handle to the predefined STDOUT log stream and attach
-	it to the logging system. It remains active for all further
-	calls to aiImportFile(Ex) and aiApplyPostProcessing. */
-	//struct aiLogStream stream;
-	//stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
-	//aiAttachLogStream(&stream);
-
-	//create window for app
-	m_ApplicationWindow = new Window();
-	m_ApplicationWindow->createWindow(640, 480, "Window");
-	m_ApplicationWindow->makeContextCurrent();//make context so we can render to it
-
-	m_ApplicationWindow->m_WindowResizeCallback = windowResize;
-	//m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
-	m_ApplicationWindow->addFramebufferResize(windowFramebufferResize);
-
-	//set up callbacks for window
-	setCallbacksForWindow(m_ApplicationWindow);
-
-
-	//start glew (opengl)
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK) {
-		printf("Failed to initialize GLEW\n");
-		return;
-	}
-
 	{
-		int glMajor, glMinor;
-		const  GLubyte* glVersion;
-		const  GLubyte* glVender;
-		const  GLubyte* glRenderer;
-		glGetIntegerv(GL_MAJOR_VERSION, &glMajor);
-		glGetIntegerv(GL_MINOR_VERSION, &glMinor);
-		glVersion = glGetString(GL_VERSION);
-		glVender = glGetString(GL_VENDOR);
-		glRenderer = glGetString(GL_RENDERER);
-		printf("OpenGL - %s\n(%i.%i) Vender: %s, Renderer: %s\n\n", glVersion, glMajor, glMinor, glVender, glRenderer);
+		Application* ap = m_Application;
+
+		/* get a handle to the predefined STDOUT log stream and attach
+		it to the logging system. It remains active for all further
+		calls to aiImportFile(Ex) and aiApplyPostProcessing. */
+		//struct aiLogStream stream;
+		//stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+		//aiAttachLogStream(&stream);
+
+		//create window for app
+		ap->m_ApplicationWindow = new Window();
+		ap->m_ApplicationWindow->createWindow(640, 480, "Window");
+		//m_ApplicationWindow->makeContextCurrent();//make context so we can render to it
+
+		ap->m_ApplicationWindow->m_WindowResizeCallback = windowResize;
+		//m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
+		ap->m_ApplicationWindow->addFramebufferResize(windowFramebufferResize);
+
+		//set up callbacks for window
+		ap->setCallbacksForWindow(ap->m_ApplicationWindow);
 	}
-	/** SET UP PROGRAM FOR STARTUP */
+#if RUN_GLFW_ON_OPENGL_THREAD
+	});
+#endif
+
+	m_mtm->queueMethod([](void*) {
+		glfwMakeContextCurrent(Window::getMainWindowGLFW());
+	});
+	m_mtm->waitForThread();
+
+	m_mtm->queueMethod([](void*) {
+		//start glew (opengl)
+		glewExperimental = GL_TRUE;
+		if (glewInit() != GLEW_OK) {
+			printf("Failed to initialize GLEW\n");
+			return;
+		}
+
+		{
+			int glMajor, glMinor;
+			const  GLubyte* glVersion;
+			const  GLubyte* glVender;
+			const  GLubyte* glRenderer;
+			glGetIntegerv(GL_MAJOR_VERSION, &glMajor);
+			glGetIntegerv(GL_MINOR_VERSION, &glMinor);
+			glVersion = glGetString(GL_VERSION);
+			glVender = glGetString(GL_VENDOR);
+			glRenderer = glGetString(GL_RENDERER);
+			printf("OpenGL - %s\n(%i.%i) Vender: %s, Renderer: %s\n\n", glVersion, glMajor, glMinor, glVender, glRenderer);
+		}
+
+		/** SET UP PROGRAM FOR STARTUP */
 #ifdef _DEBUG
 	//other callbacks
-	glEnable(GL_DEBUG_OUTPUT);
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	glDebugMessageCallback((GLDEBUGPROC)GLDebug::openGLMessageCallback, 0);
-	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
-	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
-	//131185 - Buffer detailed info : Buffer object _ID_ (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
-	const GLsizei numOfIds = 1;
-	GLuint ids[numOfIds] = { 131185 };
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, numOfIds, ids, false);
-	GLenum error = glGetError();
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback((GLDEBUGPROC)GLDebug::openGLMessageCallback, 0);
+		glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
+		glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, false);
+		//131185 - Buffer detailed info : Buffer object _ID_ (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+		const GLsizei numOfIds = 1;
+		GLuint ids[numOfIds] = { 131185 };
+		glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, numOfIds, ids, false);
+		GLenum error = glGetError();
 #endif // _DEBUG
+
+	});
+	m_mtm->waitForThread();
 
 	//set up scene root transform
 	m_RootTransform = new Transform("Root Transform");
@@ -126,56 +159,67 @@ void Application::run() {
 
 	Texture::m_White1x1Texture = new Texture(1, 1, TextureType::RGB);
 	Texture::m_White1x1Texture->setPixel(0, 0, glm::vec4(1, 1, 1, 1));
-	Texture::m_White1x1Texture->bind();
-	GLDebug_NAMEOBJ(GL_TEXTURE, Texture::m_White1x1Texture->getTextureId(), "White 1x1");
+	m_mtm->queueMethod([](void*) {
+		Texture::m_White1x1Texture->bind();
+		GLDebug_NAMEOBJ(GL_TEXTURE, Texture::m_White1x1Texture->getTextureId(), "White 1x1");
+	});
 
-	//gen frame buffers
-	{
-		const unsigned int numOfFames = 4;
-		Framebuffer** frame[numOfFames] = { &m_FbGameFrame,&m_FbGameFrameCopy, &m_FbUIFrame, &m_FbCombinedFrame };
-		for (int i = 0; i < numOfFames; i++) {
-			(*frame[i]) = new Framebuffer();
-			//(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
-			(*frame[i])->setSizePercent(1.0f, 1.0f);
-			if (i <= 1) {
-				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
-				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
-				(*frame[i])->genFramebuffer();
-			} else if (i >= 2) {
-				(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
-				(*frame[i])->genFramebuffer();
-			} else {
-				(*frame[i])->createRenderTarget();
+	m_mtm->queueMethod([](void*) {
+		Application* ap = m_Application;
+		//gen frame buffers
+		{
+			const unsigned int numOfFames = 4;
+			Framebuffer** frame[numOfFames] = { &ap->m_FbGameFrame,&ap->m_FbGameFrameCopy, &ap->m_FbUIFrame, &ap->m_FbCombinedFrame };
+			for (int i = 0; i < numOfFames; i++) {
+				(*frame[i]) = new Framebuffer();
+				//(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
+				(*frame[i])->setSizePercent(1.0f, 1.0f);
+				if (i <= 1) {
+					(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
+					(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::DEPTH);
+					(*frame[i])->genFramebuffer();
+				} else if (i >= 2) {
+					(*frame[i])->addBuffer(FramebufferBufferTypes::TEXTURE, FramebufferBufferFormats::RGBA);
+					(*frame[i])->genFramebuffer();
+				} else {
+					(*frame[i])->createRenderTarget();
+				}
 			}
 		}
-	}
 
-	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbGameFrame->getFramebufferId(), "Game Frame");
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrame->getTexture(0)->getTextureId(), "Game Frame - RGBA");
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrame->getTexture(1)->getTextureId(), "Game Frame - Depth");
-	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbGameFrameCopy->getFramebufferId(), "Last Game Frame");
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrameCopy->getTexture(0)->getTextureId(), "Last Game Frame - RGBA");
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbGameFrameCopy->getTexture(1)->getTextureId(), "Last Game Frame - Depth");
-	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbUIFrame->getFramebufferId(), "UI Frame");
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbUIFrame->getTexture(0)->getTextureId(), "UI Frame - RGBA");
-	GLDebug_NAMEOBJ(GL_FRAMEBUFFER, m_FbCombinedFrame->getFramebufferId(), "Combined Frame");
-	GLDebug_NAMEOBJ(GL_TEXTURE, m_FbCombinedFrame->getTexture(0)->getTextureId(), "Combined Frame - RGBA");
+		GLDebug_NAMEOBJ(GL_FRAMEBUFFER, ap->m_FbGameFrame->getFramebufferId(), "Game Frame");
+		GLDebug_NAMEOBJ(GL_TEXTURE, ap->m_FbGameFrame->getTexture(0)->getTextureId(), "Game Frame - RGBA");
+		GLDebug_NAMEOBJ(GL_TEXTURE, ap->m_FbGameFrame->getTexture(1)->getTextureId(), "Game Frame - Depth");
+		GLDebug_NAMEOBJ(GL_FRAMEBUFFER, ap->m_FbGameFrameCopy->getFramebufferId(), "Last Game Frame");
+		GLDebug_NAMEOBJ(GL_TEXTURE, ap->m_FbGameFrameCopy->getTexture(0)->getTextureId(), "Last Game Frame - RGBA");
+		GLDebug_NAMEOBJ(GL_TEXTURE, ap->m_FbGameFrameCopy->getTexture(1)->getTextureId(), "Last Game Frame - Depth");
+		GLDebug_NAMEOBJ(GL_FRAMEBUFFER, ap->m_FbUIFrame->getFramebufferId(), "UI Frame");
+		GLDebug_NAMEOBJ(GL_TEXTURE, ap->m_FbUIFrame->getTexture(0)->getTextureId(), "UI Frame - RGBA");
+		GLDebug_NAMEOBJ(GL_FRAMEBUFFER, ap->m_FbCombinedFrame->getFramebufferId(), "Combined Frame");
+		GLDebug_NAMEOBJ(GL_TEXTURE, ap->m_FbCombinedFrame->getTexture(0)->getTextureId(), "Combined Frame - RGBA");
+	});
 
 	m_ShaderPPBasic = new Shader();
-	m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
-	m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
-	m_ShaderPPBasic->linkShader();
 
 	m_ShaderPPBcs = new Shader();
-	m_ShaderPPBcs->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
-	m_ShaderPPBcs->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPUber.frag");
-	m_ShaderPPBcs->linkShader();
 
 	m_ShaderBasic = new Shader();
-	m_ShaderBasic->createSimpleShader(true);
-
 	m_FullScreenQuad = new Mesh();
-	m_FullScreenQuad->createPlane(false);
+
+	m_mtm->queueMethod([](void*) {
+		Application* ap = m_Application;
+
+		ap->m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+		ap->m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPFrag.frag");
+		ap->m_ShaderPPBasic->linkShader();
+		ap->m_ShaderPPBcs->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
+		ap->m_ShaderPPBcs->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/PostProcessing/PPUber.frag");
+		ap->m_ShaderPPBcs->linkShader();
+
+		ap->m_ShaderBasic->createSimpleShader(true);
+
+		ap->m_FullScreenQuad->createPlane(false);
+	});
 
 	m_SkyboxGame = new Skybox();
 
@@ -184,8 +228,13 @@ void Application::run() {
 	m_Font->loadFont("c:/windows/fonts/arial.ttf", 26);
 
 	m_ShaderText = new Shader();
-	Font::generateShaderCode(m_ShaderText);
-	m_ShaderText->linkShader();
+
+	m_mtm->queueMethod([](void*) {
+		Application* ap = m_Application;
+		ap->m_Font->bind();
+		Font::generateShaderCode(ap->m_ShaderText);
+		ap->m_ShaderText->linkShader();
+	});
 
 	/** SET UP PROGRAM FOR STARTUP LOADING SCREEN */
 
@@ -193,64 +242,93 @@ void Application::run() {
 	m_CameraUi = new Camera();
 	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
-	//set up default clear color
-	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	m_mtm->queueMethod([](void*) {
+		//set up default clear color
+		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	});
 	//show loading text before we run startup
 	{
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_DEPTH_TEST);
-		Shader::use(m_ShaderText);
+		m_mtm->queueMethod([](void*) {
+			Application* ap = m_Application;
 
-		ShaderUniformData* uniformPVM = m_ShaderText->m_CommonUniforms.m_ProjectionViewMatrix;
-		ShaderUniformData* uniformModel = m_ShaderText->m_CommonUniforms.m_ModelMatrix;
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDisable(GL_DEPTH_TEST);
+			Shader::use(ap->m_ShaderText);
 
-		uniformPVM->setData(&m_CameraUi->getProjectionViewMatrix());
-		Shader::applyUniform(uniformPVM);
+			ShaderUniformData* uniformPVM = ap->m_ShaderText->m_CommonUniforms.m_ProjectionViewMatrix;
+			ShaderUniformData* uniformModel = ap->m_ShaderText->m_CommonUniforms.m_ModelMatrix;
 
-		Transform model;
-		model.setPosition(glm::vec3(0, 100, 0));
+			uniformPVM->setData(&ap->m_CameraUi->getProjectionViewMatrix());
+			Shader::applyUniform(uniformPVM);
 
-		uniformModel->setData(&model);
-		Shader::applyUniform(uniformModel);
+			Transform model;
+			model.setPosition(glm::vec3(0, 100, 0));
 
-		m_Font->drawText("--Loading--");
+			uniformModel->setData(&model);
+			Shader::applyUniform(uniformModel);
 
-		//have the window show something while we load the game
-		glfwSwapBuffers(m_ApplicationWindow->getWindow());
+			ap->m_Font->drawText("--Loading--");
+
+			//have the window show something while we load the game
+			glfwSwapBuffers(ap->m_ApplicationWindow->getWindow());
+		});
 	}
 
+
 	//** Thread TESTING START
-	std::cout << "Thead testing Starting" << std::endl;
-	MultithreadManager mtm;
-	mtm.startThread();
+	//std::cout << "Thead testing Starting" << std::endl;
 
-	static bool loaded = false;
+	{
+		loaded = false;
+		value = 0;
 
-	mtm.queueMethod([]() {
-		char value = 0;
-		while (!loaded) {
-			char text[4] = { '\0' };
-			std::fill_n(text, ((value++)%3)+1, '.');
-			std::cout << "Loading" << text << std::endl;
-			Sleep(300);
-		}
-	});
+		m_mtm->queueMethod([](void*) {
+			Application* ap = m_Application;
+			thisObj = MultithreadManager::getCurrentMethod();
 
-	mtm.queueMethod([]() {
-		std::cout << "Loading Finished" << std::endl;
-	});
+			if (!loaded) {
+				char text[4] = { '\0' };
+				std::fill_n(text, ((value++) % 3) + 1, '.');
+				std::string finalString = std::string(text) + "Loading" + std::string(text);
+				std::cout << finalString << std::endl;
 
-	//program startup/load models
-	startUp();
 
-	loaded = true;
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				ap->m_Font->drawText(finalString.c_str());
+				glfwSwapBuffers(ap->m_ApplicationWindow->getWindow());
+				glfwPollEvents();
 
-	mtm.closeThread();
+				MultithreadManager::queueMethodThread2([](void*) {
+					Sleep(400);
+					MultithreadManager::queueMethod(thisObj);
+				});
+			}
+		});
 
-	std::cout << "Thead testing Finished" << std::endl;
+
+		Logging::quickTimePush("Program loading", true);
+		//program startup/load models
+		startUp();
+		Logging::quickTimePop(true);
+
+		m_mtm->queueMethod([](void*) {
+			std::cout << "Loading Finished" << std::endl;
+		});
+
+
+		loaded = true;
+
+		m_mtm->queueMethod([](void*) {
+			glfwMakeContextCurrent(nullptr);
+		});
+		m_mtm->waitForThread();
+		glfwMakeContextCurrent(Window::getMainWindowGLFW());
+
+	}
+
+	//std::cout << "Thead testing Finished" << std::endl;
 	//** Thread TESTING END
 
 	//set up Game camera
@@ -306,8 +384,19 @@ void Application::run() {
 		//update old key presses
 		Input::update();
 
-		//update any new key presses
+#if RUN_GLFW_ON_OPENGL_THREAD
+		glfwMakeContextCurrent(nullptr);
+		m_mtm->queueMethod([](void*) {
+			//update any new key presses
+			glfwMakeContextCurrent(Window::getMainWindowGLFW());
+			glfwPollEvents();
+			glfwMakeContextCurrent(nullptr);
+		});
+		m_mtm->waitForThread();
+		glfwMakeContextCurrent(Window::getMainWindowGLFW());
+#else
 		glfwPollEvents();
+#endif
 
 		//check application flags
 		checkHandles();
@@ -501,6 +590,8 @@ void Application::run() {
 
 	//glfwTerminate
 	glfwTerminate();
+
+	m_mtm->closeThread();
 }
 
 
@@ -533,5 +624,10 @@ void Application::checkHandles() {
 			m_Quit = true;
 		}
 	}
+}
+
+void Application::GLFWErrorCallback(int a_ErrorCode, const char * a_Description) {
+	std::cout << "GLFW ERROR _" << a_ErrorCode << "_" << std::endl;
+	std::cout << "\t GLFW_" << a_Description << "_" << std::endl;
 }
 

@@ -137,6 +137,9 @@ void Mesh::createPlane(bool a_FlipYUV) {
 }
 
 void Mesh::draw() {
+	if (m_Vao == 0) {
+		return;
+	}
 	unsigned int loc = 0;
 	if (m_Texture != nullptr) {
 		//todo move this out of mesh

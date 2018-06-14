@@ -2,6 +2,8 @@
 
 #include "Texture.h"
 
+#include "Multithreading/MultithreadManager.h"
+
 //packing based off 
 //https://www.gamedev.net/forums/topic/683912-sprite-packing-algorithm-explained-with-example-code/
 //code example https://jsfiddle.net/jLchftot/
@@ -84,7 +86,9 @@ TexturePacker::TextureBox* TexturePacker::testAdd(const unsigned int a_Width, co
 }
 
 void TexturePacker::bind() {
-	m_PackedTexture->bind();
+	MultithreadManager::queueMethod(this, [](void* a_Texture) {
+		((TexturePacker*)a_Texture)->m_PackedTexture->bind();
+	});
 }
 
 bool TexturePacker::boxCollide(TextureBox * a_Box1, TextureBox* a_Box2) const {

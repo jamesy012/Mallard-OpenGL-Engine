@@ -12,6 +12,8 @@ class Shader;
 class Skybox;
 class Font;
 
+class MultithreadManager;
+
 class DLL_BUILD Application {
 public:
 	Application();
@@ -74,6 +76,8 @@ protected:
 	//reference to a precreated font object
 	Font* m_Font;
 
+	MultithreadManager* m_mtm;
+
 	//bool to store if application is printing out it's timer this frame
 	bool m_DebugRunningTimersThisFrame = false;
 private:
@@ -82,6 +86,8 @@ private:
 	static void windowFramebufferResize(int a_Width, int a_Height);
 
 	void checkHandles();
+
+	static void GLFWErrorCallback(int a_ErrorCode, const char* a_Description);
 
 	//root transform for every transform
 	Transform* m_RootTransform;
