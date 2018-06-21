@@ -24,6 +24,7 @@
 #include "GLDebug.h"
 
 #include "Multithreading/MultithreadManager.h"
+#include "Multithreading/MtmThread.h"
 
 /* assimp include files. These three are usually needed. */
 //these are needed for the logging system
@@ -32,11 +33,6 @@
 #include <assimp/postprocess.h>
 
 static Application* m_Application = nullptr;
-
-static bool loaded;
-static char value;
-static time_t lastTime;
-static MultithreadManager::QueueObj thisObj;
 
 //true is much slower, but allows the window to be moved during loading
 #define RUN_GLFW_ON_OPENGL_THREAD true
@@ -57,11 +53,12 @@ void Application::run() {
 
 	m_Application = this;
 
-	m_mtm = new MultithreadManager();
-	m_mtm->startThread();
+	m_Mtm = new MultithreadManager();
+	m_OpenGLThread = m_Mtm->m_OpenGLThread;
+	m_LoadingThread = m_Mtm->m_LoadingThread;
 
 #if RUN_GLFW_ON_OPENGL_THREAD
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 #endif
 		//start glfw
 		if (!glfwInit()) {
@@ -70,47 +67,47 @@ void Application::run() {
 		}
 
 
-	glfwSetErrorCallback(Application::GLFWErrorCallback);
+		glfwSetErrorCallback(Application::GLFWErrorCallback);
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);//requied Compat profile for Nsight
-	//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);//requied Compat profile for Nsight
+		//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 #if _DEBUG
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif // _DEBUG
-	{
-		Application* ap = m_Application;
+		{
+			Application* ap = m_Application;
 
-		/* get a handle to the predefined STDOUT log stream and attach
-		it to the logging system. It remains active for all further
-		calls to aiImportFile(Ex) and aiApplyPostProcessing. */
-		//struct aiLogStream stream;
-		//stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
-		//aiAttachLogStream(&stream);
+			/* get a handle to the predefined STDOUT log stream and attach
+			it to the logging system. It remains active for all further
+			calls to aiImportFile(Ex) and aiApplyPostProcessing. */
+			//struct aiLogStream stream;
+			//stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+			//aiAttachLogStream(&stream);
 
-		//create window for app
-		ap->m_ApplicationWindow = new Window();
-		ap->m_ApplicationWindow->createWindow(640, 480, "Window");
-		//m_ApplicationWindow->makeContextCurrent();//make context so we can render to it
+			//create window for app
+			ap->m_ApplicationWindow = new Window();
+			ap->m_ApplicationWindow->createWindow(640, 480, "Window");
+			//m_ApplicationWindow->makeContextCurrent();//make context so we can render to it
 
-		ap->m_ApplicationWindow->m_WindowResizeCallback = windowResize;
-		//m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
-		ap->m_ApplicationWindow->addFramebufferResize(windowFramebufferResize);
+			ap->m_ApplicationWindow->m_WindowResizeCallback = windowResize;
+			//m_ApplicationWindow->m_WindowResizeFramebufferCallback = windowFramebufferResize;
+			ap->m_ApplicationWindow->addFramebufferResize(windowFramebufferResize);
 
-		//set up callbacks for window
-		ap->setCallbacksForWindow(ap->m_ApplicationWindow);
-	}
+			//set up callbacks for window
+			ap->setCallbacksForWindow(ap->m_ApplicationWindow);
+		}
 #if RUN_GLFW_ON_OPENGL_THREAD
 	});
 #endif
 
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		glfwMakeContextCurrent(Window::getMainWindowGLFW());
 	});
-	m_mtm->waitForThread();
+	m_OpenGLThread->waitForThread();
 
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		//start glew (opengl)
 		glewExperimental = GL_TRUE;
 		if (glewInit() != GLEW_OK) {
@@ -147,7 +144,7 @@ void Application::run() {
 #endif // _DEBUG
 
 	});
-	m_mtm->waitForThread();
+	m_OpenGLThread->waitForThread();
 
 	//set up scene root transform
 	m_RootTransform = new Transform("Root Transform");
@@ -159,12 +156,12 @@ void Application::run() {
 
 	Texture::m_White1x1Texture = new Texture(1, 1, TextureType::RGB);
 	Texture::m_White1x1Texture->setPixel(0, 0, glm::vec4(1, 1, 1, 1));
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		Texture::m_White1x1Texture->bind();
 		GLDebug_NAMEOBJ(GL_TEXTURE, Texture::m_White1x1Texture->getTextureId(), "White 1x1");
 	});
 
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		Application* ap = m_Application;
 		//gen frame buffers
 		{
@@ -206,7 +203,7 @@ void Application::run() {
 	m_ShaderBasic = new Shader();
 	m_FullScreenQuad = new Mesh();
 
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		Application* ap = m_Application;
 
 		ap->m_ShaderPPBasic->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/PostProcessing/PPVertex.vert");
@@ -229,7 +226,7 @@ void Application::run() {
 
 	m_ShaderText = new Shader();
 
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		Application* ap = m_Application;
 		ap->m_Font->bind();
 		Font::generateShaderCode(ap->m_ShaderText);
@@ -242,14 +239,14 @@ void Application::run() {
 	m_CameraUi = new Camera();
 	m_CameraUi->setOrthographic(0.0f, (float)m_ApplicationWindow->getFramebufferWidth(), 0.0f, (float)m_ApplicationWindow->getFramebufferHeight(), -1000.0f, 1000.0f);
 
-	m_mtm->queueMethod([](void*) {
+	m_OpenGLThread->queueMethod([](void*) {
 		//set up default clear color
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	});
 	//show loading text before we run startup
 	{
-		m_mtm->queueMethod([](void*) {
+		m_OpenGLThread->queueMethod([](void*) {
 			Application* ap = m_Application;
 
 			glEnable(GL_BLEND);
@@ -281,12 +278,13 @@ void Application::run() {
 	//std::cout << "Thead testing Starting" << std::endl;
 
 	{
-		loaded = false;
-		value = 0;
+		static bool loaded = false;
+		static int value = 0;
 
-		m_mtm->queueMethod([](void*) {
+		static MtmQueueObj thisObj;
+		m_OpenGLThread->queueMethod([](void*) {
 			Application* ap = m_Application;
-			thisObj = MultithreadManager::getCurrentMethod();
+			thisObj = ap->m_OpenGLThread->getCurrentMethod();
 
 			if (!loaded) {
 				char text[4] = { '\0' };
@@ -300,10 +298,21 @@ void Application::run() {
 				glfwSwapBuffers(ap->m_ApplicationWindow->getWindow());
 				glfwPollEvents();
 
-				MultithreadManager::queueMethodThread2([](void*) {
+				ap->m_OpenGLThread->queueMethod([](void*) {
 					Sleep(400);
-					MultithreadManager::queueMethod(thisObj);
+					MultithreadManager::m_OpenGLThread->queueMethod(thisObj);
 				});
+				//MultithreadManager::queueMethodThread2([](void*) {
+				//	Sleep(400);
+				//	MultithreadManager::queueMethod(thisObj);
+				//});
+			} else {
+				glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				ap->m_Font->drawText("This is caused by the skybox loading!");
+
+				glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+				glfwSwapBuffers(ap->m_ApplicationWindow->getWindow());
 			}
 		});
 
@@ -311,19 +320,23 @@ void Application::run() {
 		Logging::quickTimePush("Program loading", true);
 		//program startup/load models
 		startUp();
-		Logging::quickTimePop(true);
 
-		m_mtm->queueMethod([](void*) {
+		m_OpenGLThread->queueMethod([](void*) {
 			std::cout << "Loading Finished" << std::endl;
 		});
 
 
-		loaded = true;
 
-		m_mtm->queueMethod([](void*) {
+		m_LoadingThread->waitForThread();
+		loaded = true;
+		m_OpenGLThread->waitForThread();
+		Logging::quickTimePop(true);
+
+		//remove opengl context from thread because rendering is not multithreaded
+		m_OpenGLThread->queueMethod([](void*) {
 			glfwMakeContextCurrent(nullptr);
 		});
-		m_mtm->waitForThread();
+		m_OpenGLThread->waitForThread();
 		glfwMakeContextCurrent(Window::getMainWindowGLFW());
 
 	}
@@ -336,7 +349,7 @@ void Application::run() {
 	if (m_CameraGame == nullptr) {
 		m_CameraGame = new Camera();
 	}
-	if (m_CameraGame->getProjectionMatrix()[3][3] == 1) {
+	if (m_CameraGame->getProjectionMatrix()[3][3] == 1) {//todo find a better way to check if the camera perspective has been set
 		m_CameraGame->setPerspective(60.0f, m_ApplicationWindow->getFramebufferWidth() / (float)m_ApplicationWindow->getFramebufferHeight(), 0.1f, 1000.0f);
 	}
 
@@ -348,7 +361,7 @@ void Application::run() {
 	glCullFace(GL_BACK);
 
 	if (!m_SkyboxGame->hasBeenGenerated()) {
-		m_SkyboxGame->genSkybox("Textures\\Skybox\\Vindelalven\\");
+		m_SkyboxGame->genSkybox("Textures\\Skybox\\Vindelalven\\");//todo - multithread this
 	}
 	if (!m_SkyboxGame->hasCameraAssigned()) {
 		m_SkyboxGame->assignCamera(m_CameraGame);
@@ -386,13 +399,13 @@ void Application::run() {
 
 #if RUN_GLFW_ON_OPENGL_THREAD
 		glfwMakeContextCurrent(nullptr);
-		m_mtm->queueMethod([](void*) {
+		m_OpenGLThread->queueMethod([](void*) {
 			//update any new key presses
 			glfwMakeContextCurrent(Window::getMainWindowGLFW());
 			glfwPollEvents();
 			glfwMakeContextCurrent(nullptr);
 		});
-		m_mtm->waitForThread();
+		m_OpenGLThread->waitForThread();
 		glfwMakeContextCurrent(Window::getMainWindowGLFW());
 #else
 		glfwPollEvents();
@@ -588,10 +601,12 @@ void Application::run() {
 	aiDetachAllLogStreams();
 	ResourceManager::deleteLeftOverResources();
 
+	//this deletes all threads
+	delete m_Mtm;
+
 	//glfwTerminate
 	glfwTerminate();
 
-	m_mtm->closeThread();
 }
 
 

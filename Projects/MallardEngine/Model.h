@@ -10,6 +10,9 @@ class Texture;
 
 struct aiScene;
 struct aiNode;
+namespace Assimp {
+	class Importer;
+}
 
 class DLL_BUILD Model : public IResource, public IRenderable {
 public:
@@ -43,5 +46,6 @@ private:
 	std::vector<ModelMeshData*> m_ModelMeshData;
 
 	const aiScene* m_Scene = nullptr;
+	Assimp::Importer* m_Importer = nullptr;
 };
 

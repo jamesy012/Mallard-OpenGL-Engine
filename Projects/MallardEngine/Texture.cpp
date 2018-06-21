@@ -16,6 +16,8 @@
 #include "GLDebug.h"
 
 #include "Multithreading/MultithreadManager.h"
+#include "Multithreading/MtmThread.h"
+
 
 
 Texture* Texture::m_White1x1Texture;
@@ -238,7 +240,7 @@ void Texture::resourceCopy(IResource * a_Resource) {
 	int totalSize = textureSize * dataSize;
 	m_TextureData = new DataFormat[totalSize];
 	memcpy(m_TextureData, tex->m_TextureData, totalSize * sizeof(DataFormat));
-	MultithreadManager::queueMethod(this,[](void* a_Texture) {
+	MultithreadManager::m_OpenGLThread->queueMethod(this,[](void* a_Texture) {
 		((Texture*)a_Texture)->bind();
 	});
 }

@@ -31,7 +31,7 @@
 #include "Camera.h"
 #include "CameraFly.h"
 
-#include "Multithreading/MultithreadManager.h"
+#include "Multithreading/MtmThread.h"
 
 void TestApp::startUp() {
 
@@ -40,7 +40,7 @@ void TestApp::startUp() {
 	//	Move: WASDQE, Arrow keys
 	//	Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
 	//	[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72, 190, 32, 255) / 255.0f);
-	m_mtm->queueMethod(this,[](void* tp){
+	m_OpenGLThread->queueMethod(this,[](void* tp){
 		((TestApp*)tp)->m_TestText->generateText(R"(TEST APP
 		Move: WASDQE, Arrow keys)", 20);
 	});
@@ -53,12 +53,14 @@ void TestApp::startUp() {
 	((CameraFly*)m_CameraGame)->m_RotationMode |= CameraFly::RotationModes::MOUSE;
 
 	m_DOFTest = new DepthOfField();
-	m_mtm->queueMethod(this, [](void* tp) {
+	m_OpenGLThread->queueMethod(this, [](void* tp) {
 		((TestApp*)tp)->m_DOFTest->create();
 	});
 
 	m_Model = new Model();
-	m_Model->load("Models/Nanosuit/nanosuit.obj");
+	m_LoadingThread->queueMethod(this, [](void* tp) {
+		((TestApp*)tp)->m_Model->load("Models/Nanosuit/nanosuit.obj");
+	});
 	m_Ground = new Model();
 	m_Ground->load("Models/test/Ground.obj");
 	m_GrassModel = new Model();
@@ -114,7 +116,7 @@ void TestApp::startUp() {
 
 	//objects
 	m_SphereModel = new Mesh();
-	m_mtm->queueMethod(this, [](void* tp) {
+	m_OpenGLThread->queueMethod(this, [](void* tp) {
 		((TestApp*)tp)->m_SphereModel->createBox();
 	});
 	m_SphereObject[0] = new Object(m_SphereModel, "Physics Object 1!");

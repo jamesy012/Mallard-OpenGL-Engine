@@ -13,6 +13,7 @@
 #include "GLDebug.h"
 
 #include "Multithreading/MultithreadManager.h"
+#include "Multithreading/MtmThread.h"
 
 Model::Model() {
 }
@@ -138,8 +139,10 @@ IResource* Model::resourceCreate() {
 }
 
 bool Model::resourceLoad() {
-	Assimp::Importer importer;
-	m_Scene = importer.ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+	if (m_Importer == nullptr) {
+		m_Importer = new Assimp::Importer();
+	}
+	m_Scene = m_Importer->ReadFile(m_Resource_FileName.c_str(), aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 	
 	if (m_Scene == nullptr || m_Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || m_Scene->mRootNode == nullptr) {
 		//model failed to load
@@ -157,7 +160,7 @@ bool Model::resourceLoad() {
 
 	loadNode(m_Scene->mRootNode);
 
-	MultithreadManager::queueMethod(this, [](void* a_Model) {
+	MultithreadManager::m_OpenGLThread->queueMethod(this, [](void* a_Model) {
 		Model* model = (Model*)a_Model;
 		for (size_t i = 0; i < model->m_Meshs.size(); i++) {
 			model->m_Meshs[i]->bind();
@@ -195,7 +198,9 @@ void Model::resourceCopy(IResource * a_Resource) {
 }
 
 void Model::resourceUnload() {
-
+	if (m_Importer != nullptr) {
+		delete m_Importer;
+	}
 }
 
 void Model::draw() {

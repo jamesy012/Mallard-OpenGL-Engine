@@ -3,6 +3,8 @@
 #include "Texture.h"
 
 #include "Multithreading/MultithreadManager.h"
+#include "Multithreading/MtmThread.h"
+
 
 //packing based off 
 //https://www.gamedev.net/forums/topic/683912-sprite-packing-algorithm-explained-with-example-code/
@@ -86,7 +88,7 @@ TexturePacker::TextureBox* TexturePacker::testAdd(const unsigned int a_Width, co
 }
 
 void TexturePacker::bind() {
-	MultithreadManager::queueMethod(this, [](void* a_Texture) {
+	MultithreadManager::m_OpenGLThread->queueMethod(this, [](void* a_Texture) {
 		((TexturePacker*)a_Texture)->m_PackedTexture->bind();
 	});
 }

@@ -13,6 +13,7 @@ class Skybox;
 class Font;
 
 class MultithreadManager;
+class MtmThread;
 
 class DLL_BUILD Application {
 public:
@@ -76,7 +77,9 @@ protected:
 	//reference to a precreated font object
 	Font* m_Font;
 
-	MultithreadManager* m_mtm;
+	MultithreadManager* m_Mtm;
+	MtmThread* m_OpenGLThread;
+	MtmThread* m_LoadingThread;
 
 	//bool to store if application is printing out it's timer this frame
 	bool m_DebugRunningTimersThisFrame = false;
