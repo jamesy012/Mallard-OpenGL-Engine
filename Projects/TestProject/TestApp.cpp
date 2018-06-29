@@ -39,11 +39,12 @@
 void TestApp::startUp() {
 
 	m_TestText = new Text(m_Font);
-	//m_TestText->generateText(R"(TEST APP
-	//	Move: WASDQE, Arrow keys
-	//	Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
-	//	[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72, 190, 32, 255) / 255.0f);
-	m_TestText->generateText(R"(TEST APP
+	m_OpenGLThread->queueMethod(this, [](void* tp) {
+		//m_TestText->generateText(R"(TEST APP
+		//	Move: WASDQE, Arrow keys
+		//	Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
+		//	[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72, 190, 32, 255) / 255.0f);
+		((TestApp*)tp)->m_TestText->generateText(R"(TEST APP
 		Move: WASDQE, Arrow keys)", 20);
 	});
 
@@ -211,7 +212,7 @@ void TestApp::update() {
 
 	if (Input::wasKeyPressed(KEY_T)) {
 		static int val = 0;
-		static const float values[] = { 2.0f,20.0f,0,100.0f };
+		static const float values[] = { 2.0f, 20.0f, 0, 100.0f };
 		m_DOFTest->setValue("falloff", values[(val++) % 4]);
 
 	}
@@ -319,7 +320,7 @@ void TestApp::drawUi() {
 	ShaderUniformData* uniformColor;
 	Transform model;
 
-	float fontColor[] = { 0.7f,0.7f,0.7f,1.0f };
+	float fontColor[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 
 	Shader::use(m_ShaderText);
 	//get uniforms
