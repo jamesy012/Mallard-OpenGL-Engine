@@ -32,6 +32,9 @@
 #include "CameraFly.h"
 
 #include "Multithreading/MtmThread.h"
+#include <BulletCollision/CollisionShapes/btStridingMeshInterface.h>
+#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+#include "Conversions.h"
 
 void TestApp::startUp() {
 
@@ -40,8 +43,7 @@ void TestApp::startUp() {
 	//	Move: WASDQE, Arrow keys
 	//	Text Size/[Color = 255, 0 ,0]Color [Color=128,64,64,128]Test:[Color = ]
 	//	[Size=25]B[Size=32]B Size test![Size=28]![Size=22]![Size=18]![Size=14]!)", 38, glm::vec4(72, 190, 32, 255) / 255.0f);
-	m_OpenGLThread->queueMethod(this,[](void* tp){
-		((TestApp*)tp)->m_TestText->generateText(R"(TEST APP
+	m_TestText->generateText(R"(TEST APP
 		Move: WASDQE, Arrow keys)", 20);
 	});
 
@@ -93,7 +95,6 @@ void TestApp::startUp() {
 		m_GrassBatch->bind();
 	}
 	printf("grass gen Finished\n");
-
 
 	m_ModelObject = new Object(m_Model);
 	m_GroundObject = new Object(m_Ground);
@@ -148,9 +149,37 @@ void TestApp::startUp() {
 	groundSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
 	groundSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(1.5f, 1, 0)));
 
-	dynamicsWorld->addRigidBody(groundPlaneRigidBody);
+	//dynamicsWorld->addRigidBody(groundPlaneRigidBody);
 	dynamicsWorld->addRigidBody(fallSphereRigidBody);
 	dynamicsWorld->addRigidBody(groundSphereRigidBody);
+
+	{
+		//memory leak's everywhere!
+		btTriangleMesh* mesh = new btTriangleMesh();
+		mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
+		mesh->preallocateVertices(m_Ground->m_Meshs[0]->m_Vertices.size());
+		for (unsigned int i = 0; i < m_Ground->m_Meshs[0]->m_Indices.size(); i += 3) {
+			glm::vec3 pos0 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 0]].position;
+			glm::vec3 pos1 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 1]].position;
+			glm::vec3 pos2 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 2]].position;
+			mesh->addTriangle(
+				btVector3(pos0.x, pos0.y, pos0.z),
+				btVector3(pos1.x, pos1.y, pos1.z),
+				btVector3(pos2.x, pos2.y, pos2.z));
+		}
+
+		//btCollisionShape* groundMesh = new btTriangleMeshShape(smi);
+		btCollisionShape* groundMesh = new btBvhTriangleMeshShape(mesh, true);
+
+		//btCollisionShape* groundMesh = new btConvexHullShape(points[0].m_floats, points.size(),16);
+		btDefaultMotionState* groundMeshMS = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+		btRigidBody::btRigidBodyConstructionInfo groundMeshRBCI(0, groundMeshMS, groundMesh, btVector3(0, 0, 0));
+		groundMeshRBCI.m_restitution = 0.75f;
+		btRigidBody* groundMeshRB = new btRigidBody(groundMeshRBCI);
+
+		dynamicsWorld->addRigidBody(groundMeshRB);
+	}
+	
 
 }
 
@@ -241,22 +270,20 @@ void TestApp::update() {
 		}
 	}
 
-
-
+	//rotate model
 	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
-
 	//physics
-	dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
 	{
-		btTransform trans;
-		trans = fallSphereRigidBody->getWorldTransform();
-		m_SphereObject[0]->m_Transform.setPosition(glm::vec3(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ()));
-		m_SphereObject[0]->m_Transform.setRotation(glm::quat(trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ(), trans.getRotation().getW()));
+		dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
+		{
+			btTransform trans;
+			trans = fallSphereRigidBody->getWorldTransform();
+			bulletToTransform(m_SphereObject[0]->m_Transform, trans);
 
-		trans = groundSphereRigidBody->getWorldTransform();
-		m_SphereObject[1]->m_Transform.setPosition(glm::vec3(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ()));
-		m_SphereObject[1]->m_Transform.setRotation(glm::quat(trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ(), trans.getRotation().getW()));
+			trans = groundSphereRigidBody->getWorldTransform();
+			bulletToTransform(m_SphereObject[1]->m_Transform, trans);
+		}
 	}
 }
 

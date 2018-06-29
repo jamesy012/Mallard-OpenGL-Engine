@@ -120,6 +120,9 @@
     <ClInclude Include="Multithreading\MtmThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\_Common\Conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">

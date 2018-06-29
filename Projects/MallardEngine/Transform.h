@@ -10,7 +10,7 @@
 
 //SWAP BETWEEN USING QUATERNIONS OR A VEC3 IN RADIANS
 #define USE_QUATERNIONS
-#undef USE_QUATERNIONS
+//#undef USE_QUATERNIONS
 
 //cant put DLL_BUILD after class due to it using glm
 
