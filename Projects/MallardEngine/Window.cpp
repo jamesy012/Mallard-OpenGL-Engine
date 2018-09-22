@@ -140,6 +140,12 @@ void Window::setWindowData(int a_width, int a_Height, const char * a_Title) {
 	glfwSetWindowTitle(m_ThisWindow, m_Title);
 }
 
+void Window::setMouseLock(bool a_Locked) {
+	glfwSetInputMode(m_ThisWindow, GLFW_CURSOR, a_Locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	m_HasMouseLocked = a_Locked;
+
+}
+
 GLFWwindow * Window::getWindow() const {
 	return m_ThisWindow;
 }
@@ -187,6 +193,14 @@ bool const Window::getIsVisable() const {
 	return m_IsVisable;
 }
 
+bool const Window::HasFocus() const {
+	return m_HasFocus;
+}
+
+bool const Window::HasMouseLock() const {
+	return m_HasMouseLocked;
+}
+
 void Window::makeContextCurrent() const {
 	glfwMakeContextCurrent(m_ThisWindow);
 }
@@ -223,6 +237,11 @@ void Window::windowFramebufferSizeCallback(GLFWwindow * a_Window, int a_Width, i
 }
 
 void Window::windowFocusCallback(GLFWwindow * a_Window, int a_Focused) {
+	Window* window = getWindowFromGlfwWindow(a_Window);
+	window->m_HasFocus = a_Focused;
+	if (window->m_HasMouseLocked) {
+		glfwSetInputMode(a_Window, GLFW_CURSOR, a_Focused ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+	}
 }
 
 Window * Window::getWindowFromGlfwWindow(GLFWwindow * a_Window) {

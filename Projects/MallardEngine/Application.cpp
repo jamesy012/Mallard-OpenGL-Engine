@@ -32,7 +32,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-static Application* m_Application = nullptr;
+Application* Application::m_Application = nullptr;
 
 //true is much slower, but allows the window to be moved during loading
 #define RUN_GLFW_ON_OPENGL_THREAD true
@@ -166,7 +166,7 @@ void Application::run() {
 		//gen frame buffers
 		{
 			const unsigned int numOfFames = 4;
-			Framebuffer** frame[numOfFames] = { &ap->m_FbGameFrame,&ap->m_FbGameFrameCopy, &ap->m_FbUIFrame, &ap->m_FbCombinedFrame };
+			Framebuffer** frame[numOfFames] = { &ap->m_FbGameFrame, &ap->m_FbGameFrameCopy, &ap->m_FbUIFrame, &ap->m_FbCombinedFrame };
 			for (int i = 0; i < numOfFames; i++) {
 				(*frame[i]) = new Framebuffer();
 				//(*frame[i])->setSize(m_ApplicationWindow->getFramebufferWidth(), m_ApplicationWindow->getFramebufferHeight());
@@ -371,7 +371,7 @@ void Application::run() {
 	//note without this call Logging::quickTimePush and Logging::quickTimePop appear to get the wrong value,
 	//by including the time the program waits for the vsync
 	//the interval can be any other number, it just needs this call
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	Logging::newFrame();
 
@@ -417,6 +417,13 @@ void Application::run() {
 		if (m_DebugRunningTimersThisFrame) {
 			Logging::quickTimePop(true);
 			Logging::quickTimePush("Frame");
+		}
+
+		if (m_Flags.m_CanLockmouse) {
+			if (Input::wasMousePressed(0)) {
+				m_ApplicationWindow->setMouseLock(true);
+				Input::removeMouseButton(0);
+			}
 		}
 
 		if (m_Flags.m_RunCameraUpdate) {
@@ -634,9 +641,14 @@ void Application::windowFramebufferResize(int a_Width, int a_Height) {
 }
 
 void Application::checkHandles() {
-	if (m_Flags.m_CloseOnEscape) {
-		if (Input::wasKeyPressed(GLFW_KEY_ESCAPE)) {
-			m_Quit = true;
+	if (Input::wasKeyPressed(GLFW_KEY_ESCAPE)) {
+		if (m_Flags.m_CanLockmouse && m_ApplicationWindow->HasMouseLock()) {
+			m_ApplicationWindow->setMouseLock(false);
+			Input::removeKeyButton(GLFW_KEY_ESCAPE);
+		} else {
+			if (m_Flags.m_CloseOnEscape) {
+				m_Quit = true;
+			}
 		}
 	}
 }

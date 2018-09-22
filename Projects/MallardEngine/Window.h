@@ -36,7 +36,9 @@ public:
 	void setWindowWidth(int a_width);
 	void setWindowHeight(int a_Height);
 	void setWindowTitle(const char* a_Title);
-	void setWindowData(int a_width, int a_Height,const char* a_Title);
+	void setWindowData(int a_width, int a_Height, const char* a_Title);
+
+	void setMouseLock(bool a_Locked);
 
 	GLFWwindow* getWindow() const;
 	static GLFWwindow* getMainWindowGLFW();
@@ -55,6 +57,8 @@ public:
 	bool const isWindowCreated() const;
 
 	bool const getIsVisable() const;
+	bool const HasFocus() const;
+	bool const HasMouseLock() const;
 
 	void makeContextCurrent() const;
 
@@ -86,6 +90,9 @@ private:
 	int m_Width, m_Height;
 	int m_FramebufferWidth, m_FramebufferHeight;
 	bool m_IsVisable = false;
+
+	bool m_HasFocus = false;
+	bool m_HasMouseLocked = false;
 
 	bool m_IsWindowCreated = false;
 

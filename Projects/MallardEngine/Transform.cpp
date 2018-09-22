@@ -3,6 +3,7 @@
 #include <glm\ext.hpp>
 //for m_LastUpdateTime
 #include "TimeHandler.h"
+#include "Camera.h"
 
 //global Root Transform of project, can be set at run time
 static Transform* m_RootTransform;
@@ -159,6 +160,11 @@ void Transform::setLookAt(Transform * a_Transform) {
 	setLookAt(getGlobalPosition(), a_Transform->getGlobalPosition(), glm::vec3(0, 1, 0));
 }
 
+glm::vec2 Transform::ToScreenSpace(Camera * a_Camera) {
+	glm::vec4 screenSpace = a_Camera->getProjectionViewMatrix() * glm::vec4(m_Position, 1);
+	return glm::vec2(screenSpace.x / screenSpace.z, screenSpace.y / screenSpace.w) * 0.5f + 0.5f;
+}
+
 glm::vec3 Transform::getLocalPosition() const {
 	return m_Position;
 }
@@ -258,7 +264,6 @@ glm::mat4 Transform::getGlobalMatrix() {
 }
 
 void Transform::updateTransform() {
-	m_IsDirty = false;
 
 	//update local
 	m_LocalTransform = glm::translate(glm::mat4(1), m_Position);//reset and translate
@@ -285,11 +290,17 @@ void Transform::updateTransform() {
 		m_GlobalTransform = m_Parent->getGlobalMatrix() * m_LocalTransform;
 	}
 
+	//setting the children as dirty means there will be less transforms being updated during this call
+	//for (size_t i = 0; i < m_Children.size(); i++) {
+	//	m_Children[i]->updateTransform();
+	//}
 	for (size_t i = 0; i < m_Children.size(); i++) {
-		m_Children[i]->updateTransform();
+		//this might need to be recursive
+		m_Children[i]->setDirty();
 	}
 
 	m_LastUpdateFrame = TimeHandler::getCurrentFrameNumber();
+	m_IsDirty = false;
 }
 
 void Transform::setDirty() {

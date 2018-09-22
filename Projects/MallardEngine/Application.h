@@ -15,8 +15,11 @@ class Font;
 class MultithreadManager;
 class MtmThread;
 
+
 class DLL_BUILD Application {
 public:
+	static Application* m_Application;
+
 	Application();
 	~Application();
 
@@ -45,6 +48,8 @@ protected:
 		//allow the debug timer to run every second, when it does run m_DebugRunningTimersThisFrame will be true
 		bool m_RunDebugTimers = false;
 		bool m_RunCameraUpdate = true;
+		//should we lock the mouse or not?
+		bool m_CanLockmouse = true;
 	} m_Flags;
 
 	Window* m_ApplicationWindow = nullptr;
@@ -83,6 +88,7 @@ protected:
 
 	//bool to store if application is printing out it's timer this frame
 	bool m_DebugRunningTimersThisFrame = false;
+
 private:
 	void setCallbacksForWindow(Window* a_Window);
 	static void windowResize(int a_Width, int a_Height);
@@ -97,6 +103,9 @@ private:
 
 	float m_LastDebugTimerRun = 0;
 
-
+public:
+	Flags getFlags() {
+		return m_Flags;
+	}
 };
 

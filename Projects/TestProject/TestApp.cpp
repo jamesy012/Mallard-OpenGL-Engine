@@ -51,6 +51,7 @@ void TestApp::startUp() {
 	m_CameraGame = new CameraFly();
 	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
 	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
+	((CameraFly*)m_CameraGame)->m_KeyRotationSpeed = 300;
 	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveUp = KEY_E;
 	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveDown = KEY_Q;
 	((CameraFly*)m_CameraGame)->m_RotationMode |= CameraFly::RotationModes::MOUSE;
@@ -154,7 +155,7 @@ void TestApp::startUp() {
 	dynamicsWorld->addRigidBody(fallSphereRigidBody);
 	dynamicsWorld->addRigidBody(groundSphereRigidBody);
 
-	{
+	if(false){
 		//memory leak's everywhere!
 		btTriangleMesh* mesh = new btTriangleMesh();
 		mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
@@ -188,6 +189,24 @@ void TestApp::shutDown() {
 	m_Model->unload();
 	m_Ground->unload();
 	m_GrassModel->unload();
+
+	delete m_SphereObject[0];
+	delete m_SphereObject[1];
+
+	delete dynamicsWorld;
+	delete solver;
+	delete dispatcher;
+	delete collisionConfig;
+	delete broadphase;
+
+
+	delete fallSphereMotionState;
+	delete fallSphereRigidBody;
+	delete fallSphere;
+
+	delete groundPlaneMotionState;
+	delete groundSphereRigidBody;
+	delete groundPlane;
 
 	delete m_GrassBatch;
 	delete m_GrassBatchObject;
@@ -225,7 +244,7 @@ void TestApp::update() {
 	if (m_AutoDepth) {
 		//run 3 times a second, because it's slow
 		if (TimeHandler::getCurrentFrameNumber() % 20 == 0) {
-			printf("update\n");
+			printf("Auto DOF: updating distance\n");
 			m_CurrentDepth = m_FbGameFrameCopy->getDepthAtPoint(0.5f, 0.5f);
 		}
 		if (m_CurrentDepth > m_MaxDist) {
@@ -412,4 +431,12 @@ void TestApp::drawUi() {
 		float offset = m_Font->drawText(quickText.c_str(), 20);
 		model.translate(glm::vec3(0, -offset, 0));
 	}
+	uniformModel->setData(&model);
+	Shader::applyUniform(uniformModel);
+	quickText = "Screen pos ";
+	glm::vec2 pos = m_SphereObject[1]->m_Transform.ToScreenSpace(m_CameraGame);
+	quickText += std::to_string(pos.x) + ",";
+	quickText += std::to_string(pos.y);
+	float offset = m_Font->drawText(quickText.c_str(), 26);
+	model.translate(glm::vec3(0, -offset, 0));
 }

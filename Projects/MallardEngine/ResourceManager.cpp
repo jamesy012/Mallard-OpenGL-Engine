@@ -24,7 +24,13 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 		mainResource->m_Resource_IsMain = true;
 		mainResource->m_Resource_CanDelete = false;
 		mainResource->m_Resource_FileName = a_Resource->m_Resource_FileName;
+
+		printf("Loading Resource Start: %s\n", a_Resource->m_Resource_FileName.c_str());
+
 		bool didLoad = mainResource->resourceLoad();
+
+		printf("Loading Resource %s %s \n", didLoad?"Loaded":"Failed", a_Resource->m_Resource_FileName.c_str());
+
 		if (!didLoad) {
 			//failed to load
 			delete mainResource;

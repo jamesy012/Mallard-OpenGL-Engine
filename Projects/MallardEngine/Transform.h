@@ -59,6 +59,10 @@ public:
 	DLL_BUILD void setLookAt(const glm::vec3 a_LookAt);
 	//sets the position and rotation of this transform to be looking at the position of a_Transform, up is 0,1,0
 	DLL_BUILD void setLookAt(Transform* a_Transform);
+
+	//sets the all 3 scale floats to a_Scale
+	//be sure to keep default scales at 1 and not 0, since 0 will cause the model to have 0 width
+	DLL_BUILD glm::vec2 ToScreenSpace(class Camera* a_Camera);
 	
 	//returns local Position vector
 	DLL_BUILD glm::vec3 getLocalPosition() const;

@@ -3,6 +3,7 @@
 #include "Input.h"
 #include "TimeHandler.h"
 #include "Window.h"
+#include "Application.h"
 
 CameraFly::CameraFly() {
 }
@@ -18,6 +19,10 @@ void CameraFly::update() {
 	//	mouseMovement = Window::isMouseLocked();
 	//}
 	
+	if (!Window::getMainWindow()->HasMouseLock()) {
+		return;
+	}
+
 	//if one of the rotation modes are turned on 
 	if (m_RotationMode != RotationModes::OFF) {
 		//rotate via mouse
@@ -27,7 +32,7 @@ void CameraFly::update() {
 			movement = -glm::vec2(Input::getMouseDeltaX(), Input::getMouseDeltaY());
 			movement /= glm::vec2(Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight());
 			movement *= m_MouseRotationSpeed;
-		} 
+		}
 		if (m_RotationMode & RotationModes::KEYS) {
 			if (Input::isKeyDown(m_KeyboardKeys.RotateLeft)) {
 				movement.x += m_KeyRotationSpeed;
@@ -42,43 +47,43 @@ void CameraFly::update() {
 				movement.y += -m_KeyRotationSpeed;
 			}
 		}
-
-		//check to see if there was any movement
-		if (movement != glm::vec2(0)) {
-			//scale by deltaTime
-			movement *= TimeHandler::getDeltaTime();
+			//check to see if there was any movement
+			if (movement != glm::vec2(0)) {
+				//scale by deltaTime
+				movement *= TimeHandler::getDeltaTime();
 #ifdef USE_QUATERNIONS
-			//Not needed???
-			movement *= 0.0025f;//sensitivity
+				//Not needed???
+				movement *= 0.0025f;//sensitivity
 
-			//rotate Up and down
-			//m_Transform.rotate(glm::quat(glm::rotate(movement.y, glm::vec3(1, 0, 0))));
-			glm::quat rot = m_Transform.getLocalRotation();
-			rot = glm::rotate(rot, movement.y, glm::vec3(1, 0, 0));
-			m_Transform.setRotation(rot);
+				//rotate Up and down
+				//m_Transform.rotate(glm::quat(glm::rotate(movement.y, glm::vec3(1, 0, 0))));
+				glm::quat rot = m_Transform.getLocalRotation();
+				rot = glm::rotate(rot, movement.y, glm::vec3(1, 0, 0));
+				m_Transform.setRotation(rot);
 
-			//calc up
-			glm::vec4 up = glm::inverse(rot) * glm::vec4(0, 1, 0, 0);
-			//
-			////rotate left and right using the up vector
-			m_Transform.setRotation(glm::rotate(rot, movement.x, glm::vec3(up[0], up[1], up[2])));
+				//calc up
+				glm::vec4 up = glm::inverse(rot) * glm::vec4(0, 1, 0, 0);
+				//
+				////rotate left and right using the up vector
+				m_Transform.setRotation(glm::rotate(rot, movement.x, glm::vec3(up[0], up[1], up[2])));
 #else
 
-			//attempt to stop the weird left/right controls when upside down
-			glm::vec3 rotation = m_Transform.getLocalRotationEulers();
-			int xRot = (int)abs(rotation.x) % 360;
-			if (xRot > 90 && xRot < 270) {
-				movement.x *= -1;
-			}
+				//attempt to stop the weird left/right controls when upside down
+				glm::vec3 rotation = m_Transform.getLocalRotationEulers();
+				int xRot = (int)abs(rotation.x) % 360;
+				if (xRot > 90 && xRot < 270) {
+					movement.x *= -1;
+				}
 
-			//up/down
-			m_Transform.rotate(glm::vec3(movement.y, 0, 0));
-			//left/right
-			m_Transform.rotate(glm::vec3(0, movement.x, 0));
+				//up/down
+				m_Transform.rotate(glm::vec3(movement.y, 0, 0));
+				//left/right
+				m_Transform.rotate(glm::vec3(0, movement.x, 0));
 #endif // USE_QUATERNIONS
 
+			}
 		}
-	}
+	
 
 
 	//scroll
