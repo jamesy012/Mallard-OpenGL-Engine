@@ -424,7 +424,12 @@ void Application::run() {
 				m_ApplicationWindow->setMouseLock(true);
 				Input::removeMouseButton(0);
 			}
+
+			if (m_ApplicationWindow->HasMouseLock()) {
+				glfwSetCursorPos(m_ApplicationWindow->getMainWindowGLFW(), 100, 100);
+			}
 		}
+
 
 		if (m_Flags.m_RunCameraUpdate) {
 			m_CameraGame->update();

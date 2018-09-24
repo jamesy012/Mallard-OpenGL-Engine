@@ -65,7 +65,7 @@ void Shader::setFromPath(ShaderTypes a_Type, const char * a_FilePath) {
 	std::string shaderText = fileBuffer.str();
 
 	if (shaderText.size() <= 5) {
-		printf("shader loaded from file was empty %s\n", a_FilePath);
+		printf("ERROR: shader loaded from file was empty %s\n", a_FilePath);
 		return;
 	}
 

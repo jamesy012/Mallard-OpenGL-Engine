@@ -38,6 +38,7 @@
 
 void TestApp::startUp() {
 
+	//--------------------------------------  TEXT TESTING
 	m_TestText = new Text(m_Font);
 	m_OpenGLThread->queueMethod(this, [](void* tp) {
 		//m_TestText->generateText(R"(TEST APP
@@ -48,140 +49,164 @@ void TestApp::startUp() {
 		Move: WASDQE, Arrow keys)", 20);
 	});
 
+	//--------------------------------------  CAMERA TESTING
 	m_CameraGame = new CameraFly();
 	m_CameraGame->m_Transform.setPosition(glm::vec3(-5.842, 7.482, 1.879));
 	m_CameraGame->m_Transform.setRotation(glm::vec3(40.6868, -74.030, 0));
 	((CameraFly*)m_CameraGame)->m_KeyRotationSpeed = 300;
 	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveUp = KEY_E;
 	((CameraFly*)m_CameraGame)->m_KeyboardKeys.MoveDown = KEY_Q;
-	((CameraFly*)m_CameraGame)->m_RotationMode |= CameraFly::RotationModes::MOUSE;
+	//((CameraFly*)m_CameraGame)->m_RotationMode |= CameraFly::RotationModes::MOUSE;
 
-	m_DOFTest = new DepthOfField();
-	m_OpenGLThread->queueMethod(this, [](void* tp) {
-		((TestApp*)tp)->m_DOFTest->create();
-	});
 
-	m_Model = new Model();
-	m_LoadingThread->queueMethod(this, [](void* tp) {
-		((TestApp*)tp)->m_Model->load("Models/Nanosuit/nanosuit.obj");
-	});
-	m_Ground = new Model();
-	m_Ground->load("Models/test/Ground.obj");
-	m_GrassModel = new Model();
-	m_GrassModel->load("Models/test/GrassPack/Grass_02.obj");
-
-	printf("grass gen Start\n");
-	m_GrassBatch = new MeshBatch();
-	if (false) {
-		const unsigned int NumOfGrass = 2000;
-		const unsigned int sizeOfGround = 50;
-		for (int i = 0; i < NumOfGrass; i++) {
-			glm::mat4 position;
-			glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
-
-			pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
-			pos.y = 1;
-			pos.z = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
-
-			//printf("Pos %i (%f,%f,%f) ---- ", i, pos.x, pos.y, pos.z);
-			glm::vec3 height = m_Ground->m_Meshs[0]->getClosestPosition(pos);
-			pos.y = height.y;
-			//pos = height;
-			//printf("Pos %i (%f,%f,%f)\n", i, pos.x, pos.y, pos.z);
-			//const glm::vec3 posOnGround = glm::vec3(i,0,0);
-			position = glm::translate(glm::mat4(1), pos);
-			position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
-			position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f) * 3));
-			m_GrassBatch->add(m_GrassModel, position);
-		}
-		m_GrassBatch->bind();
+	//--------------------------------------  DOF TESTING
+	{
+		m_DOFTest = new DepthOfField();
+		m_OpenGLThread->queueMethod(this, [](void* tp) {
+			((TestApp*)tp)->m_DOFTest->create();
+		});
 	}
-	printf("grass gen Finished\n");
 
-	m_ModelObject = new Object(m_Model);
-	m_GroundObject = new Object(m_Ground);
-	m_GrassBatchObject = new Object(m_GrassBatch);
+	//--------------------------------------  MODEL LOADING TESTING
+	{
+		m_Model = new Model();
+		m_LoadingThread->queueMethod(this, [](void* tp) {
+			((TestApp*)tp)->m_Model->load("Models/Nanosuit/nanosuit.obj");
+		});
+		m_Ground = new Model();
+		m_Ground->load("Models/test/Ground.obj");
+		m_GrassModel = new Model();
+		m_GrassModel->load("Models/test/GrassPack/Grass_02.obj");
 
-	m_RenderList = new RenderMList();
-	m_RenderList->addObject(m_ModelObject);
-	m_RenderList->addObject(m_GroundObject);
-	m_RenderList->addObject(m_GrassBatchObject);
+		printf("grass gen Start\n");
+		m_GrassBatch = new MeshBatch();
+		if (false) {
+			const unsigned int NumOfGrass = 2000;
+			const unsigned int sizeOfGround = 50;
+			for (int i = 0; i < NumOfGrass; i++) {
+				glm::mat4 position;
+				glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
 
+				pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
+				pos.y = 1;
+				pos.z = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
 
-	//setup physics
-	broadphase = new btDbvtBroadphase();
-	collisionConfig = new btDefaultCollisionConfiguration();
-	dispatcher = new btCollisionDispatcher(collisionConfig);
-	solver = new btSequentialImpulseConstraintSolver();
-	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-
-	dynamicsWorld->setGravity(btVector3(0, -10, 0));
-
-	//objects
-	m_SphereModel = new Mesh();
-	m_OpenGLThread->queueMethod(this, [](void* tp) {
-		((TestApp*)tp)->m_SphereModel->createBox();
-	});
-	m_SphereObject[0] = new Object(m_SphereModel, "Physics Object 1!");
-	m_SphereObject[1] = new Object(m_SphereModel, "Physics Object 2!");
-
-	m_RenderList->addObject(m_SphereObject[0]);
-	m_RenderList->addObject(m_SphereObject[1]);
-
-	groundPlane = new btStaticPlaneShape(btVector3(0, 1, 0), 1);
-
-	groundPlaneMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
-	btRigidBody::btRigidBodyConstructionInfo groundPlaneRigidBodyCI(0, groundPlaneMotionState, groundPlane, btVector3(0, 0, 0));
-	groundPlaneRigidBodyCI.m_restitution = 0.75f;
-	groundPlaneRigidBody = new btRigidBody(groundPlaneRigidBodyCI);
-
-	//fallSphere = new btSphereShape(1);
-	fallSphere = new btBoxShape(btVector3(1, 1, 1));
-	btScalar mass = 1;
-	btVector3 fallInertia(0, 0, 0);
-	fallSphere->calculateLocalInertia(mass, fallInertia);
-
-	fallSphereMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 1, 0)));
-	btRigidBody::btRigidBodyConstructionInfo fallSphereRigidBodyCI(mass, fallSphereMotionState, fallSphere, fallInertia);
-	fallSphereRigidBodyCI.m_restitution = 0.75f;
-
-	fallSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
-	fallSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 50, 0)));
-
-	groundSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
-	groundSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(1.5f, 1, 0)));
-
-	//dynamicsWorld->addRigidBody(groundPlaneRigidBody);
-	dynamicsWorld->addRigidBody(fallSphereRigidBody);
-	dynamicsWorld->addRigidBody(groundSphereRigidBody);
-
-	if(false){
-		//memory leak's everywhere!
-		btTriangleMesh* mesh = new btTriangleMesh();
-		mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
-		mesh->preallocateVertices(m_Ground->m_Meshs[0]->m_Vertices.size());
-		for (unsigned int i = 0; i < m_Ground->m_Meshs[0]->m_Indices.size(); i += 3) {
-			glm::vec3 pos0 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 0]].position;
-			glm::vec3 pos1 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 1]].position;
-			glm::vec3 pos2 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 2]].position;
-			mesh->addTriangle(
-				btVector3(pos0.x, pos0.y, pos0.z),
-				btVector3(pos1.x, pos1.y, pos1.z),
-				btVector3(pos2.x, pos2.y, pos2.z));
+				//printf("Pos %i (%f,%f,%f) ---- ", i, pos.x, pos.y, pos.z);
+				glm::vec3 height = m_Ground->m_Meshs[0]->getClosestPosition(pos);
+				pos.y = height.y;
+				//pos = height;
+				//printf("Pos %i (%f,%f,%f)\n", i, pos.x, pos.y, pos.z);
+				//const glm::vec3 posOnGround = glm::vec3(i,0,0);
+				position = glm::translate(glm::mat4(1), pos);
+				position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
+				position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f) * 3));
+				m_GrassBatch->add(m_GrassModel, position);
+			}
+			m_GrassBatch->bind();
 		}
+		printf("grass gen Finished\n");
 
-		//btCollisionShape* groundMesh = new btTriangleMeshShape(smi);
-		btCollisionShape* groundMesh = new btBvhTriangleMeshShape(mesh, true);
+		m_ModelObject = new Object(m_Model);
+		m_GroundObject = new Object(m_Ground);
+		m_GrassBatchObject = new Object(m_GrassBatch);
 
-		//btCollisionShape* groundMesh = new btConvexHullShape(points[0].m_floats, points.size(),16);
-		btDefaultMotionState* groundMeshMS = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
-		btRigidBody::btRigidBodyConstructionInfo groundMeshRBCI(0, groundMeshMS, groundMesh, btVector3(0, 0, 0));
-		groundMeshRBCI.m_restitution = 0.75f;
-		btRigidBody* groundMeshRB = new btRigidBody(groundMeshRBCI);
-
-		dynamicsWorld->addRigidBody(groundMeshRB);
+		m_RenderList = new RenderMList();
+		m_RenderList->addObject(m_ModelObject);
+		m_RenderList->addObject(m_GroundObject);
+		m_RenderList->addObject(m_GrassBatchObject);
 	}
-	
+
+	//-------------------------------------- SCREENSPACE SELECTION
+	{
+		m_OpenGLThread->queueMethod(this, [](void* tp) {
+			((TestApp*)tp)->m_SelectionShader = new Shader();
+			((TestApp*)tp)->m_SelectionShader->setFromPath(ShaderTypes::TYPE_VERTEX, "Shaders/basic.vert");
+			((TestApp*)tp)->m_SelectionShader->setFromPath(ShaderTypes::TYPE_FRAGMENT, "Shaders/basic.frag");
+			((TestApp*)tp)->m_SelectionShader->linkShader();
+
+			((TestApp*)tp)->m_SelectionMesh = new Mesh();
+			//((TestApp*)tp)->m_SelectionMesh->createPlane(true);
+			((TestApp*)tp)->m_SelectionMesh->createBox();
+		});
+	}
+
+
+
+	//-------------------------------------- PHYSICS TESTING
+	{
+		broadphase = new btDbvtBroadphase();
+		collisionConfig = new btDefaultCollisionConfiguration();
+		dispatcher = new btCollisionDispatcher(collisionConfig);
+		solver = new btSequentialImpulseConstraintSolver();
+		dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+
+		dynamicsWorld->setGravity(btVector3(0, -10, 0));
+
+		//objects
+		m_SphereModel = new Mesh();
+		m_OpenGLThread->queueMethod(this, [](void* tp) {
+			((TestApp*)tp)->m_SphereModel->createBox();
+		});
+		m_SphereObject[0] = new Object(m_SphereModel, "Physics Object 1!");
+		m_SphereObject[1] = new Object(m_SphereModel, "Physics Object 2!");
+
+		m_RenderList->addObject(m_SphereObject[0]);
+		m_RenderList->addObject(m_SphereObject[1]);
+
+		groundPlane = new btStaticPlaneShape(btVector3(0, 1, 0), 1);
+
+		groundPlaneMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+		btRigidBody::btRigidBodyConstructionInfo groundPlaneRigidBodyCI(0, groundPlaneMotionState, groundPlane, btVector3(0, 0, 0));
+		groundPlaneRigidBodyCI.m_restitution = 0.75f;
+		groundPlaneRigidBody = new btRigidBody(groundPlaneRigidBodyCI);
+
+		//fallSphere = new btSphereShape(1);
+		fallSphere = new btBoxShape(btVector3(1, 1, 1));
+		btScalar mass = 1;
+		btVector3 fallInertia(0, 0, 0);
+		fallSphere->calculateLocalInertia(mass, fallInertia);
+
+		fallSphereMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 1, 0)));
+		btRigidBody::btRigidBodyConstructionInfo fallSphereRigidBodyCI(mass, fallSphereMotionState, fallSphere, fallInertia);
+		fallSphereRigidBodyCI.m_restitution = 0.75f;
+
+		fallSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
+		fallSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 50, 0)));
+
+		groundSphereRigidBody = new btRigidBody(fallSphereRigidBodyCI);
+		groundSphereRigidBody->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(1.5f, 1, 0)));
+
+		//dynamicsWorld->addRigidBody(groundPlaneRigidBody);
+		dynamicsWorld->addRigidBody(fallSphereRigidBody);
+		dynamicsWorld->addRigidBody(groundSphereRigidBody);
+
+		{
+			//memory leak's everywhere!
+			btTriangleMesh* mesh = new btTriangleMesh();
+			mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
+			mesh->preallocateVertices(m_Ground->m_Meshs[0]->m_Vertices.size());
+			for (unsigned int i = 0; i < m_Ground->m_Meshs[0]->m_Indices.size(); i += 3) {
+				glm::vec3 pos0 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 0]].position;
+				glm::vec3 pos1 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 1]].position;
+				glm::vec3 pos2 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 2]].position;
+				mesh->addTriangle(
+					btVector3(pos0.x, pos0.y, pos0.z),
+					btVector3(pos1.x, pos1.y, pos1.z),
+					btVector3(pos2.x, pos2.y, pos2.z));
+			}
+
+			//btCollisionShape* groundMesh = new btTriangleMeshShape(smi);
+			btCollisionShape* groundMesh = new btBvhTriangleMeshShape(mesh, true);
+
+			//btCollisionShape* groundMesh = new btConvexHullShape(points[0].m_floats, points.size(),16);
+			btDefaultMotionState* groundMeshMS = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+			btRigidBody::btRigidBodyConstructionInfo groundMeshRBCI(0, groundMeshMS, groundMesh, btVector3(0, 0, 0));
+			groundMeshRBCI.m_restitution = 0.75f;
+			btRigidBody* groundMeshRB = new btRigidBody(groundMeshRBCI);
+
+			dynamicsWorld->addRigidBody(groundMeshRB);
+		}
+	}
 
 }
 
@@ -217,6 +242,9 @@ void TestApp::shutDown() {
 	delete m_RenderList;
 
 	delete m_TestText;
+
+	delete m_SelectionShader;
+	delete m_SelectionMesh;
 }
 
 void TestApp::update() {
@@ -304,6 +332,17 @@ void TestApp::update() {
 			trans = groundSphereRigidBody->getWorldTransform();
 			bulletToTransform(m_SphereObject[1]->m_Transform, trans);
 		}
+	}
+
+	if (Input::isMouseDown(0)) {
+		if (Input::wasMousePressed(0)) {
+			m_SelectionFirstPoint = Input::getMousePos();
+		} else {
+			m_SelectionSecondPoint = Input::getMousePos();
+			m_ShowSelection = glm::distance(m_SelectionFirstPoint, m_SelectionSecondPoint) > 50;
+		}
+	} else {
+		m_ShowSelection = false;
 	}
 }
 
@@ -430,13 +469,31 @@ void TestApp::drawUi() {
 
 		float offset = m_Font->drawText(quickText.c_str(), 20);
 		model.translate(glm::vec3(0, -offset, 0));
+
+		if (m_ShowSelection) {
+			Shader::use(m_SelectionShader);
+			uniformPVM = m_SelectionShader->m_CommonUniforms.m_ProjectionViewMatrix;
+			uniformModel = m_SelectionShader->m_CommonUniforms.m_ModelMatrix;
+
+			uniformPVM->setData(&m_CameraMain->getProjectionViewMatrix());
+
+			glm::vec2 pos = (m_SelectionFirstPoint + m_SelectionSecondPoint) / 2;
+			glm::vec2 size = glm::abs(m_SelectionFirstPoint - m_SelectionSecondPoint) / 2;
+
+			//model.setPosition(glm::vec3(glm::sin(TimeHandler::getCurrentTime() / 4) * 200, glm::sin(TimeHandler::getCurrentTime() / 2) * 200, glm::sin(TimeHandler::getCurrentTime()) * 200));
+			model.setPosition(glm::vec3(pos.x, Window::getMainWindow()->getWindowHeight() - pos.y, 0));
+			//model.setPosition(glm::vec3(100,-100,0));
+			float ratio = Window::getMainWindow()->getWindowWidth() / Window::getMainWindow()->getWindowHeight();
+			model.setScale(glm::vec3(size.x*ratio, size.y, 1));
+			model.setRotation(glm::vec3(TimeHandler::getCurrentTime(), 0, 0));
+
+			uniformModel->setData(&model);
+			m_SelectionShader->checkUniformChanges();
+
+			m_SelectionMesh->draw();
+		}
 	}
-	uniformModel->setData(&model);
-	Shader::applyUniform(uniformModel);
-	quickText = "Screen pos ";
-	glm::vec2 pos = m_SphereObject[1]->m_Transform.ToScreenSpace(m_CameraGame);
-	quickText += std::to_string(pos.x) + ",";
-	quickText += std::to_string(pos.y);
-	float offset = m_Font->drawText(quickText.c_str(), 26);
-	model.translate(glm::vec3(0, -offset, 0));
+
+
+
 }

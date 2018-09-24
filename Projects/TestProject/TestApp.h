@@ -49,6 +49,11 @@ private:
 	bool m_RunningFocalDistanceChange = false;
 	float m_FocalDistanceTimer = 0.0f;
 
+	Shader* m_SelectionShader;
+	Mesh* m_SelectionMesh;
+	bool m_ShowSelection = false;
+	glm::vec2 m_SelectionFirstPoint;
+	glm::vec2 m_SelectionSecondPoint;
 
 	/// - physics
 	Mesh* m_SphereModel;

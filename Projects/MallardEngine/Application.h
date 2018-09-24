@@ -49,7 +49,7 @@ protected:
 		bool m_RunDebugTimers = false;
 		bool m_RunCameraUpdate = true;
 		//should we lock the mouse or not?
-		bool m_CanLockmouse = true;
+		bool m_CanLockmouse = false;
 	} m_Flags;
 
 	Window* m_ApplicationWindow = nullptr;
