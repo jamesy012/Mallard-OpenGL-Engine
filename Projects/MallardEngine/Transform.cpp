@@ -162,7 +162,8 @@ void Transform::setLookAt(Transform * a_Transform) {
 
 glm::vec2 Transform::ToScreenSpace(Camera * a_Camera) {
 	glm::vec4 screenSpace = a_Camera->getProjectionViewMatrix() * glm::vec4(m_Position, 1);
-	return glm::vec2(screenSpace.x / screenSpace.z, screenSpace.y / screenSpace.w) * 0.5f + 0.5f;
+	glm::vec2 pos = glm::vec2(screenSpace.x / screenSpace.z, (screenSpace.y / screenSpace.w)) * 0.5f + 0.5f;
+	return glm::vec2(pos.x, 1 - pos.y);
 }
 
 glm::vec3 Transform::getLocalPosition() const {
@@ -365,7 +366,7 @@ bool Transform::isChild(const Transform * a_Object) const {
 }
 
 void Transform::setRootTransform(Transform * a_RootTransform) {
-	//TODO deal with letting another transform be set here after the first
+	//TODO deal with letting another transform be set here after the first (as root parent)
 	if (m_RootTransform != nullptr) {
 		printf("CANT SET ANOTHER TRANSFORM AS ROOT\n");
 		return;

@@ -39,7 +39,7 @@ public:
 	void draw(Camera& a_Camera);
 	virtual void drawInstance(unsigned int a_Amount) override;
 
-private:
+protected:
 	void genMesh();
 	void genShader();
 	void addSkyboxSide(unsigned int a_SideTarget, const std::string a_FilePath);

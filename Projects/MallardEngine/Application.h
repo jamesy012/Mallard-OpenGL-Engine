@@ -107,5 +107,8 @@ public:
 	Flags getFlags() {
 		return m_Flags;
 	}
+	Camera* getCurrentCamera() {
+		return m_CameraMain;
+	}
 };
 

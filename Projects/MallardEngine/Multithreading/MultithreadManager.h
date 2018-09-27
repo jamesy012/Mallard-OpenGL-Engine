@@ -7,6 +7,7 @@ class Application;
 class MtmThread;
 
 typedef void(*MtmMethodQueue) (void*);
+//typedef []void(*MtmMethodQueue) (void*);
 
 struct MtmQueueObj {
 	MtmMethodQueue m_Method;

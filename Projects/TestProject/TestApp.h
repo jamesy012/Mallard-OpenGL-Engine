@@ -11,6 +11,8 @@ class RenderMList;
 class Object;
 class MeshBatch;
 
+class Terrain;
+
 #include <btBulletDynamicsCommon.h>
 
 class  TestApp :
@@ -34,6 +36,10 @@ private:
 	Object* m_GroundObject;
 	Object* m_GrassBatchObject;
 
+	std::vector<Object*> m_MoreModelObjects;
+
+	Terrain* m_Terrain;
+
 	Text* m_TestText;
 
 	DepthOfField* m_DOFTest;
@@ -54,6 +60,7 @@ private:
 	bool m_ShowSelection = false;
 	glm::vec2 m_SelectionFirstPoint;
 	glm::vec2 m_SelectionSecondPoint;
+	std::vector<Object*> m_InSelection;
 
 	/// - physics
 	Mesh* m_SphereModel;

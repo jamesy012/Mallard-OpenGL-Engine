@@ -10,7 +10,7 @@ uniform sampler2D blurredTex;
 uniform sampler2D depthTex;
 
 
-uniform float focusDistance =  5f;
+uniform float focusDistance =  5.0f;
 uniform float farDof = 1.0f;
 uniform float nearDof = 1.0f;
 //how quick does it fade to nothing, higher is quicker

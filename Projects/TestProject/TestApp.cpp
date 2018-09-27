@@ -31,10 +31,16 @@
 #include "Camera.h"
 #include "CameraFly.h"
 
+#include "Terrain.h"
+
 #include "Multithreading/MtmThread.h"
 #include <BulletCollision/CollisionShapes/btStridingMeshInterface.h>
 #include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 #include "Conversions.h"
+
+#undef min
+#undef max
 
 void TestApp::startUp() {
 
@@ -78,33 +84,35 @@ void TestApp::startUp() {
 		m_GrassModel = new Model();
 		m_GrassModel->load("Models/test/GrassPack/Grass_02.obj");
 
-		printf("grass gen Start\n");
+		//printf("grass gen Start\n");
 		m_GrassBatch = new MeshBatch();
-		if (false) {
-			const unsigned int NumOfGrass = 2000;
-			const unsigned int sizeOfGround = 50;
-			for (int i = 0; i < NumOfGrass; i++) {
-				glm::mat4 position;
-				glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
-
-				pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
-				pos.y = 1;
-				pos.z = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
-
-				//printf("Pos %i (%f,%f,%f) ---- ", i, pos.x, pos.y, pos.z);
-				glm::vec3 height = m_Ground->m_Meshs[0]->getClosestPosition(pos);
-				pos.y = height.y;
-				//pos = height;
-				//printf("Pos %i (%f,%f,%f)\n", i, pos.x, pos.y, pos.z);
-				//const glm::vec3 posOnGround = glm::vec3(i,0,0);
-				position = glm::translate(glm::mat4(1), pos);
-				position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
-				position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f) * 3));
-				m_GrassBatch->add(m_GrassModel, position);
-			}
-			m_GrassBatch->bind();
-		}
-		printf("grass gen Finished\n");
+		//if (false) {
+		//	const unsigned int NumOfGrass = 2000;
+		//	const unsigned int sizeOfGround = 50;
+		//	for (int i = 0; i < NumOfGrass; i++) {
+		//		glm::mat4 position;
+		//		glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
+		//
+		//		pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
+		//		pos.y = 1;
+		//		pos.z = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
+		//
+		//		//printf("Pos %i (%f,%f,%f) ---- ", i, pos.x, pos.y, pos.z);
+		//		glm::vec3 height = m_Ground->m_Meshs[0]->getClosestPosition(pos);
+		//		pos.y = height.y;
+		//		//pos = height;
+		//		//printf("Pos %i (%f,%f,%f)\n", i, pos.x, pos.y, pos.z);
+		//		//const glm::vec3 posOnGround = glm::vec3(i,0,0);
+		//		position = glm::translate(glm::mat4(1), pos);
+		//		position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
+		//		position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f) * 3));
+		//		m_GrassBatch->add(m_GrassModel, position);
+		//	}
+		//	m_OpenGLThread->queueMethod(this, [](void* tp) {
+		//		((TestApp*)tp)->m_GrassBatch->bind();
+		//	});
+		//}
+		//printf("grass gen Finished\n");
 
 		m_ModelObject = new Object(m_Model);
 		m_GroundObject = new Object(m_Ground);
@@ -112,8 +120,21 @@ void TestApp::startUp() {
 
 		m_RenderList = new RenderMList();
 		m_RenderList->addObject(m_ModelObject);
-		m_RenderList->addObject(m_GroundObject);
+		//m_RenderList->addObject(m_GroundObject);
 		m_RenderList->addObject(m_GrassBatchObject);
+
+		m_Terrain = new Terrain();
+		m_Terrain->generate();
+
+		//for (int x = -100; x < 100; x += 10) {
+		//	for (int y = -100; y < 100; y += 10) {
+		//		Object* newModel = new Object(m_Model);
+		//		newModel->m_Transform.setPosition(glm::vec3(x, 0, y));
+		//		m_RenderList->addObject(newModel);
+		//		m_MoreModelObjects.push_back(newModel);
+		//	}
+		//
+		//}
 	}
 
 	//-------------------------------------- SCREENSPACE SELECTION
@@ -129,7 +150,7 @@ void TestApp::startUp() {
 			((TestApp*)tp)->m_SelectionMesh->createBox();
 		});
 	}
-
+	return;
 
 
 	//-------------------------------------- PHYSICS TESTING
@@ -206,6 +227,46 @@ void TestApp::startUp() {
 
 			dynamicsWorld->addRigidBody(groundMeshRB);
 		}
+
+	}
+
+	printf("grass gen Start\n");
+	{
+		if (m_GrassBatch == nullptr) {
+			m_GrassBatch = new MeshBatch();
+		}
+		const unsigned int NumOfGrass = 5000;
+		const unsigned int sizeOfGround = 50;
+		unsigned int numSpawned = 0;
+		unsigned int percentage = 0;
+		for (int i = 0; i < NumOfGrass; i++) {
+			glm::mat4 position;
+			glm::vec3 pos;// = m_Ground->m_Meshs[0]->getVertexPosition(i);
+
+			pos.x = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
+			pos.y = 1;
+			pos.z = (((rand() % 10000) / 10000.0f) * (sizeOfGround * 2)) - sizeOfGround;
+
+			btCollisionWorld::ClosestRayResultCallback raycastCallback(btVector3(pos.x, 100, pos.z), btVector3(pos.x, -100, pos.z));
+			dynamicsWorld->rayTest(btVector3(pos.x, 100, pos.z), btVector3(pos.x, -100, pos.z), raycastCallback);
+			if (!raycastCallback.hasHit()) {
+				continue;
+			}
+			pos.y = raycastCallback.m_hitPointWorld.getY();
+
+			position = glm::translate(glm::mat4(1), pos);
+			position = glm::rotate(position, ((rand() % 10000) / 10000.0f) * 360, glm::vec3(0, 1, 0));
+			position = glm::scale(position, glm::vec3(((rand() % 10000) / 10000.0f) * 3) + 0.25f);
+			m_GrassBatch->add(m_GrassModel, position);
+			numSpawned++;
+			if (i%(NumOfGrass / 10) == 0) {
+				printf("grass gen %i percent compleate\n", (++percentage) * 10);
+			}
+		}
+		m_OpenGLThread->queueMethod(this, [](void* tp) {
+			((TestApp*)tp)->m_GrassBatch->bind();
+		});
+	printf("grass gen Finished SPAWNED %i/%i\n", numSpawned,NumOfGrass);
 	}
 
 }
@@ -245,6 +306,12 @@ void TestApp::shutDown() {
 
 	delete m_SelectionShader;
 	delete m_SelectionMesh;
+
+	delete m_Terrain;
+
+	for (int i = 0; i < m_MoreModelObjects.size(); i++) {
+		delete m_MoreModelObjects[i];
+	}
 }
 
 void TestApp::update() {
@@ -322,7 +389,7 @@ void TestApp::update() {
 	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
 	//physics
-	{
+	if(dynamicsWorld){
 		dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
 		{
 			btTransform trans;
@@ -340,10 +407,29 @@ void TestApp::update() {
 		} else {
 			m_SelectionSecondPoint = Input::getMousePos();
 			m_ShowSelection = glm::distance(m_SelectionFirstPoint, m_SelectionSecondPoint) > 50;
+
+			if (m_ShowSelection) {
+				m_InSelection.clear();
+				for (int i = 0; i < 2; i++) {
+					glm::vec2 pos = m_SphereObject[i]->m_Transform.ToScreenSpace(m_CameraGame);
+					glm::vec2 windowSize = glm::vec2(Window::getMainWindow()->getFramebufferWidth(), Window::getMainWindow()->getFramebufferHeight());
+					glm::vec2 min = glm::min(m_SelectionFirstPoint, m_SelectionSecondPoint) / windowSize;
+					glm::vec2 max = glm::max(m_SelectionFirstPoint, m_SelectionSecondPoint) / windowSize;
+					if (min.x < pos.x && min.y < pos.y) {
+						if (max.x > pos.x && max.y > pos.y) {
+							m_InSelection.push_back(m_SphereObject[i]);
+						}
+					}
+				}
+			}
+
 		}
 	} else {
+		m_InSelection.clear();
 		m_ShowSelection = false;
 	}
+
+
 }
 
 void TestApp::draw() {
@@ -370,6 +456,8 @@ void TestApp::draw() {
 		Logging::quickTimePop(m_DebugRunningTimersThisFrame);
 		Logging::quickGpuDebugGroupPop();
 	}
+
+	m_Terrain->draw();
 }
 
 void TestApp::drawUi() {
@@ -471,21 +559,38 @@ void TestApp::drawUi() {
 		model.translate(glm::vec3(0, -offset, 0));
 
 		if (m_ShowSelection) {
+
+			//selection info
+			{
+				uniformModel->setData(&model);
+				Shader::applyUniform(uniformModel);
+
+				//quick text draw, not as efficient as using a Text object to render
+				quickText = "Selected: ";
+				quickText += std::to_string(m_InSelection.size());
+				for (int i = 0; i < m_InSelection.size(); i++) {
+					quickText += "\n" + m_InSelection[i]->m_Transform.m_Name;
+				}
+				float offset = m_Font->drawText(quickText.c_str(), 20);
+				model.translate(glm::vec3(0, -offset, 0));
+			}
+
 			Shader::use(m_SelectionShader);
 			uniformPVM = m_SelectionShader->m_CommonUniforms.m_ProjectionViewMatrix;
 			uniformModel = m_SelectionShader->m_CommonUniforms.m_ModelMatrix;
 
 			uniformPVM->setData(&m_CameraMain->getProjectionViewMatrix());
+			m_SelectionShader->m_CommonUniforms.m_Color->setData(1.0f, 0.0f, 1.0f, 1.0f);
 
 			glm::vec2 pos = (m_SelectionFirstPoint + m_SelectionSecondPoint) / 2;
 			glm::vec2 size = glm::abs(m_SelectionFirstPoint - m_SelectionSecondPoint) / 2;
 
 			//model.setPosition(glm::vec3(glm::sin(TimeHandler::getCurrentTime() / 4) * 200, glm::sin(TimeHandler::getCurrentTime() / 2) * 200, glm::sin(TimeHandler::getCurrentTime()) * 200));
-			model.setPosition(glm::vec3(pos.x, Window::getMainWindow()->getWindowHeight() - pos.y, 0));
+			model.setPosition(glm::vec3(pos.x, Window::getMainWindow()->getFramebufferHeight() - pos.y, 0));
 			//model.setPosition(glm::vec3(100,-100,0));
-			float ratio = Window::getMainWindow()->getWindowWidth() / Window::getMainWindow()->getWindowHeight();
-			model.setScale(glm::vec3(size.x*ratio, size.y, 1));
-			model.setRotation(glm::vec3(TimeHandler::getCurrentTime(), 0, 0));
+			float ratio = Window::getMainWindow()->getFramebufferWidth() / Window::getMainWindow()->getFramebufferHeight();
+			model.setScale(glm::vec3(size.x, size.y / ratio, 1));
+			model.setRotation(glm::vec3(0, 0, 0));
 
 			uniformModel->setData(&model);
 			m_SelectionShader->checkUniformChanges();

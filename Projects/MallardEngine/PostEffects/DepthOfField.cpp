@@ -27,6 +27,7 @@ DepthOfField::~DepthOfField() {
 
 		delete m_DOFShader;
 		delete m_BlurShader;
+		delete m_FullScreenQuad;
 	}
 }
 

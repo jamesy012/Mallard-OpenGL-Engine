@@ -38,7 +38,11 @@
     <ClInclude Include="Multithreading\MtmThread.h" />
     <ClInclude Include="Multithreading\MultithreadManager.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="PostEffects\BlurEffect.h" />
     <ClInclude Include="PostEffects\DepthOfField.h" />
+    <ClInclude Include="PostEffects\ObjectHighlight.h" />
+    <ClInclude Include="PostEffects\PostEffectManager.h" />
+    <ClInclude Include="RaycastManager.h" />
     <ClInclude Include="Renderer\RenderMFnPtr.h" />
     <ClInclude Include="Renderer\RenderMFwdDec.h" />
     <ClInclude Include="Renderer\RenderMIncludeAll.h" />
@@ -49,6 +53,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderUniformData.h" />
     <ClInclude Include="Skybox.h" />
+    <ClInclude Include="Terrain.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TexturePacker.h" />
@@ -71,7 +76,11 @@
     <ClCompile Include="Multithreading\MtmThread.cpp" />
     <ClCompile Include="Multithreading\MultithreadManager.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="PostEffects\BlurEffect.cpp" />
     <ClCompile Include="PostEffects\DepthOfField.cpp" />
+    <ClCompile Include="PostEffects\ObjectHighlight.cpp" />
+    <ClCompile Include="PostEffects\PostEffectManager.cpp" />
+    <ClCompile Include="RaycastManager.cpp" />
     <ClCompile Include="Renderer\RenderMInstanced.cpp" />
     <ClCompile Include="Renderer\RenderMShader.cpp" />
     <ClCompile Include="Renderer\RenderMList.cpp" />
@@ -80,6 +89,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderUniformData.cpp" />
     <ClCompile Include="Skybox.cpp" />
+    <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TexturePacker.cpp" />
@@ -90,32 +100,32 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DBC40799-7547-4447-AF16-0052335F371F}</ProjectGuid>
     <RootNamespace>MallardEngine</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>

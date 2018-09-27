@@ -6,6 +6,7 @@
 struct GLFWwindow;
 class Input;
 
+
 class DLL_BUILD Window {
 	friend Input;
 public:

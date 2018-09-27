@@ -16,7 +16,7 @@ MultithreadManager::MultithreadManager() {
 
 
 MultithreadManager::~MultithreadManager() {
-	for (int i = 0; i < m_Threads.size();i++) {
+	for (size_t i = 0; i < m_Threads.size();i++) {
 		m_Threads[i]->closeThread();
 		delete m_Threads[i];
 	}
