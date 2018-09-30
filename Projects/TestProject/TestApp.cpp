@@ -76,13 +76,13 @@ void TestApp::startUp() {
 	//--------------------------------------  MODEL LOADING TESTING
 	{
 		m_Model = new Model();
+		m_Ground = new Model();
+		m_GrassModel = new Model();
 		m_LoadingThread->queueMethod(this, [](void* tp) {
 			((TestApp*)tp)->m_Model->load("Models/Nanosuit/nanosuit.obj");
+		((TestApp*)tp)->m_Ground->load("Models/test/Ground.obj");
+		((TestApp*)tp)->m_GrassModel->load("Models/test/GrassPack/Grass_02.obj");
 		});
-		m_Ground = new Model();
-		m_Ground->load("Models/test/Ground.obj");
-		m_GrassModel = new Model();
-		m_GrassModel->load("Models/test/GrassPack/Grass_02.obj");
 
 		//printf("grass gen Start\n");
 		m_GrassBatch = new MeshBatch();
@@ -150,7 +150,6 @@ void TestApp::startUp() {
 			((TestApp*)tp)->m_SelectionMesh->createBox();
 		});
 	}
-	return;
 
 
 	//-------------------------------------- PHYSICS TESTING
@@ -201,6 +200,8 @@ void TestApp::startUp() {
 		dynamicsWorld->addRigidBody(fallSphereRigidBody);
 		dynamicsWorld->addRigidBody(groundSphereRigidBody);
 
+
+		m_LoadingThread->waitForThread();
 		{
 			//memory leak's everywhere!
 			btTriangleMesh* mesh = new btTriangleMesh();
@@ -229,7 +230,7 @@ void TestApp::startUp() {
 		}
 
 	}
-
+	return;
 	printf("grass gen Start\n");
 	{
 		if (m_GrassBatch == nullptr) {

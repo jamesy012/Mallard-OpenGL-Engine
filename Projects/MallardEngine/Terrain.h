@@ -29,12 +29,13 @@ public:
 protected:
 	Mesh * createHighLodAtPoint(glm::vec3 a_Pos);
 	Mesh* createLowLodAtPoint(glm::vec3 a_Pos);
-	Mesh* createPlaneAtPoint(unsigned int a_Size,glm::vec3 a_Pos);
+	Mesh* createPlaneAtPoint(unsigned int a_Size, glm::vec3 a_Pos, float a_YBias = 0.0f);
 	float getHeightFromMapAtWorldPos(glm::vec3 a_WorldPos);
 private:
 	Texture * m_HeightMap;
 	Texture * m_GroundTex;
 	Shader * m_Shader;
+	Shader * m_NormalTestShader;
 	std::vector<TerrainObj*> m_Terrains;
 };
 

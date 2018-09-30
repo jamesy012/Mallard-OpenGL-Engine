@@ -10,6 +10,7 @@
 enum class ShaderTypes {
 	TYPE_VERTEX,
 	TYPE_FRAGMENT,
+	TYPE_GEOMETRY,
 	END_TYPES
 };
 static const int SHADER_TYPES_SIZE = (int) ShaderTypes::END_TYPES;

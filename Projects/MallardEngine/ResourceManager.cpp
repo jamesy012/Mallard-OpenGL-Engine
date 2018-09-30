@@ -40,7 +40,7 @@ bool ResourceManager::loadResource(IResource * a_Resource) {
 		mainReference = new ResourceReference();
 		mainReference->resource = mainResource;
 
-		addResource(mainReference);
+		ResourceManager::addResource(mainReference);
 		createdResource = true;
 	}
 	//there is a resource to copy from, so lets do that
@@ -72,6 +72,9 @@ void ResourceManager::removeResource(IResource * a_Resource) {
 	if (mainReference->resourceCount == 0) {
 		//m_ResourceList[mainReference->resource->getResourceType()]
 		IResource* resource = mainReference->resource;
+		if (resource == nullptr) {
+			return;
+		}
 		int resourceIndex = mainReference->resource->getResourceType();
 
 		resource->resourceUnload();
@@ -92,6 +95,9 @@ void ResourceManager::removeResource(IResource * a_Resource) {
 }
 
 ResourceManager::ResourceReference* ResourceManager::getMainResource(IResource * a_Resource) {
+	if (a_Resource == nullptr) {
+		return nullptr;
+	}
 	mapData* resourceObjects;
 	resourceObjects = m_ResourceList[a_Resource->getResourceType()];
 
@@ -131,6 +137,9 @@ void ResourceManager::deleteLeftOverResources() {
 }
 
 void ResourceManager::addResource(ResourceReference * a_ResourceRef) {
+	if (a_ResourceRef == nullptr || a_ResourceRef->resource == nullptr) {
+		return;
+	}
 	mapData* resourceObjects;
 	resourceObjects = m_ResourceList[a_ResourceRef->resource->getResourceType()];
 

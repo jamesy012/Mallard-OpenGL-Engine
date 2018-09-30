@@ -201,6 +201,9 @@ void Shader::createProgram() {
 	if (m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_ShaderID != 0) {
 		programName += std::to_string(m_Shaders[(int)ShaderTypes::TYPE_FRAGMENT].m_ShaderID) + " Fragment/";
 	}
+	if (m_Shaders[(int)ShaderTypes::TYPE_GEOMETRY].m_ShaderID != 0) {
+		programName += std::to_string(m_Shaders[(int)ShaderTypes::TYPE_GEOMETRY].m_ShaderID) + " Geometry/";
+	}
 	GLDebug_NAMEOBJ(GL_PROGRAM, m_Program, programName.c_str());
 }
 
@@ -520,6 +523,8 @@ unsigned int Shader::getOpenglShaderType(ShaderTypes a_Type) const {
 			return GL_VERTEX_SHADER;
 		case ShaderTypes::TYPE_FRAGMENT:
 			return GL_FRAGMENT_SHADER;
+		case ShaderTypes::TYPE_GEOMETRY:
+			return GL_GEOMETRY_SHADER;
 		default:
 			return 0;
 	}
@@ -551,6 +556,9 @@ void Shader::createShader(ShaderTypes a_Type, std::string a_Code) {
 			break;
 		case ShaderTypes::TYPE_FRAGMENT:
 			GLDebug_NAMEOBJ(GL_SHADER, shaderIndex, ("Shader/Fragment " + m_Shaders[(int)a_Type].m_FilePath).c_str());
+			break;
+		case ShaderTypes::TYPE_GEOMETRY:
+			GLDebug_NAMEOBJ(GL_SHADER, shaderIndex, ("Shader/GEOMETRY " + m_Shaders[(int)a_Type].m_FilePath).c_str());
 			break;
 	}
 }

@@ -37,6 +37,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Multithreading\MtmThread.h" />
     <ClInclude Include="Multithreading\MultithreadManager.h" />
+    <ClInclude Include="Noise.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PostEffects\BlurEffect.h" />
     <ClInclude Include="PostEffects\DepthOfField.h" />
@@ -75,6 +76,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Multithreading\MtmThread.cpp" />
     <ClCompile Include="Multithreading\MultithreadManager.cpp" />
+    <ClCompile Include="Noise.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PostEffects\BlurEffect.cpp" />
     <ClCompile Include="PostEffects\DepthOfField.cpp" />
@@ -100,7 +102,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DBC40799-7547-4447-AF16-0052335F371F}</ProjectGuid>
     <RootNamespace>MallardEngine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
