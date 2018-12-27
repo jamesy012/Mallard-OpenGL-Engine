@@ -20,7 +20,7 @@ vec3 calculateTriangleNormal(){
 
 vec3 calculateLighting(vec3 faceNormal){
 	float brightness = max(dot(-lightDirection, faceNormal), ambientLighting);
-	return brightness;
+	return vec3(brightness,brightness,brightness);
 }
 
 void main(){

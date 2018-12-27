@@ -70,7 +70,7 @@ void Application::run() {
 		glfwSetErrorCallback(Application::GLFWErrorCallback);
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);//requied Compat profile for Nsight
 		//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 #if _DEBUG

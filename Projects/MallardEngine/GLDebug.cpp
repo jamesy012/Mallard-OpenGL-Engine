@@ -4,6 +4,13 @@
 #include <stdio.h>
 
 void GLDebug::openGLMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, const void * userParam) {
+	switch (id) {
+		case 131218: // NVIDIA: "shader will be recompiled due to GL state mismatches"
+			return;
+		default:
+			break;
+	}
+	
 	std::string errorMessage;
 	switch (source) {
 		case GL_DEBUG_SOURCE_API:
