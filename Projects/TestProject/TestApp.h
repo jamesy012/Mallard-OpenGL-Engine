@@ -7,7 +7,6 @@ class Mesh;
 class Text;
 
 class DepthOfField;
-class RenderMList;
 class Object;
 class MeshBatch;
 
@@ -43,7 +42,6 @@ private:
 	Text* m_TestText;
 
 	DepthOfField* m_DOFTest;
-	RenderMList* m_RenderList;
 
 	bool m_RenderDOF = false;
 

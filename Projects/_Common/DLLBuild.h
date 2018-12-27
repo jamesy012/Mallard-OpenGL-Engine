@@ -8,3 +8,9 @@
 //#define DLL_BUILD __declspec(dllimport)   
 #define DLL_BUILD
 #endif  
+
+#define DEPRECATED(message) [[deprecated(message)]]
+
+
+typedef unsigned int uint;
+

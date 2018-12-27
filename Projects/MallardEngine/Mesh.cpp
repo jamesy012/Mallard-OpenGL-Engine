@@ -136,6 +136,7 @@ void Mesh::createPlane(bool a_FlipYUV) {
 
 }
 
+/*
 void Mesh::draw() {
 	if (m_Vao == 0) {
 		return;
@@ -179,7 +180,7 @@ void Mesh::drawInstance(unsigned int a_Amount) {
 
 	Logging::objectRendered(m_Indices.size() * a_Amount);
 }
-
+*/
 void Mesh::applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices) {
 	m_Vertices = a_Verts;
 	m_Indices = a_Indices;

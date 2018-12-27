@@ -10,7 +10,9 @@ enum class VertexRenderingType {
 
 class DLL_BUILD IRenderable {
 public:
+		DEPRECATED("IRenderable getting removed")
 	virtual void draw() = 0;
+		DEPRECATED("IRenderable getting removed")
 	virtual void drawInstance(unsigned int a_Amount) = 0;
 
 	//Used for sorting when this object renders

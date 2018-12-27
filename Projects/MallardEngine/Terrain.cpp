@@ -72,6 +72,8 @@ void Terrain::generate() {
 }
 
 void Terrain::draw() {
+	//todo: remove direct mesh draw calls here
+
 	Shader::use(m_Shader);
 	Camera* camera = Application::m_Application->getCurrentCamera();
 	m_Shader->m_CommonUniforms.m_ProjectionViewMatrix->setData(camera);

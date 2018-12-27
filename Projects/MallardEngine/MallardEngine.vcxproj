@@ -44,12 +44,12 @@
     <ClInclude Include="PostEffects\ObjectHighlight.h" />
     <ClInclude Include="PostEffects\PostEffectManager.h" />
     <ClInclude Include="RaycastManager.h" />
-    <ClInclude Include="Renderer\RenderMFnPtr.h" />
-    <ClInclude Include="Renderer\RenderMFwdDec.h" />
-    <ClInclude Include="Renderer\RenderMIncludeAll.h" />
-    <ClInclude Include="Renderer\RenderMInstanced.h" />
-    <ClInclude Include="Renderer\RenderMShader.h" />
-    <ClInclude Include="Renderer\RenderMList.h" />
+    <ClInclude Include="Renderer\Renderable.h" />
+    <ClInclude Include="Renderer\RenderData.h" />
+    <ClInclude Include="Renderer\RenderingBase.h" />
+    <ClInclude Include="Renderer\RenderingObject.h" />
+    <ClInclude Include="Renderer\RenderingHolder.h" />
+    <ClInclude Include="Renderer\RenderingList.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderUniformData.h" />
@@ -83,10 +83,10 @@
     <ClCompile Include="PostEffects\ObjectHighlight.cpp" />
     <ClCompile Include="PostEffects\PostEffectManager.cpp" />
     <ClCompile Include="RaycastManager.cpp" />
-    <ClCompile Include="Renderer\RenderMInstanced.cpp" />
-    <ClCompile Include="Renderer\RenderMShader.cpp" />
-    <ClCompile Include="Renderer\RenderMList.cpp" />
-    <ClCompile Include="Renderer\RenderMFnPtr.cpp" />
+    <ClCompile Include="Renderer\RenderData.cpp" />
+    <ClCompile Include="Renderer\RenderingBase.cpp" />
+    <ClCompile Include="Renderer\RenderingObject.cpp" />
+    <ClCompile Include="Renderer\RenderingList.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderUniformData.cpp" />
@@ -189,7 +189,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
@@ -216,7 +216,7 @@ exit/B %errlev%
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
@@ -245,7 +245,7 @@ exit/B %errlev%
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
@@ -276,7 +276,7 @@ exit/B %errlev%
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)Projects\_Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>

@@ -1,6 +1,6 @@
 #pragma once
 #include "DLLBuild.h"
-#include "IRenderable.h"
+#include "Renderer/RenderData.h"
 
 #include <vector>
 
@@ -12,17 +12,7 @@ struct aiMaterial;
 class Texture;
 class MeshBatch;
 
-struct MeshVertex {
-	glm::vec4 position;
-	glm::vec4 normal;
-	glm::vec2 texCoord;
-	glm::vec4 color = glm::vec4(1,1,1,1);
-};
-
-typedef MeshVertex MeshVerticesType;
-typedef unsigned int MeshIndicesType;
-
-class DLL_BUILD Mesh : public IRenderable {
+class DLL_BUILD Mesh : public RenderData {
 	friend MeshBatch;
 public:
 	Mesh();
@@ -37,9 +27,10 @@ public:
 	//if there is already a mesh here then it will overwrite the old mesh
 	void createPlane(bool a_FlipYUV);
 
-	// Inherited via IRenderable
-	virtual void draw() override;
-	virtual void drawInstance(unsigned int a_Amount) override;
+	//DEPRECATED("Will be done via Renderable")
+	//	void draw() override;
+	//DEPRECATED("Will be done via a inherited Renderable")
+	//	void drawInstance(unsigned int a_Amount);
 
 	void applyData(std::vector<MeshVerticesType> a_Verts, std::vector<MeshIndicesType> a_Indices);
 	void loadFromMesh(aiMesh* a_Mesh, aiMaterial* a_Material);
@@ -60,19 +51,13 @@ public:
 	//this stores the index of which texture this is using in it's model
 	int m_TextureIndex = 0;
 
-	//TODO: Move this back to private, temp change for instance rendering
-	unsigned int m_Vao;
-
-	std::vector<MeshVerticesType> m_Vertices;
-	std::vector<MeshIndicesType> m_Indices;
 private:
-	
+
 	//todo change to material
 	//test Texture
 	Texture* m_Texture = nullptr;
 	//did this class create a texture for itself?
 	bool m_CreatedTexture = false;
 
-	unsigned int m_Vbo, m_Ebo;
 };
 

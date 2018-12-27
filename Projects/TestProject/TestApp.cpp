@@ -17,7 +17,6 @@
 #include "Model.h"
 #include "Mesh.h"
 #include "MeshBatch.h"
-#include "Renderer/RenderMList.h"
 
 #include "Font.h"
 #include "Text.h"
@@ -114,14 +113,12 @@ void TestApp::startUp() {
 		//}
 		//printf("grass gen Finished\n");
 
-		m_ModelObject = new Object(m_Model);
-		m_GroundObject = new Object(m_Ground);
-		m_GrassBatchObject = new Object(m_GrassBatch);
-
-		m_RenderList = new RenderMList();
-		m_RenderList->addObject(m_ModelObject);
-		//m_RenderList->addObject(m_GroundObject);
-		m_RenderList->addObject(m_GrassBatchObject);
+		//m_ModelObject = new Object(m_Model);
+		//m_GroundObject = new Object(m_Ground);
+		//m_GrassBatchObject = new Object(m_GrassBatch);
+		m_ModelObject = new Object(nullptr);
+		//m_GroundObject = new Object(m_Ground);
+		m_GrassBatchObject = new Object(m_GrassBatch->m_CombinedMesh);
 
 		m_Terrain = new Terrain();
 		m_Terrain->generate();
@@ -170,9 +167,6 @@ void TestApp::startUp() {
 		m_SphereObject[0] = new Object(m_SphereModel, "Physics Object 1!");
 		m_SphereObject[1] = new Object(m_SphereModel, "Physics Object 2!");
 
-		m_RenderList->addObject(m_SphereObject[0]);
-		m_RenderList->addObject(m_SphereObject[1]);
-
 		groundPlane = new btStaticPlaneShape(btVector3(0, 1, 0), 1);
 
 		groundPlaneMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
@@ -202,32 +196,32 @@ void TestApp::startUp() {
 
 
 		m_LoadingThread->waitForThread();
-		{
-			//memory leak's everywhere!
-			btTriangleMesh* mesh = new btTriangleMesh();
-			mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
-			mesh->preallocateVertices(m_Ground->m_Meshs[0]->m_Vertices.size());
-			for (unsigned int i = 0; i < m_Ground->m_Meshs[0]->m_Indices.size(); i += 3) {
-				glm::vec3 pos0 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 0]].position;
-				glm::vec3 pos1 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 1]].position;
-				glm::vec3 pos2 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 2]].position;
-				mesh->addTriangle(
-					btVector3(pos0.x, pos0.y, pos0.z),
-					btVector3(pos1.x, pos1.y, pos1.z),
-					btVector3(pos2.x, pos2.y, pos2.z));
-			}
-
-			//btCollisionShape* groundMesh = new btTriangleMeshShape(smi);
-			btCollisionShape* groundMesh = new btBvhTriangleMeshShape(mesh, true);
-
-			//btCollisionShape* groundMesh = new btConvexHullShape(points[0].m_floats, points.size(),16);
-			btDefaultMotionState* groundMeshMS = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
-			btRigidBody::btRigidBodyConstructionInfo groundMeshRBCI(0, groundMeshMS, groundMesh, btVector3(0, 0, 0));
-			groundMeshRBCI.m_restitution = 0.75f;
-			btRigidBody* groundMeshRB = new btRigidBody(groundMeshRBCI);
-
-			dynamicsWorld->addRigidBody(groundMeshRB);
-		}
+		//{
+		//	//memory leak's everywhere!
+		//	btTriangleMesh* mesh = new btTriangleMesh();
+		//	mesh->preallocateIndices(m_Ground->m_Meshs[0]->m_Indices.size());
+		//	mesh->preallocateVertices(m_Ground->m_Meshs[0]->m_Vertices.size());
+		//	for (unsigned int i = 0; i < m_Ground->m_Meshs[0]->m_Indices.size(); i += 3) {
+		//		glm::vec3 pos0 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 0]].position;
+		//		glm::vec3 pos1 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 1]].position;
+		//		glm::vec3 pos2 = m_Ground->m_Meshs[0]->m_Vertices[m_Ground->m_Meshs[0]->m_Indices[i + 2]].position;
+		//		mesh->addTriangle(
+		//			btVector3(pos0.x, pos0.y, pos0.z),
+		//			btVector3(pos1.x, pos1.y, pos1.z),
+		//			btVector3(pos2.x, pos2.y, pos2.z));
+		//	}
+		//
+		//	//btCollisionShape* groundMesh = new btTriangleMeshShape(smi);
+		//	btCollisionShape* groundMesh = new btBvhTriangleMeshShape(mesh, true);
+		//
+		//	//btCollisionShape* groundMesh = new btConvexHullShape(points[0].m_floats, points.size(),16);
+		//	btDefaultMotionState* groundMeshMS = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+		//	btRigidBody::btRigidBodyConstructionInfo groundMeshRBCI(0, groundMeshMS, groundMesh, btVector3(0, 0, 0));
+		//	groundMeshRBCI.m_restitution = 0.75f;
+		//	btRigidBody* groundMeshRB = new btRigidBody(groundMeshRBCI);
+		//
+		//	dynamicsWorld->addRigidBody(groundMeshRB);
+		//}
 
 	}
 	return;
@@ -301,7 +295,6 @@ void TestApp::shutDown() {
 	delete m_ModelObject;
 	delete m_GroundObject;
 	delete m_DOFTest;
-	delete m_RenderList;
 
 	delete m_TestText;
 
@@ -390,17 +383,17 @@ void TestApp::update() {
 	m_ModelObject->m_Transform.setRotation(glm::vec3(0, TimeHandler::getCurrentTime(), 0));
 
 	//physics
-	if(dynamicsWorld){
-		dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
-		{
-			btTransform trans;
-			trans = fallSphereRigidBody->getWorldTransform();
-			bulletToTransform(m_SphereObject[0]->m_Transform, trans);
-
-			trans = groundSphereRigidBody->getWorldTransform();
-			bulletToTransform(m_SphereObject[1]->m_Transform, trans);
-		}
-	}
+	//if(dynamicsWorld){
+	//	dynamicsWorld->stepSimulation(TimeHandler::getDeltaTime(), 10);
+	//	{
+	//		btTransform trans;
+	//		trans = fallSphereRigidBody->getWorldTransform();
+	//		bulletToTransform(m_SphereObject[0]->m_Transform, trans);
+	//
+	//		trans = groundSphereRigidBody->getWorldTransform();
+	//		bulletToTransform(m_SphereObject[1]->m_Transform, trans);
+	//	}
+	//}
 
 	if (Input::isMouseDown(0)) {
 		if (Input::wasMousePressed(0)) {
@@ -447,7 +440,11 @@ void TestApp::draw() {
 	Shader::applyUniform(uniformPvm);
 	//Shader::applyUniform(uniformModel);
 
-	m_RenderList->draw();
+	//m_ModelObject->m_Renderable->draw();
+	//m_GrassBatchObject->m_Renderable->draw();
+	//m_SphereObject[0]->m_Renderable->draw();
+	//m_SphereObject[1]->m_Renderable->draw();
+	m_Terrain->draw();
 
 	if (m_RenderDOF) {
 		Logging::quickGpuDebugGroupPush("Depth of field");
@@ -458,7 +455,6 @@ void TestApp::draw() {
 		Logging::quickGpuDebugGroupPop();
 	}
 
-	m_Terrain->draw();
 }
 
 void TestApp::drawUi() {
